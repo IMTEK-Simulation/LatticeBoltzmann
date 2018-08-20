@@ -47,14 +47,14 @@ ndx = int(sys.argv[1])
 ndy = int(sys.argv[2])
 
 # Lattice
-nx = 1000
-ny = 1000
+nx = int(sys.argv[3])
+ny = int(sys.argv[4])
 
 # Number of steps
-nsteps = 1000
+nsteps = 100000
 
 # Dump velocities every this many steps
-dump_freq = 100
+dump_freq = 10000
 
 # Relaxation parameter
 omega = 1.7

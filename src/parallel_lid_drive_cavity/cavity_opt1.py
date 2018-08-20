@@ -20,16 +20,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 --------
-| OPT2 |
+| OPT1 |
 --------
 
 This is an implementation of the D2Q9 Lattice Boltzmann lattice in the simple
 relaxation time approximation. The writes the velocity field to a series of
 files in the npy format.
 
-The present implementation contains was optimized with respect to opt1 in that
-the collision operation was implemented in C++. The C++ implementation can be
-found in cavity_opt2_cext.cpp.
+The present implementation contains was optimized with respect to opt0 to
+eliminate all multiplications with zero (channel velocity) in the collision
+step. This requires to explicitly write out some multiplication from opt0. The
+storage of the velocity field is split into the two Cartesian components ux_kl
+and uy_kl now rather than having a single array u_ckl with Cartesian index as
+the first dimension.
 """
 
 import sys
@@ -39,8 +42,6 @@ from enum import IntEnum
 from mpi4py import MPI
 
 import numpy as np
-
-import cavity_opt2_cext as D2Q9
 
 ### Parameters
 
@@ -83,9 +84,75 @@ c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],    # velocities, x compone
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T # velocities, y components
 
 # Weight factors
-w_i = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36])
+w_0 = 4/9
+w_1234 = 1/9
+w_5678 = 1/36
+w_i = np.array([w_0, w_1234, w_1234, w_1234, w_1234,
+                w_5678, w_5678, w_5678, w_5678])
 
 ### Compute functions
+
+def equilibrium(rho_kl, ux_kl, uy_kl):
+    """
+    Return the equilibrium distribution function.
+
+    Parameters
+    ----------
+    rho_rl: array
+        Fluid density on the 2D grid.
+    ux_kl: array
+        x-components of streaming velocity on the 2D grid.
+    uy_kl: array
+        y-components of streaming velocity on the 2D grid.
+
+    Returns
+    -------
+    f_ikl: array
+        Equilibrium distribution for the given fluid density *rho_kl* and
+        streaming velocity *ux_kl*, *uy_kl*.
+    """
+    cu5_kl = ux_kl + uy_kl
+    cu6_kl = -ux_kl + uy_kl
+    cu7_kl = -ux_kl - uy_kl
+    cu8_kl = ux_kl - uy_kl
+    uu_kl = ux_kl**2 + uy_kl**2
+    return np.array([w_0*rho_kl*(1 - 3/2*uu_kl),
+                     w_1234*rho_kl*(1 + 3*ux_kl + 9/2*ux_kl**2 - 3/2*uu_kl),
+                     w_1234*rho_kl*(1 + 3*uy_kl + 9/2*uy_kl**2 - 3/2*uu_kl),
+                     w_1234*rho_kl*(1 - 3*ux_kl + 9/2*ux_kl**2 - 3/2*uu_kl),
+                     w_1234*rho_kl*(1 - 3*uy_kl + 9/2*uy_kl**2 - 3/2*uu_kl),
+                     w_5678*rho_kl*(1 + 3*cu5_kl + 9/2*cu5_kl**2 - 3/2*uu_kl),
+                     w_5678*rho_kl*(1 + 3*cu6_kl + 9/2*cu6_kl**2 - 3/2*uu_kl),
+                     w_5678*rho_kl*(1 + 3*cu7_kl + 9/2*cu7_kl**2 - 3/2*uu_kl),
+                     w_5678*rho_kl*(1 + 3*cu8_kl + 9/2*cu8_kl**2 - 3/2*uu_kl)])
+
+def collide(f_ikl, omega):
+    """
+    Carry out collision step. This relaxes the distribution of particle
+    velocities towards its equilibrium.
+
+    Parameters
+    ----------
+    f_ikl: array
+        Distribution of particle velocity on the 2D grid. Note that this array
+        is modified in place.
+    omega: float
+        Relaxation parameter.
+
+    Returns
+    -------
+    rho_rl: array
+        Current fluid density on the 2D grid.
+    ux_kl: array
+        x-components of current streaming velocity on the 2D grid.
+    uy_kl: array
+        y-components of current streaming velocity on the 2D grid.
+    """
+    rho_kl = np.sum(f_ikl, axis=0)
+    ux_kl = (f_ikl[1] - f_ikl[3] + f_ikl[5] - f_ikl[6] - f_ikl[7] + f_ikl[8])/rho_kl
+    uy_kl = (f_ikl[2] - f_ikl[4] + f_ikl[5] + f_ikl[6] - f_ikl[7] - f_ikl[8])/rho_kl
+    f_ikl += omega*(equilibrium(rho_kl, ux_kl, uy_kl) - f_ikl)
+    return rho_kl, ux_kl, uy_kl
 
 def stream(f_ikl):
     """
@@ -314,11 +381,9 @@ print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (incl
 
 ### Initialize occupation numbers
 
-f_ikl = np.zeros((9, local_nx, local_ny))
-D2Q9.equilibrium(np.ones((local_nx, local_ny)).reshape(-1),
-                 np.zeros((local_nx, local_ny)).reshape(-1),
-                 np.zeros((local_nx, local_ny)).reshape(-1),
-                 f_ikl.reshape(9, -1))
+f_ikl = equilibrium(np.ones((local_nx, local_ny)),
+                    np.zeros((local_nx, local_ny)),
+                    np.zeros((local_nx, local_ny)))
 ### Main loop
 
 for i in range(nsteps):
@@ -326,13 +391,11 @@ for i in range(nsteps):
         sys.stdout.write('=== Step {}/{} ===\r'.format(i+1, nsteps))
     communicate(f_ikl)
     stream_and_bounce_back(f_ikl)
-    D2Q9.collide(f_ikl.reshape(9, -1), omega)
+    rho_kl, ux_kl, uy_kl = collide(f_ikl, omega)
 
     if i % dump_freq == 0:
-        rho_kl = np.sum(f_ikl, axis=0)
-        u_ckl = np.dot(f_ikl.T, c_ic).T/rho_kl
-        save_mpiio(comm, 'ux_{}.npy'.format(i), u_ckl[0, without_ghosts_x, without_ghosts_y])
-        save_mpiio(comm, 'uy_{}.npy'.format(i), u_ckl[1, without_ghosts_x, without_ghosts_y])
+        save_mpiio(comm, 'ux_{}.npy'.format(i), ux_kl[without_ghosts_x, without_ghosts_y])
+        save_mpiio(comm, 'uy_{}.npy'.format(i), uy_kl[without_ghosts_x, without_ghosts_y])
 
 ### Dump final stage of the simulation to a file
 
