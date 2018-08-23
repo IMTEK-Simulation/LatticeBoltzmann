@@ -49,6 +49,9 @@ nsteps = 1000
 # Relaxation parameter
 omega = 0.3
 
+# Data type
+dtype = np.float32
+
 ### Auxiliary arrays
 
 # Naming conventions for arrays: Subscript indicates type of dimension
@@ -67,9 +70,9 @@ c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],    # velocities, x compone
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T # velocities, y components
 
 # Weight factors
-w_0 = 4/9
-w_1234 = 1/9
-w_5678 = 1/36
+w_0 = dtype(4/9)
+w_1234 = dtype(1/9)
+w_5678 = dtype(1/36)
 
 ### Compute functions
 
@@ -153,9 +156,9 @@ def stream(f_ikl):
 
 x_k = np.arange(nx)
 wavevector = 2*np.pi/nx
-uy_k = np.sin(wavevector*x_k)
+uy_k = np.sin(wavevector*x_k, dtype=dtype)
 
-f_ikl = equilibrium(np.ones((nx, ny)),
+f_ikl = equilibrium(np.ones((nx, ny), dtype=dtype),
                     np.zeros_like(uy_k).reshape((nx, 1)),
                     uy_k.reshape((nx, 1)))
 

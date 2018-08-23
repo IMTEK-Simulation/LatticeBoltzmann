@@ -53,6 +53,9 @@ ndy = int(sys.argv[2])
 nx = int(sys.argv[3])
 ny = int(sys.argv[4])
 
+# Data type
+dtype = np.dtype(sys.argv[5])
+
 # Number of steps
 nsteps = 100000
 
@@ -60,7 +63,7 @@ nsteps = 100000
 dump_freq = 10000
 
 # Relaxation parameter
-omega = 1.7
+omega = np.array(1.7, dtype=dtype)
 
 ### Direction shorthands
 
@@ -88,7 +91,7 @@ w_0 = 4/9
 w_1234 = 1/9
 w_5678 = 1/36
 w_i = np.array([w_0, w_1234, w_1234, w_1234, w_1234,
-                w_5678, w_5678, w_5678, w_5678])
+                w_5678, w_5678, w_5678, w_5678], dtype=dtype)
 
 ### Compute functions
 
@@ -339,6 +342,7 @@ assert ndx*ndy == size
 if rank == 0:
     print('Domain decomposition: {} x {} MPI processes.'.format(ndx, ndy))
     print('Global grid has size {}x{}.'.format(nx, ny))
+    print('Using {} floating point data type.'.format(dtype))
 
 # Create cartesian communicator and get MPI ranks of neighboring cells
 comm = MPI.COMM_WORLD.Create_cart((ndx, ndy), periods=(False, False))
@@ -381,9 +385,9 @@ print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (incl
 
 ### Initialize occupation numbers
 
-f_ikl = equilibrium(np.ones((local_nx, local_ny)),
-                    np.zeros((local_nx, local_ny)),
-                    np.zeros((local_nx, local_ny)))
+f_ikl = equilibrium(np.ones((local_nx, local_ny), dtype=dtype),
+                    np.zeros((local_nx, local_ny), dtype=dtype),
+                    np.zeros((local_nx, local_ny), dtype=dtype))
 ### Main loop
 
 for i in range(nsteps):

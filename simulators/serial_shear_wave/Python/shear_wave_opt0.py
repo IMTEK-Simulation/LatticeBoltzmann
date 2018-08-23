@@ -46,6 +46,9 @@ nsteps = 1000
 # Relaxation parameter
 omega = 0.3
 
+# Data type
+dtype = np.float32
+
 ### Auxiliary arrays
 
 # Naming conventions for arrays: Subscript indicates type of dimension
@@ -64,7 +67,7 @@ c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],    # velocities, x compone
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T # velocities, y components
 
 # Weight factors
-w_i = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36])
+w_i = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36], dtype=dtype)
 
 ### Compute functions
 
@@ -85,7 +88,7 @@ def equilibrium(rho_kl, u_ckl):
         Equilibrium distribution for the given fluid density *rho_kl* and
         streaming velocity *u_ckl*.
     """
-    cu_ikl = np.dot(u_ckl.T, c_ic.T).T
+    cu_ikl = np.dot(u_ckl.T, c_ic.T.astype(u_ckl.dtype)).T
     uu_kl = np.sum(u_ckl**2, axis=0)
     return (w_i*(rho_kl*(1 + 3*cu_ikl + 9/2*cu_ikl**2 - 3/2*uu_kl)).T).T
 
@@ -132,10 +135,10 @@ def stream(f_ikl):
 
 x_k = np.arange(nx)
 wavevector = 2*np.pi/nx
-uy_k = np.sin(wavevector*x_k)
-u_ck = np.array([np.zeros_like(uy_k), uy_k])
+uy_k = np.sin(wavevector*x_k, dtype=dtype)
+u_ck = np.array([np.zeros_like(uy_k), uy_k], dtype=dtype)
 
-f_ikl = equilibrium(np.ones((nx, ny)), u_ck.reshape((2, nx, 1)))
+f_ikl = equilibrium(np.ones((nx, ny), dtype=dtype), u_ck.reshape((2, nx, 1)))
 
 ### Main loop
 

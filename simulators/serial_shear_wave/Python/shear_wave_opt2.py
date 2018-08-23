@@ -34,7 +34,7 @@ found in shear_wave_opt2_cext.cpp.
 
 import numpy as np
 
-import shear_wave_opt2_cext as D2Q9
+import PyLB as D2Q9
 
 ### Parameters
 
@@ -47,6 +47,9 @@ nsteps = 1000
 
 # Relaxation parameter
 omega = 0.3
+
+# Data type
+dtype = np.float64
 
 ### Auxiliary arrays
 
@@ -75,12 +78,12 @@ def stream(f_ikl):
 
 x_k = np.arange(nx)
 wavevector = 2*np.pi/nx
-uy_k = np.sin(wavevector*x_k)
+uy_k = np.sin(wavevector*x_k, dtype=dtype)
 
 #f_ikl = np.zeros((9, nx, ny), dtype=float)
-f_ikl = np.arange(9*nx*ny, dtype=float).reshape(9, nx, ny)
-D2Q9.equilibrium(np.ones((nx, ny)).reshape(-1),
-                 np.zeros((nx, ny)).reshape(-1),
+f_ikl = np.arange(9*nx*ny, dtype=dtype).reshape(9, nx, ny)
+D2Q9.equilibrium(np.ones((nx, ny), dtype=dtype).reshape(-1),
+                 np.zeros((nx, ny), dtype=dtype).reshape(-1),
                  np.resize(uy_k, (nx, ny)).T.reshape(-1),
                  f_ikl.reshape(9, -1))
 

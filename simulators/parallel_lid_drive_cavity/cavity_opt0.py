@@ -50,6 +50,9 @@ ndy = int(sys.argv[2])
 nx = int(sys.argv[3])
 ny = int(sys.argv[4])
 
+# Data type
+dtype = np.dtype(sys.argv[5])
+
 # Number of steps
 nsteps = 100000
 
@@ -57,7 +60,7 @@ nsteps = 100000
 dump_freq = 10000
 
 # Relaxation parameter
-omega = 1.7
+omega = np.array(1.7, dtype=dtype)
 
 ### Direction shorthands
 
@@ -81,7 +84,7 @@ c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],    # velocities, x compone
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T # velocities, y components
 
 # Weight factors
-w_i = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36])
+w_i = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36], dtype=dtype)
 
 ### Compute functions
 
@@ -99,7 +102,7 @@ def equilibrium(rho_kl, u_ckl):
         the first dimension being the Cartesian directions of the velocity
         vectors and the next two dimension x- and y-positions.
     """
-    cu_ikl = np.dot(u_ckl.T, c_ic.T).T
+    cu_ikl = np.dot(u_ckl.T, c_ic.T.astype(u_ckl.dtype)).T
     uu_kl = np.sum(u_ckl**2, axis=0)
     return (w_i*(rho_kl*(1 + 3*cu_ikl + 9/2*cu_ikl**2 - 3/2*uu_kl)).T).T
 
@@ -128,7 +131,7 @@ def collide(f_ikl, omega):
         vectors and the next two dimension x- and y-positions.
     """
     rho_kl = np.sum(f_ikl, axis=0)
-    u_ckl = np.dot(f_ikl.T, c_ic).T/rho_kl
+    u_ckl = np.dot(f_ikl.T, c_ic.astype(f_ikl.dtype)).T/rho_kl
     f_ikl += omega*(equilibrium(rho_kl, u_ckl) - f_ikl)
     return rho_kl, u_ckl
 
@@ -317,6 +320,7 @@ assert ndx*ndy == size
 if rank == 0:
     print('Domain decomposition: {} x {} MPI processes.'.format(ndx, ndy))
     print('Global grid has size {}x{}.'.format(nx, ny))
+    print('Using {} floating point data type.'.format(dtype))
 
 # Create cartesian communicator and get MPI ranks of neighboring cells
 comm = MPI.COMM_WORLD.Create_cart((ndx, ndy), periods=(False, False))
@@ -359,8 +363,8 @@ print('Rank {} has domain coordinates {}x{} and a local grid of size {}x{} (incl
 
 ### Initialize occupation numbers
 
-f_ikl = equilibrium(np.ones((local_nx, local_ny)),
-                    np.zeros((2, local_nx, local_ny)))
+f_ikl = equilibrium(np.ones((local_nx, local_ny), dtype=dtype),
+                    np.zeros((2, local_nx, local_ny), dtype=dtype))
 
 ### Main loop
 
