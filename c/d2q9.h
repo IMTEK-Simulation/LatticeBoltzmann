@@ -31,10 +31,6 @@ lattice.
 #define __D2Q9_H
 
 #include "lbkernels.h"
-
-constexpr double w_0 = 4./9;
-constexpr double w_1234 = 1./9;
-constexpr double w_5678 = 1./36;
  
 template<typename T>
 using D2Q9Probability_t = Eigen::Matrix<T, 9, 1>;
@@ -62,21 +58,26 @@ using D2Q9ProbabilityField_t = Eigen::Array<T, 9, Eigen::Dynamic, Eigen::RowMajo
  */
 template<typename T>
 D2Q9Probability_t<T> d2q9_equilibrium1(T rho, T ux, T uy) {
+    T w_0 = 4*rho/9;
+    T w_1234 = rho/9;
+    T w_5678 = rho/36;
+    ux *= 3;
+    uy *= 3;
     T cu5 = ux + uy;
     T cu6 = -ux + uy;
     T cu7 = -ux - uy;
     T cu8 = ux - uy;
-    T uu = ux*ux + uy*uy;
+    T uu = (ux*ux + uy*uy)/6;
     return (D2Q9Probability_t<T>() <<
-        w_0*rho*(1 - 3./2*uu),
-        w_1234*rho*(1 + 3*ux + 9./2*ux*ux - 3./2*uu),
-        w_1234*rho*(1 + 3*uy + 9./2*uy*uy - 3./2*uu),
-        w_1234*rho*(1 - 3*ux + 9./2*ux*ux - 3./2*uu),
-        w_1234*rho*(1 - 3*uy + 9./2*uy*uy - 3./2*uu),
-        w_5678*rho*(1 + 3*cu5 + 9./2*cu5*cu5 - 3./2*uu),
-        w_5678*rho*(1 + 3*cu6 + 9./2*cu6*cu6 - 3./2*uu),
-        w_5678*rho*(1 + 3*cu7 + 9./2*cu7*cu7 - 3./2*uu),
-        w_5678*rho*(1 + 3*cu8 + 9./2*cu8*cu8 - 3./2*uu)).finished();
+        w_0*(1 - uu),
+        w_1234*(1 + ux + ux*ux/2 - uu),
+        w_1234*(1 + uy + uy*uy/2 - uu),
+        w_1234*(1 - ux + ux*ux/2 - uu),
+        w_1234*(1 - uy + uy*uy/2 - uu),
+        w_5678*(1 + cu5 + cu5*cu5/2 - uu),
+        w_5678*(1 + cu6 + cu6*cu6/2 - uu),
+        w_5678*(1 + cu7 + cu7*cu7/2 - uu),
+        w_5678*(1 + cu8 + cu8*cu8/2 - uu)).finished();
 }
 
 /*
