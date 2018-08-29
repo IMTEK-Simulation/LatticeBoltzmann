@@ -38,9 +38,8 @@ class get_pybind_include(object):
         self.user = user
 
     def __str__(self):
-        #import pybind11
-        #return pybind11.get_include(self.user)
-        return '/usr/local/Cellar/pybind11/2.2.3/include/pybind11'
+        import pybind11
+        return pybind11.get_include(self.user)
 
 
 ext_modules = [
