@@ -27,5 +27,3 @@ addons:
     - python3-scipy
     - python3-matplotlib
     - libeigen3-dev
-    - pybind11-dev
-    - python3-pybind11
