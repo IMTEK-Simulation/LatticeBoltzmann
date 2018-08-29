@@ -1,0 +1,31 @@
+# Travis auto-virtualenv isn't supported on OS X
+language: generic
+sudo: required
+matrix:
+  include:
+    - python: 3.4
+      language: python
+      python: "3.4"
+      os: linux
+      dist: trusty
+      env: PYTHON=/usr/bin/python3.4
+virtualenv:
+  system_site_packages: true
+before_install:
+  - source .travis.before_install.bash
+before_script:
+  - source .travis.before_script.bash
+script:
+  - "python setup.py test"
+notifications:
+  email:
+    - lars.pastewka@imtek.uni-freiburg.de
+addons:
+  apt:
+    packages:
+    - python3-numpy
+    - python3-scipy
+    - python3-matplotlib
+    - libeigen3-dev
+    - pybind11-dev
+    - python3-pybind11
