@@ -10,6 +10,13 @@ in Python+numpy.
 - *opt1* contains optimizations of this Python code.
 - In *opt2*, part of the Python code has been moved to C++. 
 
+Build status
+------------
+
+The following badge should say _build passing_. This means that all automated tests completed successfully for the master branch.
+
+[![Build Status](https://travis-ci.org/IMTEK-Simulation/LBWithPython.svg?branch=master)](https://travis-ci.org/IMTEK-Simulation/LBWithPython)
+
 Requirements
 ------------
 
