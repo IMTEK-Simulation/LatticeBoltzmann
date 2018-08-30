@@ -26,4 +26,3 @@ addons:
     - python3-numpy
     - python3-scipy
     - python3-matplotlib
-    - libeigen3-dev
