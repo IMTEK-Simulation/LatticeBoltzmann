@@ -47,7 +47,7 @@ def get_pybind11_include(pybind11_version='2.2.3'):
     pybind11_path = '{}/depend/pybind11-{}'.format(root, pybind11_version)
     if not os.path.exists(pybind11_path):
         os.makedirs(pybind11_path, exist_ok=True)
-        os.system('curl -L https://github.com/pybind/pybind11/archive/v{}.tar.gz | tar -jx -C {} --strip-components 1'.format(pybind11_version, pybind11_path))
+        os.system('curl -L https://github.com/pybind/pybind11/archive/v{}.tar.gz | tar -zx -C {} --strip-components 1'.format(pybind11_version, pybind11_path))
     return('{}/include'.format(pybind11_path))
 
 
