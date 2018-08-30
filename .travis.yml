@@ -20,6 +20,7 @@ script:
 notifications:
   email:
     - lars.pastewka@imtek.uni-freiburg.de
+    - andreas.greiner@imtek.uni-freiburg.de
 addons:
   apt:
     packages:
