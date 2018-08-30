@@ -131,4 +131,5 @@ setup(
     ext_modules=ext_modules,
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
+    test_suite='tests'
 )
