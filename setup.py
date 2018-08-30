@@ -22,24 +22,33 @@
 
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
+import os
 import sys
 import setuptools
 
 __version__ = '0.0.1'
 
 
-class get_pybind_include(object):
-    """Helper class to determine the pybind11 include path
-    The purpose of this class is to postpone importing pybind11
-    until it is actually installed, so that the ``get_include()``
-    method can be invoked. """
+def get_eigen_include(eigen_version='3.3.5'):
+    """Helper function to download and install eigen and return include path.
+    """
+    root = os.path.abspath(os.path.dirname(__file__))
+    eigen_path = '{}/depend/eigen-{}'.format(root, eigen_version)
+    if not os.path.exists(eigen_path):
+        os.makedirs(eigen_path, exist_ok=True)
+        os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
+    return(eigen_path)
 
-    def __init__(self, user=False):
-        self.user = user
 
-    def __str__(self):
-        import pybind11
-        return pybind11.get_include(self.user)
+def get_pybind11_include(pybind11_version='2.2.3'):
+    """Helper function to download and install pybind and return include path.
+    """
+    root = os.path.abspath(os.path.dirname(__file__))
+    pybind11_path = '{}/depend/pybind11-{}'.format(root, pybind11_version)
+    if not os.path.exists(pybind11_path):
+        os.makedirs(pybind11_path, exist_ok=True)
+        os.system('curl -L https://github.com/pybind/pybind11/archive/v{}.tar.gz | tar -jx -C {} --strip-components 1'.format(pybind11_version, pybind11_path))
+    return('{}/include'.format(pybind11_path))
 
 
 ext_modules = [
@@ -47,10 +56,9 @@ ext_modules = [
         '_lbkernels',
         ['c/_lbkernels.cpp'],
         include_dirs=[
-            # Path to pybind11 headers
-            get_pybind_include(),
-            get_pybind_include(user=True),
-            '/usr/local/Cellar/eigen/3.3.5/include/eigen3'
+            # Path to pybind11 and Eigen headers
+            get_eigen_include(),
+            get_pybind11_include()
         ],
         language='c++'
     ),
@@ -121,7 +129,6 @@ setup(
     long_description='',
     packages = find_packages(),
     ext_modules=ext_modules,
-    install_requires=['pybind11>=2.2'],
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
 )
