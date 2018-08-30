@@ -24,8 +24,8 @@ SOFTWARE.
 try:
     import unittest
     import numpy as np
-    from PyLB import collide
-    from .PyLBTest import PyLBTestCase
+    from PyLB import collide, equilibrium
+    from .PyLBTest import PyLBTestCase, skip
 except ImportError as err:
     import sys
     print(err)
@@ -54,9 +54,10 @@ def d2q9_equilibrium_ref(rho_kl, u_ckl):
         the first dimension being the Cartesian directions of the velocity
         vectors and the next two dimension x- and y-positions.
     """
-    cu_ikl = np.dot(u_ckl.T, c_ic.T.astype(u_ckl.dtype)).T
+    cu_ikl = np.dot(u_ckl.T, c_ic.T).T
     uu_kl = np.sum(u_ckl**2, axis=0)
     return (w_i*(rho_kl*(1 + 3*cu_ikl + 9/2*cu_ikl**2 - 3/2*uu_kl)).T).T
+
 
 def d2q9_collide_ref(f_ikl, omega):
     """
@@ -83,13 +84,23 @@ def d2q9_collide_ref(f_ikl, omega):
         vectors and the next two dimension x- and y-positions.
     """
     rho_kl = np.sum(f_ikl, axis=0)
-    u_ckl = np.dot(f_ikl.T, c_ic.astype(f_ikl.dtype)).T/rho_kl
+    u_ckl = np.dot(f_ikl.T, c_ic).T/rho_kl
     f_ikl += omega*(d2q9_equilibrium_ref(rho_kl, u_ckl) - f_ikl)
     return rho_kl, u_ckl
 
 ###
 
 class CollideTest(PyLBTestCase):
+    def test_D2Q9_equilibrium(self):
+        rho_kl = np.abs(np.random.random([2, 2]))
+        ux_kl = np.random.random(rho_kl.shape)
+        uy_kl = np.random.random(rho_kl.shape)
+        e1 = np.zeros([9]+list(rho_kl.shape))
+        equilibrium(rho_kl.reshape(-1), ux_kl.reshape(-1), uy_kl.reshape(-1),
+                    e1.reshape(9, -1))
+        e2 = d2q9_equilibrium_ref(rho_kl, np.array([ux_kl, uy_kl]))
+        self.assertArrayAlmostEqual(e1, e2)
+
     def test_D2Q9_collide(self):
         f_ikl = np.abs(np.random.random([9, 4, 4]))
         for omega in [0.5, 1.7]:
