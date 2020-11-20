@@ -10,6 +10,9 @@ in Python+numpy.
 - *opt1* contains optimizations of this Python code.
 - In *opt2*, part of the Python code has been moved to C++. 
 
+A detailed description of this code has been published in the Proceedings of
+the 5th bwHPC Symposium that can be found [here](https://10.15496/publikation-29062).
+
 Build status
 ------------
 
