@@ -31,10 +31,7 @@ lattice.
 #define __D2Q9_H
 
 #include "lbkernels.h"
-/**
- * test if github works, allthough from clicon instead of pycharm
- *
- * */
+
 template<typename T>
 using D2Q9Probability_t = Eigen::Matrix<T, 9, 1>;
 
