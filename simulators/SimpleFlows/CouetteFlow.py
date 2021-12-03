@@ -32,6 +32,10 @@ weights = np.array([4/9,1/9,1/9,1/9,1/36, 1/36, 1/36,1/36])
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]])
 
+# grid sizes
+size_xy = 40
+
+grid = np.ones((9, size_xy, size_xy))
 ''' functions '''
 def equilibrium():
     pass
