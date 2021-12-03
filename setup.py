@@ -28,15 +28,19 @@ import setuptools
 
 __version__ = '0.0.1'
 
-
-def get_eigen_include(eigen_version='3.3.5'):
+#update
+def get_eigen_include(eigen_version='3.4.0'):
     """Helper function to download and install eigen and return include path.
     """
     root = os.path.abspath(os.path.dirname(__file__))
     eigen_path = '{}/depend/eigen-{}'.format(root, eigen_version)
     if not os.path.exists(eigen_path):
         os.makedirs(eigen_path, exist_ok=True)
-        os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
+        #https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
+        #os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
+        #TODO this seems to be broken, ill copy manually
+        os.system('curl -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2 | tar'.format(
+            eigen_version, eigen_path))
     return(eigen_path)
 
 
