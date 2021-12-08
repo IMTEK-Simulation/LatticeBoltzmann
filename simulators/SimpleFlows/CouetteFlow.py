@@ -33,21 +33,34 @@ velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]])
 
 # grid sizes
-size_xy = 40
+size_xy = 2
 
-grid = np.ones((9, size_xy, size_xy))
+#grid = np.zeros((2, size_xy, size_xy)) #array
 ''' functions '''
 def equilibrium():
     pass
 
 #start with Streaming kinda easier on the head
-def streaming():
+def streaming(grid):
     pass
 
 def collision():
     pass
 
 ''' body '''
+grid = np.zeros((1,1,9))
+grid[:,:,0] = 1
+print(grid)
+
+def roll_through(grid):
+    grid = np.roll(grid,(1,0))
+    print(grid)
+    return grid
+
+grid = roll_through(grid)
+grid = roll_through(grid)
+grid = roll_through(grid)
+
 
 
 ''' visualization '''
