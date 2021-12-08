@@ -31,6 +31,8 @@ class testsInDevelopment(unittest.TestCase):
         #roll through but ignore channel 0 !!
         for i in range(lenght):
             #just roll the right channel
+            #TODO Frage wegen channel rollen im channel selbst durchschieben oder nach der Vorgabe der Velocity
+            # aktuell mach ich zweiteres
             grid[1,:,:,] =  roll_through_multidimensional(grid[1,:,:,], (1,0))
             grid[2,:,:,] =  roll_through_multidimensional(grid[2,:,:,], (1,0))
             grid[3,:,:,]  = roll_through_multidimensional(grid[3,:,:,], (-1, 0))
