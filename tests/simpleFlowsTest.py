@@ -108,6 +108,10 @@ class testsInStreaming(unittest.TestCase):
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
 
     def test_final_implementation_other_axis(self):
+        '''
+        Similar to the previous test, but this time x and y are interchanged
+        might do a full 2D test, but the test cases are not that trivial i think so no idea
+        '''
         # basic variables
         lenght = 9
         base = 9
@@ -115,12 +119,6 @@ class testsInStreaming(unittest.TestCase):
         velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                                  [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
         grid[:, :, 0] = 1
-        ####
-        '''
-        basic idea is to move them constant from one point in the array to the next
-        not sure about it as the original implementation behaves a bit different
-        this works like my intuition -> in one step the content of the previous channel gets written into the next
-        '''
         for i in range(lenght):
             for j in range(1 , 5):
                 #print(velocity_set[j])
