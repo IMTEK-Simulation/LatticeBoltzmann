@@ -107,6 +107,45 @@ class testsInStreaming(unittest.TestCase):
         for i in range(base - 1):  # from 1 to 4
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
 
+    def test_final_implementation_other_axis(self):
+        # basic variables
+        lenght = 9
+        base = 9
+        grid = np.zeros((base, lenght, 1))
+        velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                                 [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+        grid[:, :, 0] = 1
+        ####
+        '''
+        basic idea is to move them constant from one point in the array to the next
+        not sure about it as the original implementation behaves a bit different
+        this works like my intuition -> in one step the content of the previous channel gets written into the next
+        '''
+        for i in range(lenght):
+            for j in range(1 , 5):
+                #print(velocity_set[j])
+                grid[j] = np.roll(grid[j],velocity_set[j])
+            for j in range(5, 9):
+                grid[j] = np.roll(grid[j], velocity_set[j], axis=(0, 1))
+            #middle test for values
+            #print(grid[5])
+            if i == 3:
+                #print(grid[4, :, :, ])
+                #first value doesnt move
+                self.assertEqual(grid[0,0,0],1)
+                self.assertEqual(grid[1,4,0],1)
+                self.assertEqual(grid[2, 4, 0], 1)
+                self.assertEqual(grid[3, 5,0 ], 1)
+                self.assertEqual(grid[4, 5, 0], 1)
+                self.assertEqual(grid[5, 4, 0], 1)
+                self.assertEqual(grid[6, 4,0 ], 1)
+                self.assertEqual(grid[7, 5, 0], 1)
+                self.assertEqual(grid[8, 5, 0], 1)
+
+        # check the values at the end
+        for i in range(base - 1):  # from 1 to 4
+            self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
+
     def test_withOrgiginal_implementation(self):
         # basic variables
         lenght = 9
