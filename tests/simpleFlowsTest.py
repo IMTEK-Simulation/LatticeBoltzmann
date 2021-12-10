@@ -91,7 +91,7 @@ class testsInStreaming(unittest.TestCase):
             #middle test for values
             #print(grid[5])
             if i == 3:
-                print(grid[4, :, :, ])
+                #print(grid[4, :, :, ])
                 #first value doesnt move
                 self.assertEqual(grid[0,0,0],1)
                 self.assertEqual(grid[1,0,4],1)
@@ -141,6 +141,65 @@ class testsInStreaming(unittest.TestCase):
        grid = np.array([[[1,2,5]],[[7,8,9]]])
        #print(grid)
        #print(grid[1,:,:,]) # gives the elements with the index 0
+
+'''
+tester to get an understanding about the collision operation
+'''
+class testsInCollision(unittest.TestCase):
+    ###
+    def test_equilbrium_function(self):
+        '''
+        this is just a function, therefore tests are kinda hard to perform
+        '''
+        ###
+        rho = 0
+        ux = 0
+        uy = 0
+        lenght = 9
+        base = 9
+        grid = np.ones((base, 1, lenght))
+        ###
+        #need to think about fields vs scalar
+        #calculate_3pincipalValues(grid)
+        equlibrium_function(rho,ux,uy)
+
+'''
+functions
+'''
+def equlibrium_function(rho, ux, uy):
+    #TODO ask for the explicit reduction of the function 3.54 in the book especially the delta
+    # still need to practice the einstein summation
+    equilibrium = np.zeros(9)
+    uxy = ux + uy
+    uu = ux*ux + uy*uy
+    equilibrium[0] = 2/9*rho * (2 -3*uu)
+    equilibrium[1] = rho/18 * (2+6*ux+9*ux*ux-3*uu)
+    equilibrium[2] = rho/18 * (2+6*uy+9*uy*uy-3*uu)
+    equilibrium[3] = rho/18 * (2-6*ux+9*ux*ux-3*uu)
+    equilibrium[4] = rho/18 * (2-6*uy+9*uy*uy-3*uu)
+    equilibrium[5] = rho/36 * (1+3*uxy+9*ux*uy+3*uu)
+    equilibrium[6] = rho/36 * (1-3*uxy-9*ux*uy+3*uu)
+    equilibrium[7] = rho/36 * (1-3*uxy+9*ux*uy+3*uu)
+    equilibrium[8] = rho/36 * (1+3*uxy-9*ux*uy+3*uu)
+    return equilibrium
+
+def calculate_3pincipalValues(gridpoint):
+    #just the basic equations
+    rho = np.sum(gridpoint)
+    ux = ((gridpoint[1]+gridpoint[5]+gridpoint[8])-(gridpoint[3]+gridpoint[6]+gridpoint[7]))/rho
+    uy = ((gridpoint[2] + gridpoint[5]+gridpoint[6])-(gridpoint[4]+gridpoint[7]+gridpoint[8]))/rho
+
+def streaming(grid):
+    ####
+    velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                             [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+    ####
+    for j in range(1, 5):
+        # print(velocity_set[j])
+        grid[j] = np.roll(grid[j], velocity_set[j])
+    for j in range(5, 9):
+        grid[j] = np.roll(grid[j], velocity_set[j], axis=(0, 1))
+
 
 
 if __name__ == '__main__':
