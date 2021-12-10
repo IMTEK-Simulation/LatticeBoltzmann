@@ -80,6 +80,7 @@ class testsInStreaming(unittest.TestCase):
         '''
         basic idea is to move them constant from one point in the array to the next
         not sure about it as the original implementation behaves a bit different
+        this works like my intuition -> in one step the content of the previous channel gets written into the next
         '''
         for i in range(lenght):
             for j in range(1 , 5):
