@@ -8,7 +8,7 @@ import numpy as np
 from PyLB import stream
 
 '''
-Tester
+Tester for Streaming
 '''
 class testsInStreaming(unittest.TestCase):
     def test_basic_np_roll(self):
