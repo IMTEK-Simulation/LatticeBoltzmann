@@ -227,6 +227,9 @@ def calculate_3pincipalValues(gridpoint):
     uy = ((gridpoint[2] + gridpoint[5]+gridpoint[6])-(gridpoint[4]+gridpoint[7]+gridpoint[8]))/rho
 
 def streaming(grid):
+    '''
+    Could also just use the orignal version
+    '''
     ####
     velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                              [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
