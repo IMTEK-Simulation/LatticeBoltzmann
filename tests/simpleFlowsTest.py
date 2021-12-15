@@ -201,6 +201,32 @@ class testsInStreaming(unittest.TestCase):
         # check the values at the end
         for i in range(base - 1):  # from 1 to 4
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
+    def test_array_channel2(self):
+        # basic variables
+        lenght = 9
+        base = 9
+        grid = np.zeros((base, lenght, lenght))
+        velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                                 [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+        watch = 2
+        grid[watch, 1, 1:8] = 1
+        print(grid[watch])
+        grid[watch] = np.roll(np.flip(grid[watch].T),velocity_set[watch])
+        grid[watch] = np.flip(grid[watch].T)
+        print(grid[watch])
+
+    def test_array_channel2_question(self):
+        # basic variables
+        lenght = 9
+        base = 9
+        grid = np.zeros((base, lenght, lenght))
+        velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                                 [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+        watch = 2
+        grid[watch, 1, 1:8] = 1
+        print(grid[watch])
+        grid[watch] = np.roll(grid[watch],velocity_set[watch])
+        print(grid[watch])
 
     def test_strides_array(self):
         grid = np.array([[[1, 2, 5]], [[7, 8, 9]]])
@@ -254,7 +280,7 @@ Tests for the boundary
 
 class testsForBoundary(unittest.TestCase):
     def test_bounce_back_1channel_resting_wall_horizontal_channels(self):
-        #test in channels 1 and 3 as they are the easiest to conceptulize
+        # test in channels 1 and 3 as they are the easiest to conceptulize
         # resting wall variant
         base = 9
         lenght = 9
@@ -283,23 +309,6 @@ class testsForBoundary(unittest.TestCase):
             grid[3, :, 0]
             grid[6, :, 0]
             grid[7, :, 0]
-            #####
-            # top side
-            grid[2, 1, :] = grid[4, 0, :]
-            grid[5, 1, :] = grid[7, 0, :]
-            grid[6, 1, :] = grid[8, 0, :]
-            # set values to 0
-            grid[4, 0, :]
-            grid[7, 0, :]
-            grid[8, 0, :]
-            # bottum side
-            grid[4, 1, :] = grid[2, 0, :]
-            grid[7, 1, :] = grid[5, 0, :]
-            grid[8, 1, :] = grid[6, 0, :]
-            # set values to 0
-            grid[2, 0, :]
-            grid[5, 0, :]
-            grid[6, 0, :]
             # lol
             #print(grid[1])
             #after 7 steps the ones should be in channel 3
@@ -311,7 +320,55 @@ class testsForBoundary(unittest.TestCase):
                 for j in range(1, 8):
                     self.assertEqual(grid[1, j, 1], 1)
 
-
+    def test_bounce_back_1channel_resting_wall_vertical_channels(self):
+        # test in channels 2 and 4 as they are also easy to conceptulize
+        # resting wall variant
+        base = 9
+        lenght = 9
+        grid = np.zeros([base,lenght,lenght])
+        # assume boundary nodes at the edges, so only a 7x7 flow thingi
+        # put 1s in channel 2 and let it move up
+        grid[2, 7, 1:8] = 1
+        # print(grid[2])
+        # instead of streaming to the other side they should come back and then we hit them against the wall again
+        for i in range(15):
+            grid[2] = np.roll(grid[2],(0,1))
+            # very cumbersom to do it this very explicte way
+            # right side
+            grid[3, :, 7] = grid[1, :, 8]
+            grid[6, :, 7] = grid[8, :, 8]
+            grid[7, :, 7] = grid[5, :, 8]
+            # set value to 0 to be able to bounce back again
+            grid[1, :, 8] = 0
+            grid[8, :, 8] = 0
+            grid[5, :, 8] = 0
+            # left side
+            grid[1, :, 1] = grid[3, :, 0]
+            grid[8, :, 1] = grid[6, :, 0]
+            grid[5, :, 1] = grid[7, :, 0]
+            # set values to 0
+            grid[3, :, 0]
+            grid[6, :, 0]
+            grid[7, :, 0]
+            #####
+            # top side
+            grid[4, 1, :] = grid[2, 0, :]
+            grid[7, 1, :] = grid[5, 0, :]
+            grid[8, 1, :] = grid[6, 0, :]
+            # set values to 0
+            grid[2, 0, :]
+            grid[5, 0, :]
+            grid[6, 0, :]
+            # bottum side
+            grid[2, 7, :] = grid[4, 8, :]
+            grid[5, 7, :] = grid[7, 8, :]
+            grid[6, 7, :] = grid[8, 8, :]
+            # set values to 0
+            grid[4, 8, :]
+            grid[7, 8, :]
+            grid[8, 8, :]
+            # lol
+            #print(grid[2])
 
     def test_pressure_diffrence(self):
         pass
