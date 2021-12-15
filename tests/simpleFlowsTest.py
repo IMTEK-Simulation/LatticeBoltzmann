@@ -143,8 +143,34 @@ class testsInStreaming(unittest.TestCase):
         # check the values at the end
         for i in range(base - 1):  # from 1 to 4
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
+    def test_streaming_from_center(self):
+        ###
+        '''
+        For whatever reason np.roll does not like to go out the left side and will move the content one line down or up
+        (depending on the direction) so thats fun, will now definitly use the original implementation seems to work best lol
+        '''
+        lenght = 9
+        base = 9
+        grid = np.zeros((base, lenght, lenght))
+        velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                                 [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+        # put a 1 in every channel in the middle
+        grid[:,4,4] = 1
+        for i in range(lenght):
+            for j in range(1, 9):
+                grid[j] = np.roll(grid[j], velocity_set[j],axis = (0,1))
+
+        #everything should be in the middle again
+        for i in range(base):
+            #print(grid[i])
+            self.assertEqual(grid[i,4,4],1)
+
 
     def test_withOrgiginal_implementation(self):
+        '''
+        The content of one 1D array gets pulled forward 2 cells at a time which is logical as they get transported over
+        the boundary
+        '''
         # basic variables
         lenght = 9
         base = 9
@@ -188,17 +214,33 @@ class testsInCollision(unittest.TestCase):
         '''
         this is just a function, therefore tests are kinda hard to perform
         '''
-        ###
-        rho = 0
-        ux = 0
-        uy = 0
         lenght = 9
         base = 9
-        grid = np.ones((base, 1, lenght))
+        relaxation = np.pi/3
+        rho = np.zeros((lenght,lenght))
+        ux = np.zeros((lenght,lenght))
+        uy = np.zeros((lenght,lenght))
+        grid = np.ones((base, lenght, lenght))
+        equlibrium = np.zeros((base,lenght, lenght))
+        collision = np.zeros((base,lenght, lenght))
         ###
         #need to think about fields vs scalar
-        #calculate_3pincipalValues(grid)
-        equlibrium_function(rho,ux,uy)
+        for i in range(lenght):
+            for j in range(lenght):
+                #do streaming first
+                stream(grid)
+                #get a shorthand for a gridpoint
+                gridpoint = grid[:,i,j]
+                #calculate pressure and velocities at that gridpoint
+                rho[i,j], ux[i,j], uy[i,j] = calculate_3pincipal_values(gridpoint)
+                #calculate the equilibrium at that gridpoint
+                equlibrium[:,i,j] = equlibrium_function(rho[i,j],ux[i,j],uy[i,j])
+                #collision is something with dt/tau :> 1/tau (relaxation) for all equilbrias
+                collision = (grid[:,i,j] - equlibrium[:,i,j])/relaxation
+                #apply collision
+                grid = grid - collision
+                #this should conclude 1 step
+
 
 '''
 functions
@@ -220,11 +262,13 @@ def equlibrium_function(rho, ux, uy):
     equilibrium[8] = rho/36 * (1+3*uxy-9*ux*uy+3*uu)
     return equilibrium
 
-def calculate_3pincipalValues(gridpoint):
+def calculate_3pincipal_values(gridpoint):
     #just the basic equations
     rho = np.sum(gridpoint)
     ux = ((gridpoint[1]+gridpoint[5]+gridpoint[8])-(gridpoint[3]+gridpoint[6]+gridpoint[7]))/rho
     uy = ((gridpoint[2] + gridpoint[5]+gridpoint[6])-(gridpoint[4]+gridpoint[7]+gridpoint[8]))/rho
+
+    return rho, ux,uy
 
 def streaming(grid):
     '''
