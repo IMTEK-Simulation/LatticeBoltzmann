@@ -253,8 +253,65 @@ Tests for the boundary
 '''
 
 class testsForBoundary(unittest.TestCase):
-    def test_bounce_back(self):
-        pass
+    def test_bounce_back_1channel_resting_wall_horizontal_channels(self):
+        #test in channels 1 and 3 as they are the easiest to conceptulize
+        # resting wall variant
+        base = 9
+        lenght = 9
+        grid = np.zeros([base,lenght,lenght])
+        # assume boundary nodes at the edges, so only a 7x7 flow thingi
+        # put 1s in channel 1
+        grid[1, 1:8, 1] = 1
+        # print(grid)
+        # instead of streaming to the other side they should come back and then we hit them against the wall again
+        for i in range(15):
+            streaming(grid)
+            # very cumbersom to do it this very explicte way
+            # right side
+            grid[3, :, 7] = grid[1, :, 8]
+            grid[6, :, 7] = grid[8, :, 8]
+            grid[7, :, 7] = grid[5, :, 8]
+            # set value to 0 to be able to bounce back again
+            grid[1, :, 8] = 0
+            grid[8, :, 8] = 0
+            grid[5, :, 8] = 0
+            # left side
+            grid[1, :, 1] = grid[3, :, 0]
+            grid[8, :, 1] = grid[6, :, 0]
+            grid[5, :, 1] = grid[7, :, 0]
+            # set values to 0
+            grid[3, :, 0]
+            grid[6, :, 0]
+            grid[7, :, 0]
+            #####
+            # top side
+            grid[2, 1, :] = grid[4, 0, :]
+            grid[5, 1, :] = grid[7, 0, :]
+            grid[6, 1, :] = grid[8, 0, :]
+            # set values to 0
+            grid[4, 0, :]
+            grid[7, 0, :]
+            grid[8, 0, :]
+            # bottum side
+            grid[4, 1, :] = grid[2, 0, :]
+            grid[7, 1, :] = grid[5, 0, :]
+            grid[8, 1, :] = grid[6, 0, :]
+            # set values to 0
+            grid[2, 0, :]
+            grid[5, 0, :]
+            grid[6, 0, :]
+            # lol
+            #print(grid[1])
+            #after 7 steps the ones should be in channel 3
+            if i == 6:
+                for j in range(1,8):
+                    self.assertEqual(grid[3,j,7],1)
+            #after 14 steps it should be back in channel 1
+            if i == 13:
+                for j in range(1, 8):
+                    self.assertEqual(grid[1, j, 1], 1)
+
+
 
     def test_pressure_diffrence(self):
         pass
