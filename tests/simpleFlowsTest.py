@@ -202,6 +202,7 @@ class testsInStreaming(unittest.TestCase):
         for i in range(base - 1):  # from 1 to 4
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
     def test_array_channel2(self):
+        print("What I would expect")
         # basic variables
         lenght = 9
         base = 9
@@ -216,6 +217,7 @@ class testsInStreaming(unittest.TestCase):
         print(grid[watch])
 
     def test_array_channel2_question(self):
+        print("What I got")
         # basic variables
         lenght = 9
         base = 9
