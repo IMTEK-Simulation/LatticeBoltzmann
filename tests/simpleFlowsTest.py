@@ -225,10 +225,11 @@ class testsInCollision(unittest.TestCase):
         collision = np.zeros((base,lenght, lenght))
         ###
         #need to think about fields vs scalar
+        # do streaming first
+        stream(grid)
+        #now do the collision
         for i in range(lenght):
             for j in range(lenght):
-                #do streaming first
-                stream(grid)
                 #get a shorthand for a gridpoint
                 gridpoint = grid[:,i,j]
                 #calculate pressure and velocities at that gridpoint
