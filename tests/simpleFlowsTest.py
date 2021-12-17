@@ -449,7 +449,7 @@ class testsForBoundary(unittest.TestCase):
         max_size = lenght - 1  # for iteration in the array
         grid = np.zeros([base, lenght, lenght])
         grid[2, 1:8, 1] = 1
-        print(grid[2])
+        #print(grid[2])
         # back and forth
         for i in range(14):
             stream(grid)
@@ -509,11 +509,11 @@ def calculate_3pincipal_values(gridpoint):
     rho = np.sum(gridpoint)
     ux = ((gridpoint[1] + gridpoint[5] + gridpoint[8]) - (gridpoint[3] + gridpoint[6] + gridpoint[7])) / rho
     uy = ((gridpoint[2] + gridpoint[5] + gridpoint[6]) - (gridpoint[4] + gridpoint[7] + gridpoint[8])) / rho
-
     return rho, ux, uy
 
 
 def streaming(grid):
+    # THIS IS WRONG!!
     ####
     velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                              [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
@@ -524,6 +524,38 @@ def streaming(grid):
     for j in range(5, 9):
         grid[j] = np.roll(grid[j], velocity_set[j], axis=(0, 1))
 
+def baunce_back(grid):
+    # baunce back without any velocity gain
+    max_size_x = grid.shape()[1] # x
+    max_size_y = grid.shape()[2] # y
+    # right so x = 0
+    grid[1, 1, :] = grid[3, 0, :]
+    grid[5, 1, :] = grid[7, 0, :]
+    grid[8, 1, :] = grid[6, 0, :]
+    grid[3, 0, :] = 0
+    grid[7, 0, :] = 0
+    grid[6, 0, :] = 0
+    # left so x = max_size_x
+    grid[3, max_size_x - 1, :] = grid[1, max_size_x, :]
+    grid[6, max_size_x - 1, :] = grid[8, max_size_x, :]
+    grid[7, max_size_x - 1, :] = grid[5, max_size_x, :]
+    grid[1, max_size_x, :] = 0
+    grid[8, max_size_x, :] = 0
+    grid[5, max_size_x, :] = 0
+    # for bottom y = 0
+    grid[2, :, 1] = grid[4, :, 0]
+    grid[5, :, 1] = grid[7, :, 0]
+    grid[6, :, 1] = grid[8, :, 0]
+    grid[4, :, 0] = 0
+    grid[7, :, 0] = 0
+    grid[8, :, 0] = 0
+    # for top y = max_size_y
+    grid[4, :, max_size_y - 1] = grid[2, :, max_size_y]
+    grid[7, :, max_size_y - 1] = grid[5, :, max_size_y]
+    grid[8, :, max_size_y - 1] = grid[6, :, max_size_y]
+    grid[2, :, max_size_y] = 0
+    grid[5, :, max_size_y] = 0
+    grid[6, :, max_size_y] = 0
 
 if __name__ == '__main__':
     unittest.main()
