@@ -75,6 +75,7 @@ def equilibrium(rho, ux, uy):
 
 
 def calculate_velocities_pressure(gridpoint):
+    # TODO recheck
     rho = np.sum(gridpoint)
     ux = ((gridpoint[1] + gridpoint[5] + gridpoint[8]) - (gridpoint[3] + gridpoint[6] + gridpoint[7])) / rho
     uy = ((gridpoint[2] + gridpoint[5] + gridpoint[6]) - (gridpoint[4] + gridpoint[7] + gridpoint[8])) / rho
