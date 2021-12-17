@@ -472,13 +472,17 @@ class testsForBoundary(unittest.TestCase):
         for i in range(1, 7):
             self.assertEqual(grid[2, i, 1], 1)
 
-
-
-
-
     def test_pressure_diffrence(self):
         pass
 
+    def test_simple_stuff(self):
+        size_x = 100
+        size_y = 300
+        x = np.arange(0,size_x)
+        y = np.arange(0, size_y)
+        #print(x)
+        grid = np.zeros((9,5,3))
+        print(grid.shape[1])
 
 
 '''
@@ -526,8 +530,8 @@ def streaming(grid):
 
 def baunce_back_resting_wall(grid):
     # baunce back without any velocity gain
-    max_size_x = grid.shape()[1] # x
-    max_size_y = grid.shape()[2] # y
+    max_size_x = grid.shape[1]-1 # x
+    max_size_y = grid.shape[2]-1 # y
     # right so x = 0
     grid[1, 1, :] = grid[3, 0, :]
     grid[5, 1, :] = grid[7, 0, :]
