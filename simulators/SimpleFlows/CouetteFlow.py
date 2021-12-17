@@ -87,20 +87,6 @@ def bounce_back(grid,uw):
     # baunce back without any velocity gain
     max_size_x = grid.shape[1]-1  # x
     max_size_y = grid.shape[2]-1  # y
-    # right so x = 0
-    grid[1, 1, :] = grid[3, 0, :]
-    grid[5, 1, :] = grid[7, 0, :]
-    grid[8, 1, :] = grid[6, 0, :]
-    grid[3, 0, :] = 0
-    grid[7, 0, :] = 0
-    grid[6, 0, :] = 0
-    # left so x = max_size_x
-    grid[3, max_size_x - 1, :] = grid[1, max_size_x, :]
-    grid[6, max_size_x - 1, :] = grid[8, max_size_x, :]
-    grid[7, max_size_x - 1, :] = grid[5, max_size_x, :]
-    grid[1, max_size_x, :] = 0
-    grid[8, max_size_x, :] = 0
-    grid[5, max_size_x, :] = 0
     # for bottom y = 0
     grid[2, :, 1] = grid[4, :, 0]
     grid[5, :, 1] = grid[7, :, 0]
@@ -128,7 +114,7 @@ for i in range(steps):
             # calculate the collision operator
             collision[:,k,l] = (grid[:,k,l]-equlibrium[:,k,l])
     #
-    collision = collision/relaxation
+    collision = collision*relaxation
     # apply collision
     grid = grid - collision
     # stream
