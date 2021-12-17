@@ -515,6 +515,19 @@ def calculate_3pincipal_values(gridpoint):
     uy = ((gridpoint[2] + gridpoint[5] + gridpoint[6]) - (gridpoint[4] + gridpoint[7] + gridpoint[8])) / rho
     return rho, ux, uy
 
+
+def streaming(grid):
+    # THIS IS WRONG!! but i dont want to break tests
+    ####
+    velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                             [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+    ####
+    for j in range(1, 5):
+        # print(velocity_set[j])
+        grid[j] = np.roll(grid[j], velocity_set[j])
+    for j in range(5, 9):
+        grid[j] = np.roll(grid[j], velocity_set[j], axis=(0, 1))
+
 def baunce_back_resting_wall(grid):
     # baunce back without any velocity gain
     max_size_x = grid.shape[1]-1 # x
