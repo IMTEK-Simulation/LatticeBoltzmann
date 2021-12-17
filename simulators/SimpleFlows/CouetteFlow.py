@@ -43,13 +43,14 @@ velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
 size_x = 25
 size_y = 25
 grid = np.ones((channels,size_x,size_y))
+equlibrium = np.zeros((channels, size_x, size_y))
 collision = np.zeros((channels,size_x,size_y))
 rho = np.zeros((size_x,size_y))
 ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 5000
+steps = 50
 ''' functions '''
 
 
@@ -123,9 +124,9 @@ for i in range(steps):
         for l in range(size_y-1):
             rho[k,l], ux[k,l], uy[k,l] = calculate_velocities_pressure(grid[:,k,l])
             # calculate the equilibrium-function
-            collision[:,k,l] = equilibrium(rho[k,l],ux[k,l], uy[k,l])
+            equlibrium[:,k,l] = equilibrium(rho[k,l],ux[k,l], uy[k,l])
             # calculate the collision operator
-            collision[:,k,l] = (grid[:,k,l]-collision[:,k,l])
+            collision[:,k,l] = (grid[:,k,l]-equlibrium[:,k,l])
     #
     collision = collision/relaxation
     # apply collision

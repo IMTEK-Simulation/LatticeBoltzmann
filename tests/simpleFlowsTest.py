@@ -310,8 +310,8 @@ class testsInCollision(unittest.TestCase):
                 equlibrium[:, i, j] = equlibrium_function(rho[i, j], ux[i, j], uy[i, j])
                 #  collision is something with dt/tau :> 1/tau (relaxation) for all equilbrias
                 collision = (grid[:, i, j] - equlibrium[:, i, j]) / relaxation
-                # apply collision
-                grid = grid - collision
+        # apply collision
+        grid = grid - collision
                 # this should conclude 1 step
 
 
