@@ -333,7 +333,7 @@ class testsForBoundary(unittest.TestCase):
         # print(grid)
         # instead of streaming to the other side they should come back and then we hit them against the wall again
         for i in range(15):
-            stream(grid)
+            streaming(grid)
             # very cumbersom to do it this very explicte way
             # right side
             grid[3, :, 7] = grid[1, :, 8]
