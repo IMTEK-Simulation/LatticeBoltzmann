@@ -297,9 +297,7 @@ class testsInCollision(unittest.TestCase):
         collision = np.zeros((base, lenght, lenght))
         ###
         # need to watch out for fields vs scalar
-        # do streaming first
-        stream(grid)
-        # now do the collision
+        # collision first
         for i in range(lenght):
             for j in range(lenght):
                 # get a shorthand for a gridpoint
@@ -312,7 +310,9 @@ class testsInCollision(unittest.TestCase):
                 collision = (grid[:, i, j] - equlibrium[:, i, j]) / relaxation
         # apply collision
         grid = grid - collision
-                # this should conclude 1 step
+        # do streaming
+        stream(grid)
+        # this should conclude 1 step
 
 
 '''
