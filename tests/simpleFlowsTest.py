@@ -202,7 +202,7 @@ class testsInStreaming(unittest.TestCase):
         for i in range(base - 1):  # from 1 to 4
             self.assertEqual(grid[i + 1, 0, 0], 1)  # roll through the whole array should be 1
     def test_array_channel2(self):
-        print("What I would expect for (0,1)")
+        #print("What I would expect for (0,1)")
         # basic variables
         lenght = 9
         base = 9
@@ -211,24 +211,63 @@ class testsInStreaming(unittest.TestCase):
                                  [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
         watch = 2
         grid[watch, 1, 1:8] = 1
-        print(grid[watch])
+        #print(grid[watch])
         grid[watch] = np.roll(np.flip(grid[watch].T),velocity_set[watch])
         grid[watch] = np.flip(grid[watch].T)
-        print(grid[watch])
+        #print(grid[watch])
 
     def test_array_channel2_question(self):
-        print("What I got")
+        #print("What I got")
         # basic variables
         lenght = 9
         base = 9
         grid = np.zeros((base, lenght, lenght))
         velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                                  [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
-        watch = 2
+        watch = 3
         grid[watch, 1, 1:8] = 1
-        print(grid[watch])
-        grid[watch] = np.roll(grid[watch],velocity_set[watch])
-        print(grid[watch])
+        #print(grid[watch])
+        grid[watch] = np.roll(grid[watch],velocity_set[watch],axis = (1,0))
+        #print(grid[watch])
+
+    def test_array_allChannel_streaming(self):
+        # brute force test weather or not implementation is correct
+        lenght = 9
+        base = 9
+        grid = np.zeros((base, lenght, lenght))
+        control_grid = np.zeros((base,lenght,lenght))
+        velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
+                                 [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
+        # iterate over all channels
+        for watch in range(1,9):
+            # put a 1 in every array and observe how they move in 1 step
+            grid[watch, 1, 1:8] = 1
+            control_grid[watch] = np.roll(grid[watch],velocity_set[watch],axis = (0,1))
+        # check for every channel weather they move as we expect them to do
+        # channel 1 in positive x-Direction
+        for i in range(1,8):
+            self.assertEqual([grid[1,i,1]],control_grid[1,i+1,1])
+        # channel 2 in posetive y-Direction
+        for i in range(1,8):
+            self.assertEqual([grid[2,i,1]],control_grid[2,i,2])
+        # channel 3 in negative x-Direction
+        for i in range(1,8):
+            self.assertEqual([grid[3,i,1]],control_grid[3,i-1,1])
+        # channel 4 in negative y-Direction
+        for i in range(1,8):
+            self.assertEqual([grid[4,i,1]],control_grid[4,i,0])
+        # channel 5 in posetive x posetive y
+        for i in range(1,8):
+            self.assertEqual([grid[5,i,1]],control_grid[5,i+1,2])
+        # channel 6 in negative x posetive y
+        for i in range(1,8):
+            self.assertEqual([grid[6,i,1]],control_grid[6,i-1,2])
+        # channel 7 in negative x negative y
+        for i in range(1,8):
+            self.assertEqual([grid[7,i,1]],control_grid[7,i-1,0])
+        # channel 8 in posetive x negative y
+        for i in range(1,8):
+            self.assertEqual([grid[8,i,1]],control_grid[8,i+1,0])
 
     def test_strides_array(self):
         grid = np.array([[[1, 2, 5]], [[7, 8, 9]]])
@@ -281,6 +320,7 @@ Tests for the boundary
 '''
 
 class testsForBoundary(unittest.TestCase):
+    # i use the original stream here couse it is equivalent to the implementation in the last test
     def test_bounce_back_1channel_resting_wall_horizontal_channels(self):
         # test in channels 1 and 3 as they are the easiest to conceptulize
         # resting wall variant
@@ -293,7 +333,7 @@ class testsForBoundary(unittest.TestCase):
         # print(grid)
         # instead of streaming to the other side they should come back and then we hit them against the wall again
         for i in range(15):
-            streaming(grid)
+            stream(grid)
             # very cumbersom to do it this very explicte way
             # right side
             grid[3, :, 7] = grid[1, :, 8]
