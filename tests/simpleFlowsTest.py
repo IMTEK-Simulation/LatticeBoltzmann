@@ -321,7 +321,7 @@ Tests for the boundary
 
 class testsForBoundary(unittest.TestCase):
     # i use the original stream here couse it is equivalent to the implementation in the last test
-    def test_bounce_back_1channel_resting_wall_horizontal_channels(self):
+    def test_bounce_back_1channel_resting_wall_horizontal_channels_fail(self):
         # test in channels 1 and 3 as they are the easiest to conceptulize
         # resting wall variant
         base = 9
@@ -362,7 +362,7 @@ class testsForBoundary(unittest.TestCase):
                 for j in range(1, 8):
                     self.assertEqual(grid[1, j, 1], 1)
 
-    def test_bounce_back_1channel_resting_wall_vertical_channels(self):
+    def test_bounce_back_1channel_resting_wall_vertical_channels_fail(self):
         # test in channels 2 and 4 as they are also easy to conceptulize
         # resting wall variant
         base = 9
@@ -411,6 +411,70 @@ class testsForBoundary(unittest.TestCase):
             grid[8, 8, :]
             # lol
             #print(grid[2])
+
+    def test_bounce_back_vertical_channels(self):
+        # resting wall variant
+        base = 9
+        lenght = 9
+        max_size = lenght-1 # for iteration in the array
+        grid = np.zeros([base, lenght, lenght])
+        grid[1, 1, 1:8] = 1
+        #print(grid[1])
+        # back and forth
+        for i in range(14):
+            stream(grid)
+            # check boundaries for anything
+            # right so x = 0
+            grid[1, 1, :] = grid[3, 0, :]
+            grid[5, 1, :] = grid[7, 0, :]
+            grid[8, 1, :] = grid[6, 0, :]
+            grid[3, 0, :] = 0
+            grid[7, 0, :] = 0
+            grid[6, 0, :] = 0
+            # left so x = 8
+            grid[3, max_size -1, :] = grid[1, max_size, :]
+            grid[6, max_size -1, :] = grid[8, max_size, :]
+            grid[7, max_size -1, :] = grid[5, max_size, :]
+            grid[1, max_size, :] = 0
+            grid[8, max_size, :] = 0
+            grid[5, max_size, :] = 0
+        # check after the array bounce back 2 times weather its in the original spot again
+        for i in range(1,7):
+            self.assertEqual(grid[1,1,i],1)
+
+
+    def test_bounce_back_horizontal_channels(self):
+        base = 9
+        lenght = 9
+        max_size = lenght - 1  # for iteration in the array
+        grid = np.zeros([base, lenght, lenght])
+        grid[2, 1:8, 1] = 1
+        print(grid[2])
+        # back and forth
+        for i in range(14):
+            stream(grid)
+            # check the boundaries
+            # for bottom y = 0
+            grid[2, :, 1] = grid[4, :, 0]
+            grid[5, :, 1] = grid[7, :, 0]
+            grid[6, :, 1] = grid[8, :, 0]
+            grid[4, :, 0] = 0
+            grid[7, :, 0] = 0
+            grid[8, :, 0] = 0
+            # for top y = max_size
+            grid[4, :, max_size -1 ] = grid[2, :, max_size]
+            grid[7, :, max_size -1] = grid[5, :, max_size]
+            grid[8, :, max_size -1] = grid[6, :, max_size]
+            grid[2, :, max_size] = 0
+            grid[5, :, max_size] = 0
+            grid[6, :, max_size] = 0
+        # check after the array bounce back 2 times weather its in the original spot again
+        for i in range(1, 7):
+            self.assertEqual(grid[1, i, 1], 1)
+
+
+
+
 
     def test_pressure_diffrence(self):
         pass
