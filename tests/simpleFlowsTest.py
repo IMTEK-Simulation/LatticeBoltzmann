@@ -470,7 +470,7 @@ class testsForBoundary(unittest.TestCase):
             grid[6, :, max_size] = 0
         # check after the array bounce back 2 times weather its in the original spot again
         for i in range(1, 7):
-            self.assertEqual(grid[1, i, 1], 1)
+            self.assertEqual(grid[2, i, 1], 1)
 
 
 
