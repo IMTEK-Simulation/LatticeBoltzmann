@@ -482,7 +482,7 @@ class testsForBoundary(unittest.TestCase):
         y = np.arange(0, size_y)
         #print(x)
         grid = np.zeros((9,5,3))
-        print(grid.shape[1])
+        #print(grid.shape[1])
 
 
 '''
