@@ -50,7 +50,7 @@ ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 5000
+steps = 50
 ''' functions '''
 
 
@@ -106,6 +106,8 @@ def bounce_back(grid,uw):
 
 
 ''' body '''
+# TODO prob boundary condition and density missing and 2 to small
+# also calculation should check for the boundary nodes
 for i in range(steps):
     # aquire the values for the pressure and velocities
     # basically no efficiency
@@ -130,7 +132,9 @@ for i in range(steps):
 #quiver?!
 x = np.arange(0,size_x)
 y = np.arange(0,size_y)
-plt.quiver(x, y, ux, uy, scale=1)
+X,Y = np.meshgrid(x,y)
+# UX, UY = np.meshgrid(ux, uy)
+plt.streamplot(X,Y,ux,uy)
 plt.show()
 
 
