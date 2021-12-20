@@ -50,7 +50,7 @@ ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 50
+steps = 5000
 ''' functions '''
 
 
@@ -63,7 +63,7 @@ def equilibrium(rho, ux, uy):
     equilibrium = np.zeros(9)
     uxy = ux + uy
     uu = ux * ux + uy * uy
-    equilibrium[0] = 2 / 9 * rho * (2 - 3 * uu)
+    equilibrium[0] = (2 * rho / 9) * (2 - 3 * uu)
     equilibrium[1] = rho / 18 * (2 + 6 * ux + 9 * ux * ux - 3 * uu)
     equilibrium[2] = rho / 18 * (2 + 6 * uy + 9 * uy * uy - 3 * uu)
     equilibrium[3] = rho / 18 * (2 - 6 * ux + 9 * ux * ux - 3 * uu)
@@ -107,6 +107,7 @@ def bounce_back(grid,uw):
 ''' body '''
 for i in range(steps):
     # aquire the values for the pressure and velocities
+    # basically no efficiency
     for k in range(size_x-1):
         for l in range(size_y-1):
             rho[k,l], ux[k,l], uy[k,l] = calculate_velocities_pressure(grid[:,k,l])
