@@ -50,7 +50,7 @@ ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 500
+steps = 2000
 ''' functions '''
 
 
@@ -139,6 +139,7 @@ y = np.arange(0,size_y)
 X,Y = np.meshgrid(x,y)
 # UX, UY = np.meshgrid(ux, uy)
 plt.streamplot(X,Y,ux,uy)
+print(ux)
 plt.show()
 
 
