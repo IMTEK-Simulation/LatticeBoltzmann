@@ -137,15 +137,18 @@ def bounce_back(grid,uw):
 
 
 ''' body '''
-# TODO prob boundary condition and density missing and 2 to small
-# also calculation should check for the boundary nodes
-for i in range(steps):
-    rho, ux, uy = calculate_collision(grid)
-    # stream
-    stream(grid)
-    # baounce back
-    bounce_back(grid,uw)
-    # next step
+def slow_calc():
+    pass
+
+def fast_calc():
+    # also calculation should check for the boundary nodes
+    for i in range(steps):
+        rho, ux, uy = calculate_collision(grid)
+        # stream
+        stream(grid)
+        # baounce back
+        bounce_back(grid,uw)
+        # next step
     #print(grid)
 
 ''' visualization '''
