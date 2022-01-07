@@ -11,6 +11,8 @@ implementations. (In the second try PoiseuilleFlow ill use them thou.) This shou
 D2Q9.
 
 '''
+from numpy import ndarray
+
 '''
 Remider CodingRules: 
 Zeilenumbruch bei Spalte 120
@@ -46,9 +48,9 @@ size_x = size                     # 50
 size_y = size# + topbottom_boundary # 52
 # initilization of the grids used
 grid = np.ones((channels,size_x,size_y))
-rho = np.zeros((size_x,size_y))
-ux = np.zeros((size_x,size_y))
-uy = np.zeros((size_x,size_y))
+rho_v = np.zeros((size_x,size_y))
+ux_v = np.zeros((size_x,size_y))
+uy_v = np.zeros((size_x,size_y))
 
 # steps
 steps = 5000
@@ -138,10 +140,33 @@ def bounce_back(grid,uw):
 
 ''' body '''
 def slow_calc():
-    pass
+    equlibrium = np.ones((channels, size_x, size_y))
+    collision  = np.ones((channels, size_x, size_y))
+    for i in range(steps):
+        # aquire the values for the pressure and velocities
+        # basically no efficiency
+        for k in range(size_x):
+            for l in range(size_y):
+                rho_v[k, l], ux_v[k, l], uy_v[k, l] = calculate_velocities_pressure(grid[:, k, l])
+                # calculate the equilibrium-function
+                eq = equilibrium(rho_v[k, l], ux_v[k, l], uy_v[k, l])
+                # print(eq.shape)
+                # print(equlibrium[:,k,l].shape)
+                equlibrium[:, k, l] = equilibrium(rho[k, l], ux_v[k, l], uy_v[k, l])
+                # calculate the collision operator
+                collision[:, k, l] = (grid[:, k, l] - equlibrium[:, k, l])
+        #
+        collision = collision * relaxation
+        # apply collision
+        grid = grid - collision
+        # stream
+        stream(grid)
+        # baounce back
+        bounce_back(grid, uw)
+        # next step
+    # print(grid)
 
-def fast_calc():
-    # also calculation should check for the boundary nodes
+def fast_calc(rho,ux,uy):
     for i in range(steps):
         rho, ux, uy = calculate_collision(grid)
         # stream
@@ -149,15 +174,16 @@ def fast_calc():
         # baounce back
         bounce_back(grid,uw)
         # next step
-    #print(grid)
+    return rho, ux, uy
 
 ''' visualization '''
 #quiver?!
+rho_v, ux_v, uy_v = fast_calc(rho_v,ux_v,uy_v)
 x = np.arange(0,size_x)
 y = np.arange(0,size_y)
 X,Y = np.meshgrid(x,y)
 # UX, UY = np.meshgrid(ux, uy)
-plt.streamplot(X,Y,ux,uy)
+plt.streamplot(X,Y,ux_v,uy_v)
 #print(ux)
 plt.show()
 
