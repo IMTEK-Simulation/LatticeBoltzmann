@@ -152,7 +152,7 @@ def slow_calc():
                 eq = equilibrium(rho_v[k, l], ux_v[k, l], uy_v[k, l])
                 # print(eq.shape)
                 # print(equlibrium[:,k,l].shape)
-                equlibrium[:, k, l] = equilibrium(rho[k, l], ux_v[k, l], uy_v[k, l])
+                equlibrium[:, k, l] = equilibrium(rho_v[k, l], ux_v[k, l], uy_v[k, l])
                 # calculate the collision operator
                 collision[:, k, l] = (grid[:, k, l] - equlibrium[:, k, l])
         #
