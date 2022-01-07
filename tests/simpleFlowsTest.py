@@ -485,6 +485,54 @@ class testsForBoundary(unittest.TestCase):
         #print(grid.shape[1])
 
 
+class testsForNewCollision(unittest.TestCase):
+    def test_faster_principal_calc(self):
+        # init stuff
+        channels = 9
+        size = 50
+        size_x = 50
+        size_y = 50
+        grid = np.ones((channels,size_x,size_y))
+        rho = np.zeros((size_x, size_y))
+        ux = np.zeros((size_x, size_y))
+        uy = np.zeros((size_x, size_y))
+        # calc stuff
+        for k in range(size_x):
+            for l in range(size_y):
+                rho[k, l], ux[k, l], uy[k, l] =  calculate_3pincipal_values(grid[:,k,l])
+
+        # other way of calculating
+        rho2 = np.sum(grid, axis = 0)
+        ux1 = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
+        uy1 = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
+        # test only the first value
+        self.assertEqual(rho[0,0],rho2[0,0])
+        self.assertEqual(ux[0, 0], ux1[0, 0])
+        self.assertEqual(uy[0, 0], uy1[0, 0])
+
+    def test_equilibrium(self):
+        # init stuff
+        channels = 9
+        size = 50
+        size_x = 50
+        size_y = 50
+        grid = np.ones((channels, size_x, size_y))
+        rho = np.zeros((size_x, size_y))
+        ux = np.zeros((size_x, size_y))
+        uy = np.zeros((size_x, size_y))
+        #
+        rho = np.sum(grid, axis=0)  # sums over each one individually
+        ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
+        uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
+        #
+        k = 0
+        l = 0
+        eq = equlibrium_function(rho[k, l], ux[k, l], uy[k, l])
+        eq2 = equilibrium_on_array_test(rho,ux,uy)
+        #print(eq2[0,0,0])
+        #print(eq2.shape)
+        self.assertEqual(eq[0],eq2[0,0,0])
+
 '''
 functions
 '''
@@ -507,6 +555,23 @@ def equlibrium_function(rho, ux, uy):
     equilibrium[8] = rho / 36 * (1 + 3 * uxy - 9 * ux * uy + 3 * uu)
     return equilibrium
 
+def equilibrium_on_array_test(rho,ux,uy):
+    uxy = 3 * (ux + uy)
+    uu =  3 * (ux * ux + uy * uy)
+    ux_6 = 6*ux
+    uy_6 = 6*uy
+    uxx_9 = 9 * ux*ux
+    uyy_9 = 9 * uy*uy
+    uxy_9 = 9 * ux*uy
+    return np.array([(2*rho/9) * (2-uu),
+                    (rho / 18)* (2 + ux_6 + uxx_9-uu),
+                    (rho / 18)* (2 + uy_6 + uyy_9-uu),
+                    (rho / 18)* (2 - ux_6 + uxx_9-uu),
+                    (rho / 18)* (2 - uy_6 + uyy_9-uu),
+                    (rho / 36) * (1 + uxy + uxy_9 + uu),
+                    (rho / 36) * (1 - uxy - uxy_9 + uu),
+                    (rho / 36) * (1 - uxy + uxy_9 + uu),
+                    (rho / 36) * (1 + uxy - uxy_9 + uu)])
 
 def calculate_3pincipal_values(gridpoint):
     # just the basic equations

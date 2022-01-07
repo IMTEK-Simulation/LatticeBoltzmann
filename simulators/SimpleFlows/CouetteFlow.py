@@ -40,8 +40,11 @@ uw = 5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # grids
-size_x = 50
-size_y = 50
+size = 50
+topbottom_boundary = 2
+size_x = size                     # 50
+size_y = size# + topbottom_boundary # 52
+# initilization of the grids used
 grid = np.ones((channels,size_x,size_y))
 equlibrium = np.zeros((channels, size_x, size_y))
 collision = np.zeros((channels,size_x,size_y))
@@ -50,7 +53,7 @@ ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 2000
+steps = 100
 ''' functions '''
 
 
@@ -74,6 +77,25 @@ def equilibrium(rho, ux, uy):
     equilibrium[8] = (rho / 36) * (1 + 3 * uxy - 9 * ux * uy + 3 * uu)
     return equilibrium
 
+def equilibrium_on_array(rho,ux,uy):
+    uxy = 3 * (ux + uy)
+    uu =  3 * (ux * ux + uy * uy)
+    ux_6 = 6*ux
+    uy_6 = 6*uy
+    uxx_9 = 9 * ux*ux
+    uyy_9 = 9 * uy*uy
+    uxy_9 = 9 * ux*uy
+    return np.array([(2 * rho / 9) * (2 - uu),
+                     (rho / 18) * (2 + ux_6 + uxx_9 - uu),
+                     (rho / 18) * (2 + uy_6 + uyy_9 - uu),
+                     (rho / 18) * (2 - ux_6 + uxx_9 - uu),
+                     (rho / 18) * (2 - uy_6 + uyy_9 - uu),
+                     (rho / 36) * (1 + uxy + uxy_9 + uu),
+                     (rho / 36) * (1 - uxy - uxy_9 + uu),
+                     (rho / 36) * (1 - uxy + uxy_9 + uu),
+                     (rho / 36) * (1 + uxy - uxy_9 + uu)])
+
+
 
 def calculate_velocities_pressure(gridpoint):
     rho = np.sum(gridpoint)
@@ -81,8 +103,19 @@ def calculate_velocities_pressure(gridpoint):
     uy = ((gridpoint[2] + gridpoint[5] + gridpoint[6]) - (gridpoint[4] + gridpoint[7] + gridpoint[8])) / rho
     return rho, ux, uy
 
-def calculate_collision():
-    pass
+def calculate_collision(grid):
+    # does everything to apply the collision step, mainly to improve performance
+    # big resauces eater is the equilibrium calc
+    # calculate all the grid values
+    rho = np.sum(grid,axis = 0) # sums over each one individually
+    ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
+    uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
+    # calculate equilibrium + apply collision
+    # grid = grid - relaxation * (grid - equilbrium)
+    grid -= relaxation * (grid-equlibrium)
+    return rho,ux,uy
+
+
 
 def bounce_back(grid,uw):
     # baunce back without any velocity gain
@@ -111,8 +144,8 @@ def bounce_back(grid,uw):
 for i in range(steps):
     # aquire the values for the pressure and velocities
     # basically no efficiency
-    for k in range(size_x-1):
-        for l in range(size_y-1):
+    for k in range(size_x):
+        for l in range(size_y):
             rho[k,l], ux[k,l], uy[k,l] = calculate_velocities_pressure(grid[:,k,l])
             # calculate the equilibrium-function
             eq = equilibrium(rho[k,l],ux[k,l], uy[k,l])
