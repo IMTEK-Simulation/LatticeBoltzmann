@@ -36,12 +36,12 @@ print("Couetteflow")
 # velocity_set
 channels = 9
 relaxation = 0.5
-uw = 1
+uw = 5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # grids
-size_x = 25
-size_y = 25
+size_x = 50
+size_y = 50
 grid = np.ones((channels,size_x,size_y))
 equlibrium = np.zeros((channels, size_x, size_y))
 collision = np.zeros((channels,size_x,size_y))
@@ -50,7 +50,7 @@ ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 50
+steps = 500
 ''' functions '''
 
 
@@ -64,18 +64,18 @@ def equilibrium(rho, ux, uy):
     uxy = ux + uy
     uu = ux * ux + uy * uy
     equilibrium[0] = (2 * rho / 9) * (2 - 3 * uu)
-    equilibrium[1] = rho / 18 * (2 + 6 * ux + 9 * ux * ux - 3 * uu)
-    equilibrium[2] = rho / 18 * (2 + 6 * uy + 9 * uy * uy - 3 * uu)
-    equilibrium[3] = rho / 18 * (2 - 6 * ux + 9 * ux * ux - 3 * uu)
-    equilibrium[4] = rho / 18 * (2 - 6 * uy + 9 * uy * uy - 3 * uu)
-    equilibrium[5] = rho / 36 * (1 + 3 * uxy + 9 * ux * uy + 3 * uu)
-    equilibrium[6] = rho / 36 * (1 - 3 * uxy - 9 * ux * uy + 3 * uu)
-    equilibrium[7] = rho / 36 * (1 - 3 * uxy + 9 * ux * uy + 3 * uu)
-    equilibrium[8] = rho / 36 * (1 + 3 * uxy - 9 * ux * uy + 3 * uu)
+    equilibrium[1] = (rho / 18) * (2 + 6 * ux + 9 * ux * ux - 3 * uu)
+    equilibrium[2] = (rho / 18) * (2 + 6 * uy + 9 * uy * uy - 3 * uu)
+    equilibrium[3] = (rho / 18) * (2 - 6 * ux + 9 * ux * ux - 3 * uu)
+    equilibrium[4] = (rho / 18) * (2 - 6 * uy + 9 * uy * uy - 3 * uu)
+    equilibrium[5] = (rho / 36) * (1 + 3 * uxy + 9 * ux * uy + 3 * uu)
+    equilibrium[6] = (rho / 36) * (1 - 3 * uxy - 9 * ux * uy + 3 * uu)
+    equilibrium[7] = (rho / 36) * (1 - 3 * uxy + 9 * ux * uy + 3 * uu)
+    equilibrium[8] = (rho / 36) * (1 + 3 * uxy - 9 * ux * uy + 3 * uu)
+    return equilibrium
 
 
 def calculate_velocities_pressure(gridpoint):
-    # TODO recheck
     rho = np.sum(gridpoint)
     ux = ((gridpoint[1] + gridpoint[5] + gridpoint[8]) - (gridpoint[3] + gridpoint[6] + gridpoint[7])) / rho
     uy = ((gridpoint[2] + gridpoint[5] + gridpoint[6]) - (gridpoint[4] + gridpoint[7] + gridpoint[8])) / rho
@@ -115,6 +115,9 @@ for i in range(steps):
         for l in range(size_y-1):
             rho[k,l], ux[k,l], uy[k,l] = calculate_velocities_pressure(grid[:,k,l])
             # calculate the equilibrium-function
+            eq = equilibrium(rho[k,l],ux[k,l], uy[k,l])
+            #print(eq.shape)
+            #print(equlibrium[:,k,l].shape)
             equlibrium[:,k,l] = equilibrium(rho[k,l],ux[k,l], uy[k,l])
             # calculate the collision operator
             collision[:,k,l] = (grid[:,k,l]-equlibrium[:,k,l])
@@ -127,6 +130,7 @@ for i in range(steps):
     # baounce back
     bounce_back(grid,uw)
     # next step
+    #print(grid)
 
 ''' visualization '''
 #quiver?!
