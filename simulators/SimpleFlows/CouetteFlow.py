@@ -46,14 +46,12 @@ size_x = size                     # 50
 size_y = size# + topbottom_boundary # 52
 # initilization of the grids used
 grid = np.ones((channels,size_x,size_y))
-equlibrium = np.zeros((channels, size_x, size_y))
-collision = np.zeros((channels,size_x,size_y))
 rho = np.zeros((size_x,size_y))
 ux = np.zeros((size_x,size_y))
 uy = np.zeros((size_x,size_y))
 
 # steps
-steps = 100
+steps = 5000
 ''' functions '''
 
 
@@ -112,7 +110,7 @@ def calculate_collision(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     # calculate equilibrium + apply collision
     # grid = grid - relaxation * (grid - equilbrium)
-    grid -= relaxation * (grid-equlibrium)
+    grid -= relaxation * (grid-equilibrium_on_array(rho,ux,uy))
     return rho,ux,uy
 
 
@@ -142,22 +140,7 @@ def bounce_back(grid,uw):
 # TODO prob boundary condition and density missing and 2 to small
 # also calculation should check for the boundary nodes
 for i in range(steps):
-    # aquire the values for the pressure and velocities
-    # basically no efficiency
-    for k in range(size_x):
-        for l in range(size_y):
-            rho[k,l], ux[k,l], uy[k,l] = calculate_velocities_pressure(grid[:,k,l])
-            # calculate the equilibrium-function
-            eq = equilibrium(rho[k,l],ux[k,l], uy[k,l])
-            #print(eq.shape)
-            #print(equlibrium[:,k,l].shape)
-            equlibrium[:,k,l] = equilibrium(rho[k,l],ux[k,l], uy[k,l])
-            # calculate the collision operator
-            collision[:,k,l] = (grid[:,k,l]-equlibrium[:,k,l])
-    #
-    collision = collision*relaxation
-    # apply collision
-    grid = grid - collision
+    rho, ux, uy = calculate_collision(grid)
     # stream
     stream(grid)
     # baounce back
@@ -172,7 +155,7 @@ y = np.arange(0,size_y)
 X,Y = np.meshgrid(x,y)
 # UX, UY = np.meshgrid(ux, uy)
 plt.streamplot(X,Y,ux,uy)
-print(ux)
+#print(ux)
 plt.show()
 
 
