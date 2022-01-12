@@ -132,6 +132,7 @@ def bounce_back(grid,uw):
     grid[6, :, max_size_y] = 0
 
 def periodic_boundary_with_pressure_variations(grid):
+
     rho_null = 1
     p = 1 / 3 * rho_null
     delta_p = 0.001
@@ -142,7 +143,8 @@ def periodic_boundary_with_pressure_variations(grid):
     # get all the values
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
-
+    grid[:, 0, :] = 0
+    grid[:, -1, :] = 0
     ##########
     equilibrium_in = equilibrium_on_array(rho_in, ux[:, -1], uy[:, -1])
     # inlet 1,5,8
@@ -195,7 +197,7 @@ def couette_flow():
 def poiseuille_flow():
     # main code
     print("Poiseuille Flow")
-    steps = 1000
+    steps = 2000
     uw = 0
 
     # initialize
