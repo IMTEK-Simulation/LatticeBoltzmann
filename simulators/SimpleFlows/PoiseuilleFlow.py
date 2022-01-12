@@ -54,7 +54,7 @@ def equilibrium_on_array(rho,ux,uy):
                      (rho / 36) * (1 + uxy - uxy_9 + uu)])
 
 
-def calculate_collision(grid):
+def collision(grid,rho,ux,uy):
     '''
     Performs the collision step and also calculated rho, ux, uy in the same step
     Parameters
@@ -65,12 +65,25 @@ def calculate_collision(grid):
     -------
     rho, ux, uy
     '''
-    rho = np.sum(grid,axis = 0) # sums over each one individually
-    ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
-    uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
+
     # calculate equilibrium + apply collision
     # grid = grid - relaxation * (grid - equilbrium)
     grid -= relaxation * (grid-equilibrium_on_array(rho,ux,uy))
+
+def caluculate_real_values(grid):
+    '''
+    Calculates rho, ux, uy
+    Parameters
+    ----------
+    grid
+
+    Returns
+    -------
+
+    '''
+    rho = np.sum(grid, axis=0)  # sums over each one individually
+    ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
+    uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
 def stream(grid):
@@ -88,6 +101,17 @@ def stream(grid):
         grid[i] = np.roll(grid[i],velocity_set[i], axis = (0,1))
 
 def bounce_back(grid,uw):
+    '''
+    Perfomrs the bounce back
+    Parameters
+    ----------
+    grid
+    uw
+
+    Returns
+    -------
+
+    '''
     # baunce back without any velocity gain
     # TODO rho Wall missing
     max_size_x = grid.shape[1]-1  # x
@@ -107,9 +131,31 @@ def bounce_back(grid,uw):
     grid[5, :, max_size_y] = 0
     grid[6, :, max_size_y] = 0
 
-def periodic_boundary_with_pressure_variations():
-    # TODO this bad boy
-    pass
+def periodic_boundary_with_pressure_variations(grid):
+    rho_null = 1
+    p = 1 / 3 * rho_null
+    delta_p = 0.001
+    # recalculated p into rho and put it in an array
+    rho_in = (p + delta_p) * 3 * np.ones((grid.shape[1]))
+    rho_out = (p - delta_p) * 3 * np.ones((grid.shape[1]))
+
+    # get all the values
+    rho, ux, uy = caluculate_real_values(grid)
+    equilibrium = equilibrium_on_array(rho, ux, uy)
+
+    ##########
+    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -1], uy[:, -1])
+    # inlet 1,5,8
+    grid[1, 0, :] = equilibrium_in[1] + (grid[1, -1, :] - equilibrium[1, -1, :])
+    grid[5, 0, :] = equilibrium_in[5] + (grid[5, -1, :] - equilibrium[5, -1, :])
+    grid[8, 0, :] = equilibrium_in[8] + (grid[8, -1, :] - equilibrium[8, -1, :])
+
+    # outlet 3,6,7
+    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 0], uy[:, 0])
+    # check for correct sizes
+    grid[3, -1, :] = equilibrium_out[3] + (grid[3, 0, :] - equilibrium[3, 0, :])
+    grid[6, -1, :] = equilibrium_out[6] + (grid[6, 0, :] - equilibrium[6, 0, :])
+    grid[7, -1, :] = equilibrium_out[7] + (grid[7, 0, :] - equilibrium[7, 0, :])
 
 
 #########
@@ -127,7 +173,8 @@ def couette_flow():
 
     # loop
     for i in range(steps):
-        rho, ux, uy = calculate_collision(grid)
+        rho, ux, uy = caluculate_real_values(grid)
+        collision(grid,rho,ux,uy)
         stream(grid)
         bounce_back(grid,uw)
 
@@ -146,11 +193,42 @@ def couette_flow():
 
 
 def poiseuille_flow():
+    # main code
     print("Poiseuille Flow")
+    steps = 1000
+    uw = 0
+
+    # initialize
+    rho = np.ones((size_x+2, size_y + 2))
+    ux = np.zeros((size_x+2, size_y + 2))
+    uy = np.zeros((size_x+2, size_y + 2))
+    grid = equilibrium_on_array(rho, ux, uy)
+
+    # loop
+    for i in range(steps):
+        rho, ux, uy = caluculate_real_values(grid)
+        collision(grid, rho, ux, uy)
+        stream(grid)
+        bounce_back(grid, uw)
+        periodic_boundary_with_pressure_variations(grid)
+
+    # visualize
+    x = np.arange(0, size_x)
+    y = np.arange(0, size_y)
+    X, Y = np.meshgrid(x, y)
+    # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
+    # plt.show()
+    # stolen couette flowl code ;)
+    plt.plot(ux[5, 1:-2])
+    plt.xlabel('Position in cross section')
+    plt.ylabel('velocity')
+    plt.title('Pouisuelle flow')
+    plt.show()
 
 
 ####
 # function
-couette_flow()
+#couette_flow()
+poiseuille_flow()
 
 
