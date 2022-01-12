@@ -113,7 +113,6 @@ def bounce_back(grid,uw):
 
     '''
     # baunce back without any velocity gain
-    # TODO rho Wall missing
     max_size_x = grid.shape[1]-1  # x
     max_size_y = grid.shape[2]-1  # y
     # for bottom y = 0
@@ -124,40 +123,45 @@ def bounce_back(grid,uw):
     grid[7, :, 0] = 0
     grid[8, :, 0] = 0
     # for top y = max_size_y
-    grid[4, :, max_size_y - 1] = grid[2, :, max_size_y]
-    grid[7, :, max_size_y - 1] = grid[5, :, max_size_y] - 1 / 6 * uw
-    grid[8, :, max_size_y - 1] = grid[6, :, max_size_y] + 1 / 6 * uw
-    grid[2, :, max_size_y] = 0
-    grid[5, :, max_size_y] = 0
-    grid[6, :, max_size_y] = 0
+    grid[4, :, -2] = grid[2, :, -1]
+    grid[7, :, -2] = grid[5, :, -1] #- 1 / 6 * uw
+    grid[8, :, -2] = grid[6, :, -1] #+ 1 / 6 * uw
+    grid[2, :, -1] = 0
+    grid[5, :, -1] = 0
+    grid[6, :, -1] = 0
 
-def periodic_boundary_with_pressure_variations(grid):
-
+def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
+    # TODO overflow
     rho_null = 1
     p = 1 / 3 * rho_null
-    delta_p = 0.001
+    delta_p = 0.01
     # recalculated p into rho and put it in an array
-    rho_in = (p + delta_p) * 3 * np.ones((grid.shape[1]))
-    rho_out = (p - delta_p) * 3 * np.ones((grid.shape[1]))
+    # TODO mistake here?!
+    # constante geschwindigkeit für die letzten beiden
+    # nach dem streaming step zurück setzen
+
+    rho_in = (p + delta_p/2) * 3 * np.ones((grid.shape[1]))
+    rho_out = (p - delta_p/2) * 3 * np.ones((grid.shape[1]))
 
     # get all the values
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
-    grid[:, 0, :] = 0
-    grid[:, -1, :] = 0
     ##########
-    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -1], uy[:, -1])
+    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -2], uy[:, -2])
+    # nodes are virtual
+    #grid[:,0,:] = 0
     # inlet 1,5,8
-    grid[1, 0, :] = equilibrium_in[1] + (grid[1, -1, :] - equilibrium[1, -1, :])
-    grid[5, 0, :] = equilibrium_in[5] + (grid[5, -1, :] - equilibrium[5, -1, :])
-    grid[8, 0, :] = equilibrium_in[8] + (grid[8, -1, :] - equilibrium[8, -1, :])
+    grid[1, 0, :] = equilibrium_in[1] + (grid[1, -2, :] - equilibrium[1, -2, :])
+    grid[5, 0, :] = equilibrium_in[5] + (grid[5, -2, :] - equilibrium[5, -2, :])
+    grid[8, 0, :] = equilibrium_in[8] + (grid[8, -2, :] - equilibrium[8, -2, :])
 
     # outlet 3,6,7
-    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 0], uy[:, 0])
+    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 1], uy[:, 1])
+    #grid[:,-1,:]
     # check for correct sizes
-    grid[3, -1, :] = equilibrium_out[3] + (grid[3, 0, :] - equilibrium[3, 0, :])
-    grid[6, -1, :] = equilibrium_out[6] + (grid[6, 0, :] - equilibrium[6, 0, :])
-    grid[7, -1, :] = equilibrium_out[7] + (grid[7, 0, :] - equilibrium[7, 0, :])
+    grid[3, -1, :] = equilibrium_out[3] + (grid[3, 1, :] - equilibrium[3, 1, :])
+    grid[6, -1, :] = equilibrium_out[6] + (grid[6, 1, :] - equilibrium[6, 1, :])
+    grid[7, -1, :] = equilibrium_out[7] + (grid[7, 1, :] - equilibrium[7, 1, :])
 
 
 #########
@@ -197,7 +201,7 @@ def couette_flow():
 def poiseuille_flow():
     # main code
     print("Poiseuille Flow")
-    steps = 2000
+    steps = 2400
     uw = 0
 
     # initialize
@@ -208,11 +212,11 @@ def poiseuille_flow():
 
     # loop
     for i in range(steps):
-        rho, ux, uy = caluculate_real_values(grid)
-        collision(grid, rho, ux, uy)
+        periodic_boundary_with_pressure_variations(grid, rho, ux, uy)
         stream(grid)
         bounce_back(grid, uw)
-        periodic_boundary_with_pressure_variations(grid)
+        rho, ux, uy = caluculate_real_values(grid)
+        collision(grid, rho, ux, uy)
 
     # visualize
     x = np.arange(0, size_x)
@@ -221,7 +225,7 @@ def poiseuille_flow():
     # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
     # plt.show()
     # stolen couette flowl code ;)
-    plt.plot(ux[5, 1:-2])
+    plt.plot(ux[10, 1:-2])
     plt.xlabel('Position in cross section')
     plt.ylabel('velocity')
     plt.title('Pouisuelle flow')
