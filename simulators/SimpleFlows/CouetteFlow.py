@@ -45,7 +45,7 @@ velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
 size = 50
 topbottom_boundary = 2
 size_x = size                     # 50
-size_y = size# + topbottom_boundary # 52
+size_y = size #+ topbottom_boundary # 52
 # initilization of the grids used
 grid = np.ones((channels,size_x,size_y))
 rho_v = np.zeros((size_x,size_y))

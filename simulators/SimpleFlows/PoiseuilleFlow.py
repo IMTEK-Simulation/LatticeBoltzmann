@@ -15,8 +15,11 @@ Bitte nicht CamelCase und Unterstriche mischen
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
-# Bring back stuff
+
+# global variables
 relaxation = 0.5
+size_x = 50
+size_y = 50
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 
@@ -83,3 +86,71 @@ def stream(grid):
     '''
     for i in range(1,9):
         grid[i] = np.roll(grid[i],velocity_set[i], axis = (0,1))
+
+def bounce_back(grid,uw):
+    # baunce back without any velocity gain
+    # TODO rho Wall missing
+    max_size_x = grid.shape[1]-1  # x
+    max_size_y = grid.shape[2]-1  # y
+    # for bottom y = 0
+    grid[2, :, 1] = grid[4, :, 0]
+    grid[5, :, 1] = grid[7, :, 0]
+    grid[6, :, 1] = grid[8, :, 0]
+    grid[4, :, 0] = 0
+    grid[7, :, 0] = 0
+    grid[8, :, 0] = 0
+    # for top y = max_size_y
+    grid[4, :, max_size_y - 1] = grid[2, :, max_size_y]
+    grid[7, :, max_size_y - 1] = grid[5, :, max_size_y] - 1 / 6 * uw
+    grid[8, :, max_size_y - 1] = grid[6, :, max_size_y] + 1 / 6 * uw
+    grid[2, :, max_size_y] = 0
+    grid[5, :, max_size_y] = 0
+    grid[6, :, max_size_y] = 0
+
+def periodic_boundary_with_pressure_variations():
+    # TODO this bad boy
+    pass
+
+
+#########
+def couette_flow():
+    # main code
+    print("couette Flow")
+    steps = 5000
+    uw = 1
+
+    # initialize
+    rho = np.ones((size_x,size_y+2))
+    ux = np.zeros((size_x, size_y + 2))
+    uy = np.zeros((size_x,size_y + 2))
+    grid = equilibrium_on_array(rho,ux,uy)
+
+    # loop
+    for i in range(steps):
+        rho, ux, uy = calculate_collision(grid)
+        stream(grid)
+        bounce_back(grid,uw)
+
+    # visualize
+    x = np.arange(0,size_x)
+    y = np.arange(0,size_y)
+    X,Y = np.meshgrid(x,y)
+    #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
+    #plt.show()
+    # stolen couette flowl code ;)
+    plt.plot(ux[5,1:-2])
+    plt.xlabel('Position in cross section')
+    plt.ylabel('velocity')
+    plt.title('Couette flow')
+    plt.show()
+
+
+def poiseuille_flow():
+    print("Poiseuille Flow")
+
+
+####
+# function
+couette_flow()
+
+

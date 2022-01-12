@@ -472,8 +472,11 @@ class testsForBoundary(unittest.TestCase):
         for i in range(1, 7):
             self.assertEqual(grid[2, i, 1], 1)
 
-    def test_pressure_diffrence(self):
+    def test_pbc_with_presure_variation(self):
+        # need p in p out
         pass
+
+
 
     def test_simple_stuff(self):
         size_x = 100
@@ -536,8 +539,6 @@ class testsForNewCollision(unittest.TestCase):
 '''
 functions
 '''
-
-
 def equlibrium_function(rho, ux, uy):
     # TODO ask for the explicit reduction of the function 3.54 in the book especially the delta
     # still need to practice the einstein summation
