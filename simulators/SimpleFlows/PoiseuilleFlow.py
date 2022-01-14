@@ -116,18 +116,12 @@ def bounce_back(grid,uw):
     # baunce back without any velocity gain
     # for bottom y = 0
     grid[2, :, 1] = grid[4, :, 0]
-    grid[5, :, 1] = grid[7, :, 0]
-    grid[6, :, 1] = grid[8, :, 0]
-    grid[4, :, 0] = 0
-    grid[7, :, 0] = 0
-    grid[8, :, 0] = 0
+    grid[5, :, 1] = np.roll(grid[7, :, 0],1)
+    grid[6, :, 1] = np.roll(grid[8, :, 0],-1)
     # for top y = max_size_y
     grid[4, :, -2] = grid[2, :, -1]
-    grid[7, :, -2] = grid[5, :, -1] - 1 / 6 * uw
-    grid[8, :, -2] = grid[6, :, -1] + 1 / 6 * uw
-    grid[2, :, -1] = 0
-    grid[5, :, -1] = 0
-    grid[6, :, -1] = 0
+    grid[7, :, -2] = np.roll(grid[5, :, -1],1) - 1 / 6 * uw
+    grid[8, :, -2] = np.roll(grid[6, :, -1],-1) + 1 / 6 * uw
 
 def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     # TODO overflow seems to couse the wierd profile
@@ -259,7 +253,7 @@ def constant_velocity_in_boundary_flow():
     # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
     # plt.show()
     # stolen couette flowl code ;)
-    plt.plot(ux[26, 1:-2])
+    plt.plot(ux[int(1+size_x/2), 1:-2])
     plt.xlabel('Position in cross section')
     plt.ylabel('velocity')
     plt.title('Constant velocity')
@@ -268,9 +262,8 @@ def constant_velocity_in_boundary_flow():
 
 ####
 # function
-#couette_flow()
+couette_flow()
 #poiseuille_flow()
-#time.sleep(2)
 constant_velocity_in_boundary_flow()
 
 
