@@ -233,12 +233,44 @@ def poiseuille_flow():
 
 
 def constant_velocity_in_boundary_flow():
-    pass
+    print("Constant thingi")
+    # constants
+    uw = 0
+    steps = 800
+
+    # initilazion
+    rho = np.ones((size_x + 2, size_y + 2))
+    ux = np.zeros((size_x + 2, size_y + 2))
+    uy = np.zeros((size_x + 2, size_y + 2))
+    grid = equilibrium_on_array(rho, ux, uy)
+
+    # propagation
+    for i in range(steps):
+        stream(grid)
+        bounce_back(grid, uw)
+        rho, ux, uy = caluculate_real_values(grid)
+        ux[0, :] = 2
+        ux[-1, :] = 2
+        collision(grid, rho, ux, uy)
+
+    # visiulation
+    x = np.arange(0, size_x)
+    y = np.arange(0, size_y)
+    X, Y = np.meshgrid(x, y)
+    # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
+    # plt.show()
+    # stolen couette flowl code ;)
+    plt.plot(ux[26, 1:-2])
+    plt.xlabel('Position in cross section')
+    plt.ylabel('velocity')
+    plt.title('Constant velocity')
+    plt.show()
+
 
 ####
 # function
 #couette_flow()
-poiseuille_flow()
+#poiseuille_flow()
 constant_velocity_in_boundary_flow()
 
 

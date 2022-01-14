@@ -475,7 +475,7 @@ class testsForBoundary(unittest.TestCase):
     def test_pbc_with_presure_variation(self):
         #inilzilaize stuff for tests
         channels = 9
-        lenght = 9
+        lenght = 10
         max_size = lenght - 1  # for iteration in the array
         rho_null = 1
         rho = rho_null* np.ones((lenght,lenght))
@@ -491,8 +491,9 @@ class testsForBoundary(unittest.TestCase):
         p = 1/3 * rho_null
         delta_p = 0.001
         # recalculated p into rho and put it in an array
-        rho_in = (p + delta_p) *3 * np.ones((grid.shape[0]))
-        rho_out = (p - delta_p) *3 * np.ones((grid.shape[0]))
+        rho_in = (p + delta_p) *3 * np.ones((grid.shape[1]))
+        rho_out = (p - delta_p) *3 * np.ones((grid.shape[1]))
+        print(rho_in.shape)
 
         # get all the values
         rho = np.sum(grid, axis = 0)  # sums over each one individually
@@ -502,6 +503,9 @@ class testsForBoundary(unittest.TestCase):
 
         ##########
         equilibrium_in = equilibrium_on_array_test(rho_in,ux[:,max_size], uy[:,max_size])
+        print(equilibrium_in[1].shape)
+        print(grid[1,0,:].shape)
+        print((grid[1, max_size, :] - equilibrium[1, max_size, :]))
         # inlet 1,5,8
         grid[1,0,:] = equilibrium_in[1] + (grid[1,max_size,:]- equilibrium[1,max_size,:])
         grid[5,0,:] = equilibrium_in[5] + (grid[5,max_size,:]- equilibrium[5,max_size,:])
@@ -517,8 +521,8 @@ class testsForBoundary(unittest.TestCase):
         ################
         # tests
         # check for the correct sizes
-        self.assertEqual(equilibrium_out[1].shape, (9,))
-        self.assertEqual(equilibrium_in[3].shape, (9,))
+        self.assertEqual(equilibrium_out[1].shape, (lenght,))
+        self.assertEqual(equilibrium_in[3].shape, (lenght,))
 
 
     def test_simple_stuff(self):
