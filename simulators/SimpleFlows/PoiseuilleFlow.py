@@ -23,6 +23,8 @@ size_x = 50
 size_y = 50
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
+rho_null = 1
+diff = 0.001
 
 def equilibrium_on_array(rho,ux,uy):
     '''
@@ -123,7 +125,7 @@ def bounce_back(grid,uw):
     grid[7, :, -2] = np.roll(grid[5, :, -1],1) - 1 / 6 * uw
     grid[8, :, -2] = np.roll(grid[6, :, -1],-1) + 1 / 6 * uw
 
-def periodic_boundary_with_pressure_variations(grid):
+def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
     # TODO overflow seems to couse the wierd profile
     rho_null = 1
     p = 1 / 3 * rho_null
@@ -133,8 +135,8 @@ def periodic_boundary_with_pressure_variations(grid):
     # constante geschwindigkeit für die letzten beiden
     # nach dem streaming step zurück setzen
 
-    rho_in = (p + delta_p/2) * 3 * np.ones((grid.shape[1]))
-    rho_out = (p - delta_p/2) * 3 * np.ones((grid.shape[1]))
+    #rho_in = (p + delta_p/2) * 3 * np.ones((grid.shape[1]))
+    #rho_out = (p - delta_p/2) * 3 * np.ones((grid.shape[1]))
 
     # get all the values
     rho, ux, uy = caluculate_real_values(grid)
@@ -190,6 +192,8 @@ def poiseuille_flow():
     #steps = 4533
     uw = 0
     steps = 1000 # crashes 4533
+    rho_in = rho_null+diff
+    rho_out = rho_null-diff
     # initialize
     rho = np.ones((size_x+2, size_y + 2))
     ux = np.zeros((size_x+2, size_y + 2))
@@ -198,7 +202,7 @@ def poiseuille_flow():
 
     # loop
     for i in range(steps):
-        periodic_boundary_with_pressure_variations(grid)
+        periodic_boundary_with_pressure_variations(grid,rho_in,rho_out)
         stream(grid)
         bounce_back(grid, uw)
         rho, ux, uy = caluculate_real_values(grid)

@@ -493,7 +493,7 @@ class testsForBoundary(unittest.TestCase):
         # recalculated p into rho and put it in an array
         rho_in = (p + delta_p) *3 * np.ones((grid.shape[1]))
         rho_out = (p - delta_p) *3 * np.ones((grid.shape[1]))
-        print(rho_in.shape)
+        #print(rho_in.shape)
 
         # get all the values
         rho = np.sum(grid, axis = 0)  # sums over each one individually
@@ -503,9 +503,9 @@ class testsForBoundary(unittest.TestCase):
 
         ##########
         equilibrium_in = equilibrium_on_array_test(rho_in,ux[:,max_size], uy[:,max_size])
-        print(equilibrium_in[1].shape)
-        print(grid[1,0,:].shape)
-        print((grid[1, max_size, :] - equilibrium[1, max_size, :]))
+        #print(equilibrium_in[1].shape)
+        #print(grid[1,0,:].shape)
+        #print((grid[1, max_size, :] - equilibrium[1, max_size, :]))
         # inlet 1,5,8
         grid[1,0,:] = equilibrium_in[1] + (grid[1,max_size,:]- equilibrium[1,max_size,:])
         grid[5,0,:] = equilibrium_in[5] + (grid[5,max_size,:]- equilibrium[5,max_size,:])
@@ -523,6 +523,36 @@ class testsForBoundary(unittest.TestCase):
         # check for the correct sizes
         self.assertEqual(equilibrium_out[1].shape, (lenght,))
         self.assertEqual(equilibrium_in[3].shape, (lenght,))
+
+    def test_broken_pressure(self):
+        channels = 9
+        lenght = 10
+        max_size = lenght - 1  # for iteration in the array
+        rho_null = 1
+        rho = rho_null * np.ones((lenght, lenght))
+        ux = np.zeros((lenght, lenght))
+        uy = np.zeros((lenght, lenght))
+        grid1 = equilibrium_on_array_test(rho, ux, uy)
+        grid2 = equilibrium_on_array_test(rho, ux, uy)
+        diff = 0.0001
+        rho_in = rho_null + diff
+        rho_out = rho_null - diff
+
+
+        #####
+        # Call
+        good_pressure_variation(grid1,rho_in,rho_out)
+        own_periodic_boundary_with_pressure_variations(grid2,rho_in,rho_out)
+        #####
+        #test
+        self.assertEqual(grid1[1,0,1],grid2[1,0,1])
+        for c in range(channels):
+            for i in range(lenght):
+                self.assertEqual(grid1[c, 0, i], grid2[c, 0, i]) # in side
+
+        for c in range(channels):
+            for i in range(lenght):
+                self.assertEqual(grid1[c,-1,i],grid2[c,-1,i]) # out side
 
 
     def test_simple_stuff(self):
@@ -705,6 +735,71 @@ def baunce_back_top_moving(grid,uw):
     grid[2, :, max_size_y] = 0
     grid[5, :, max_size_y] = 0
     grid[6, :, max_size_y] = 0
+
+def good_pressure_variation(g,pin,pout):
+    w = np.array([4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36])  # weights
+    c = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],  # velocities, x components
+                  [0, 0, 1, 0, -1, 1, 1, -1, -1]])  # velocities, y components
+    #
+    rhoN = np.einsum('ij->j', g[:, -2, :])
+    uN = np.einsum('ai,iy->ay', c, g[:, -2, :]) / rhoN
+    cdot3u = 3 * np.einsum('ai,ay->iy', c, uN)
+    usq = np.einsum('ay->y', uN * uN)
+    feqpin = pin * w[:, np.newaxis] * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+    wrhoN = np.einsum('i,y->iy', w, rhoN)
+    feqN = wrhoN * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+    fneqN = g[:, -2, :]
+    fin = feqpin + (fneqN - feqN)
+    #
+    rho1 = np.einsum('ij->j', g[:, 1, :])
+    u1 = np.einsum('ai,iy->ay', c, g[:, 1, :]) / rho1
+    cdot3u = 3 * np.einsum('ai,ay->iy', c, u1)
+    usq = np.einsum('ay->y', u1 * u1)
+    feqpout = pout * w[:, np.newaxis] * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+    wrho1 = np.einsum('i,y->iy', w, rho1)
+    feq1 = wrho1 * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+    fneq1 = g[:, 1, :]
+    fout = feqpout + (fneq1 - feq1)
+    g[:, 0, :] = fin
+    g[:, -1, :] = fout
+
+def caluculate_real_values(grid):
+    '''
+    Calculates rho, ux, uy
+    Parameters
+    ----------
+    grid
+
+    Returns
+    -------
+
+    '''
+    rho = np.sum(grid, axis=0)  # sums over each one individually
+    ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
+    uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
+    return rho,ux,uy
+
+
+def own_periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
+
+    # get all the values
+    rho, ux, uy = caluculate_real_values(grid)
+    equilibrium = equilibrium_on_array_test(rho, ux, uy)
+    ##########
+    equilibrium_in = equilibrium_on_array_test(rho_in, ux[:, -2], uy[:, -2])
+    # inlet 1,5,8
+    grid[:, 0, :] = equilibrium_in + (grid[:, -2, :] - equilibrium[:, -2, :])
+
+    # TODO fehler ist in diesem Teil compare 1 to 1 to other fkt
+    # outlet 3,6,7
+    equilibrium_out = equilibrium_on_array_test(rho_out, ux[:, 1], uy[:, 1])
+    # check for correct sizes
+    grid[:, -1, :] = equilibrium_out + (grid[:, 1, :] - equilibrium[:, 1, :])
+
+def both_perodic_boundaries(grid1,grid2,rho_in,rho_out):
+    pass
+
+
 
 if __name__ == '__main__':
     unittest.main()
