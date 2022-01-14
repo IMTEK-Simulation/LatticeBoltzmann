@@ -113,8 +113,6 @@ def bounce_back(grid,uw):
 
     '''
     # baunce back without any velocity gain
-    max_size_x = grid.shape[1]-1  # x
-    max_size_y = grid.shape[2]-1  # y
     # for bottom y = 0
     grid[2, :, 1] = grid[4, :, 0]
     grid[5, :, 1] = grid[7, :, 0]
@@ -124,14 +122,14 @@ def bounce_back(grid,uw):
     grid[8, :, 0] = 0
     # for top y = max_size_y
     grid[4, :, -2] = grid[2, :, -1]
-    grid[7, :, -2] = grid[5, :, -1] #- 1 / 6 * uw
-    grid[8, :, -2] = grid[6, :, -1] #+ 1 / 6 * uw
+    grid[7, :, -2] = grid[5, :, -1] - 1 / 6 * uw
+    grid[8, :, -2] = grid[6, :, -1] + 1 / 6 * uw
     grid[2, :, -1] = 0
     grid[5, :, -1] = 0
     grid[6, :, -1] = 0
 
 def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
-    # TODO overflow
+    # TODO overflow seems to couse the wierd profile
     rho_null = 1
     p = 1 / 3 * rho_null
     delta_p = 0.01
@@ -147,7 +145,7 @@ def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
     ##########
-    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -2], uy[:, -2])
+    equilibrium_in = equilibrium_on_array(rho_out, ux[:, -2], uy[:, -2])
     # nodes are virtual
     #grid[:,0,:] = 0
     # inlet 1,5,8
@@ -156,7 +154,7 @@ def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     grid[8, 0, :] = equilibrium_in[8] + (grid[8, -2, :] - equilibrium[8, -2, :])
 
     # outlet 3,6,7
-    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 1], uy[:, 1])
+    equilibrium_out = equilibrium_on_array(rho_in, ux[:, 1], uy[:, 1])
     #grid[:,-1,:]
     # check for correct sizes
     grid[3, -1, :] = equilibrium_out[3] + (grid[3, 1, :] - equilibrium[3, 1, :])
@@ -197,13 +195,12 @@ def couette_flow():
     plt.title('Couette flow')
     plt.show()
 
-
 def poiseuille_flow():
     # main code
     print("Poiseuille Flow")
-    steps = 2400
+    #steps = 4533
     uw = 0
-
+    steps = 4535
     # initialize
     rho = np.ones((size_x+2, size_y + 2))
     ux = np.zeros((size_x+2, size_y + 2))
@@ -212,6 +209,8 @@ def poiseuille_flow():
 
     # loop
     for i in range(steps):
+        if i == 4530:
+            k = 1
         periodic_boundary_with_pressure_variations(grid, rho, ux, uy)
         stream(grid)
         bounce_back(grid, uw)
@@ -232,9 +231,13 @@ def poiseuille_flow():
     plt.show()
 
 
+def constant_velocity_in_boundary_flow():
+    pass
+
 ####
 # function
 #couette_flow()
 poiseuille_flow()
+constant_velocity_in_boundary_flow()
 
 

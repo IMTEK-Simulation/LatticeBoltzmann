@@ -571,13 +571,12 @@ class testsForNewCollision(unittest.TestCase):
         ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
         uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
         #
-        k = 0
-        l = 0
-        eq = equlibrium_function(rho[k, l], ux[k, l], uy[k, l])
         eq2 = equilibrium_on_array_test(rho,ux,uy)
-        #print(eq2[0,0,0])
-        #print(eq2.shape)
-        self.assertEqual(eq[0],eq2[0,0,0])
+        for k in range(size_x):
+            for l in range(size_y):
+                eq = equlibrium_function(rho[k, l], ux[k, l], uy[k, l])
+                for c in range(channels):
+                    self.assertEqual(eq[c], eq2[c, k, l])
 
 '''
 functions
