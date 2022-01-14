@@ -132,7 +132,7 @@ def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     # TODO overflow seems to couse the wierd profile
     rho_null = 1
     p = 1 / 3 * rho_null
-    delta_p = 0.01
+    delta_p = 0.0001
     # recalculated p into rho and put it in an array
     # TODO mistake here?!
     # constante geschwindigkeit für die letzten beiden
@@ -200,7 +200,8 @@ def poiseuille_flow():
     print("Poiseuille Flow")
     #steps = 4533
     uw = 0
-    steps = 4535
+    steps = 4535 # crashes 4533
+    steps = 4530
     # initialize
     rho = np.ones((size_x+2, size_y + 2))
     ux = np.zeros((size_x+2, size_y + 2))
