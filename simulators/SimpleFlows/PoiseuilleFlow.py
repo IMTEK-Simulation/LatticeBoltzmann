@@ -15,6 +15,7 @@ Bitte nicht CamelCase und Unterstriche mischen
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 # global variables
 relaxation = 0.5
@@ -145,7 +146,7 @@ def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
     ##########
-    equilibrium_in = equilibrium_on_array(rho_out, ux[:, -2], uy[:, -2])
+    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -2], uy[:, -2])
     # nodes are virtual
     #grid[:,0,:] = 0
     # inlet 1,5,8
@@ -154,7 +155,7 @@ def periodic_boundary_with_pressure_variations(grid,rho,ux,uy):
     grid[8, 0, :] = equilibrium_in[8] + (grid[8, -2, :] - equilibrium[8, -2, :])
 
     # outlet 3,6,7
-    equilibrium_out = equilibrium_on_array(rho_in, ux[:, 1], uy[:, 1])
+    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 1], uy[:, 1])
     #grid[:,-1,:]
     # check for correct sizes
     grid[3, -1, :] = equilibrium_out[3] + (grid[3, 1, :] - equilibrium[3, 1, :])
@@ -200,8 +201,7 @@ def poiseuille_flow():
     print("Poiseuille Flow")
     #steps = 4533
     uw = 0
-    steps = 4535 # crashes 4533
-    steps = 4530
+    steps = 4530 # crashes 4533
     # initialize
     rho = np.ones((size_x+2, size_y + 2))
     ux = np.zeros((size_x+2, size_y + 2))
@@ -210,8 +210,6 @@ def poiseuille_flow():
 
     # loop
     for i in range(steps):
-        if i == 4530:
-            k = 1
         periodic_boundary_with_pressure_variations(grid, rho, ux, uy)
         stream(grid)
         bounce_back(grid, uw)
@@ -236,7 +234,8 @@ def constant_velocity_in_boundary_flow():
     print("Constant thingi")
     # constants
     uw = 0
-    steps = 800
+    # cant really go higher it just crashes :(
+    steps = 1000
 
     # initilazion
     rho = np.ones((size_x + 2, size_y + 2))
@@ -249,8 +248,8 @@ def constant_velocity_in_boundary_flow():
         stream(grid)
         bounce_back(grid, uw)
         rho, ux, uy = caluculate_real_values(grid)
-        ux[0, :] = 2
-        ux[-1, :] = 2
+        ux[0, :] = 0.02
+        ux[-1, :] = 0.02
         collision(grid, rho, ux, uy)
 
     # visiulation
@@ -271,6 +270,7 @@ def constant_velocity_in_boundary_flow():
 # function
 #couette_flow()
 #poiseuille_flow()
+#time.sleep(2)
 constant_velocity_in_boundary_flow()
 
 
