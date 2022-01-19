@@ -632,7 +632,9 @@ class testsForBoundary(unittest.TestCase):
         rho, ux, uy = caluculate_real_values(grid)
         equilibrium = equilibrium_on_array_test(rho, ux, uy)
         ##########
+        # that bad boy has the wrong size _-_
         equilibrium_in = equilibrium_on_array_test(rho_in, ux[:, -2], uy[:, -2])
+        print(equilibrium_in.shape)
         # inlet 1,5,8
         grid[:, 0, :] = equilibrium_in + (grid[:, -2, :] - equilibrium[:, -2, :])
 
