@@ -38,9 +38,8 @@ def get_eigen_include(eigen_version='3.4.0'):
         os.makedirs(eigen_path, exist_ok=True)
         #https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
         #os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
-        #TODO this seems to be broken, ill copy manually
-        os.system('curl -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2 | tar'.format(
-            eigen_version, eigen_path))
+        # TODO this seems to be broken, ill copy manually
+        #os.system('curl -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2 | tar'.format(eigen_version, eigen_path))
     return(eigen_path)
 
 

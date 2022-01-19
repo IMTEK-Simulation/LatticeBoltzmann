@@ -5,7 +5,6 @@ The purpose of this file is to help develop the simpleFlows
 
 import unittest
 import numpy as np
-from PyLB import stream
 
 '''
 Tester for Streaming
@@ -639,6 +638,13 @@ class testsForNewCollision(unittest.TestCase):
 '''
 functions
 '''
+# Copy pasta
+c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],
+                 [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T
+def stream(f_ikl):
+    for i in range(1, 9):
+        f_ikl[i] = np.roll(f_ikl[i], c_ic[i], axis=(0, 1))
+
 def equlibrium_function(rho, ux, uy):
     # TODO ask for the explicit reduction of the function 3.54 in the book especially the delta
     # still need to practice the einstein summation
@@ -821,6 +827,7 @@ def own_periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
     grid[:, -1, :] = equilibrium_out + (grid[:, 1, :] - equilibrium[:, 1, :])
 
 def both_perodic_boundaries(grid1,grid2,rho_in,rho_out):
+    ##### Andreas
     w = np.array([4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36])  # weights
     c = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],  # velocities, x components
                   [0, 0, 1, 0, -1, 1, 1, -1, -1]])  # velocities, y components
@@ -842,6 +849,7 @@ def both_perodic_boundaries(grid1,grid2,rho_in,rho_out):
     equilibrium_out = equilibrium_on_array_test(rho_out, ux[:, 1], uy[:, 1])
     # check for correct sizes
     grid2[:, -1, :] = equilibrium_out + (grid2[:, 1, :] - equilibrium[:, 1, :])
+
 
 
 
