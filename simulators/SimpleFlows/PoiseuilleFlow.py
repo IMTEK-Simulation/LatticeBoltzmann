@@ -39,22 +39,23 @@ def equilibrium_on_array(rho,ux,uy):
     -------
 
     '''
-    uxy = 3 * (ux + uy)
-    uu =  3 * (ux * ux + uy * uy)
-    ux_6 = 6*ux
-    uy_6 = 6*uy
-    uxx_9 = 9 * ux*ux
-    uyy_9 = 9 * uy*uy
-    uxy_9 = 9 * ux*uy
+    uxy_3plus = 3 * (ux + uy)
+    uxy_3miuns = 3 * (ux - uy)
+    uu = 3 * (ux * ux + uy * uy)
+    ux_6 = 6 * ux
+    uy_6 = 6 * uy
+    uxx_9 = 9 * ux * ux
+    uyy_9 = 9 * uy * uy
+    uxy_9 = 9 * ux * uy
     return np.array([(2 * rho / 9) * (2 - uu),
                      (rho / 18) * (2 + ux_6 + uxx_9 - uu),
                      (rho / 18) * (2 + uy_6 + uyy_9 - uu),
                      (rho / 18) * (2 - ux_6 + uxx_9 - uu),
                      (rho / 18) * (2 - uy_6 + uyy_9 - uu),
-                     (rho / 36) * (1 + uxy + uxy_9 + uu),
-                     (rho / 36) * (1 - uxy - uxy_9 + uu),
-                     (rho / 36) * (1 - uxy + uxy_9 + uu),
-                     (rho / 36) * (1 + uxy - uxy_9 + uu)])
+                     (rho / 36) * (1 + uxy_3plus + uxy_9 + uu),
+                     (rho / 36) * (1 - uxy_3miuns - uxy_9 + uu),
+                     (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
+                     (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
 
 def collision(grid,rho,ux,uy):
@@ -126,18 +127,18 @@ def bounce_back(grid,uw):
     grid[8, :, -2] = np.roll(grid[6, :, -1],-1) + 1 / 6 * uw
 
 def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
-    # TODO overflow seems to couse the wierd profile
-    rho_null = 1
-    p = 1 / 3 * rho_null
-    delta_p = 0.0001
-    # recalculated p into rho and put it in an array
-    # TODO mistake here?!
-    # constante geschwindigkeit für die letzten beiden
-    # nach dem streaming step zurück setzen
+    '''
 
-    #rho_in = (p + delta_p/2) * 3 * np.ones((grid.shape[1]))
-    #rho_out = (p - delta_p/2) * 3 * np.ones((grid.shape[1]))
+    Parameters
+    ----------
+    grid
+    rho_in
+    rho_out
 
+    Returns
+    -------
+
+    '''
     # get all the values
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
@@ -191,7 +192,7 @@ def poiseuille_flow():
     print("Poiseuille Flow")
     #steps = 4533
     uw = 0
-    steps = 1000 # crashes 4533
+    steps = 4000 # crashes 4533
     rho_in = rho_null+diff
     rho_out = rho_null-diff
     # initialize
@@ -227,7 +228,7 @@ def constant_velocity_in_boundary_flow():
     # constants
     uw = 0
     # cant really go higher it just crashes :(
-    steps = 1000
+    steps = 3000
 
     # initilazion
     rho = np.ones((size_x + 2, size_y + 2))

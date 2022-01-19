@@ -524,6 +524,7 @@ class testsForBoundary(unittest.TestCase):
         self.assertEqual(equilibrium_in[3].shape, (lenght,))
 
     def test_broken_pressure(self):
+        # comparision with andreas version
         channels = 9
         lenght = 10
         max_size = lenght - 1  # for iteration in the array
@@ -543,16 +544,17 @@ class testsForBoundary(unittest.TestCase):
         good_pressure_variation(grid1,rho_in,rho_out)
         own_periodic_boundary_with_pressure_variations(grid2,rho_in,rho_out)
         #####
-        #test
+        #tests
+        # in flow at boundary
         self.assertEqual(grid1[1,0,1],grid2[1,0,1])
         for c in range(channels):
             for i in range(lenght):
                 self.assertEqual(grid1[c, 0, i], grid2[c, 0, i]) # in side
-
+        # out flow at boundary
         for c in range(channels):
             for i in range(lenght):
                 pass
-                #self.assertEqual(grid1[c,-1,i],grid2[c,-1,i]) # out side
+                #self.assertEqual(grid1[c,-1,i],grid2[c,-1,i]) # out side # here is the error
 
     def test_true_diffrences_periodic_boundary(self):
         channels = 9
@@ -568,7 +570,43 @@ class testsForBoundary(unittest.TestCase):
         rho_in = rho_null + diff
         rho_out = rho_null - diff
 
-        both_perodic_boundaries(grid1, grid2, rho_in, rho_out)
+        ##### Andreas
+        w = np.array([4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36])  # weights
+        c = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],  # velocities, x components
+                      [0, 0, 1, 0, -1, 1, 1, -1, -1]])  # velocities, y components
+
+        rho1 = np.einsum('ij->j', grid1[:, 1, :])
+        u1 = np.einsum('ai,iy->ay', c, grid1[:, 1, :]) / rho1
+        cdot3u = 3 * np.einsum('ai,ay->iy', c, u1)
+        usq = np.einsum('ay->y', u1 * u1)
+        feqpout = rho_out * w[:, np.newaxis] * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+        wrho1 = np.einsum('i,y->iy', w, rho1)
+        feq1 = wrho1 * (1 + cdot3u * (1 + 0.5 * cdot3u) - 1.5 * usq[np.newaxis, :])
+        fneq1 = grid1[:, 1, :]
+        fout = feqpout + (fneq1 - feq1)
+        grid1[:, -1, :] = fout
+
+        ##### MINE
+        rho, ux, uy = caluculate_real_values(grid2)
+        equilibrium = equilibrium_on_array_test(rho, ux, uy)
+        f_equilibrium = equilibrium[:,1,:]
+        f_i = grid2[:,1,:]
+        equilibrium_out = equilibrium_on_array_test(rho_out, ux[:, 1], uy[:, 1])
+        # check for correct sizes
+        grid2[:, -1, :] = equilibrium_out + (grid2[:, 1, :] - f_equilibrium )
+        # test the first element
+        for c in range(channels):
+            for i in range(lenght):
+                 self.assertEqual(feqpout[c,i],equilibrium_out[c,i])
+        # test the second element
+        for c in range(channels):
+            for i in range(lenght):
+                self.assertEqual(feq1[c,i],f_equilibrium[c,i])
+        # test the last element
+        for c in range(channels):
+            for i in range(lenght):
+                self.assertEqual(fneq1[c,i],f_i[c,i])
+
 
         for c in range(channels):
             for i in range(lenght):
@@ -663,7 +701,8 @@ def equlibrium_function(rho, ux, uy):
     return equilibrium
 
 def equilibrium_on_array_test(rho,ux,uy):
-    uxy = 3 * (ux + uy)
+    uxy_3plus = 3 * (ux + uy)
+    uxy_3miuns = 3* (ux -uy)
     uu =  3 * (ux * ux + uy * uy)
     ux_6 = 6*ux
     uy_6 = 6*uy
@@ -675,10 +714,10 @@ def equilibrium_on_array_test(rho,ux,uy):
                     (rho / 18)* (2 + uy_6 + uyy_9-uu),
                     (rho / 18)* (2 - ux_6 + uxx_9-uu),
                     (rho / 18)* (2 - uy_6 + uyy_9-uu),
-                    (rho / 36) * (1 + uxy + uxy_9 + uu),
-                    (rho / 36) * (1 - uxy - uxy_9 + uu),
-                    (rho / 36) * (1 - uxy + uxy_9 + uu),
-                    (rho / 36) * (1 + uxy - uxy_9 + uu)])
+                    (rho / 36) * (1 + uxy_3plus + uxy_9 + uu),
+                    (rho / 36) * (1 - uxy_3miuns - uxy_9 + uu),
+                    (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
+                    (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
 def calculate_3pincipal_values(gridpoint):
     # just the basic equations
@@ -826,7 +865,7 @@ def own_periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
     # check for correct sizes
     grid[:, -1, :] = equilibrium_out + (grid[:, 1, :] - equilibrium[:, 1, :])
 
-def both_perodic_boundaries(grid1,grid2,rho_in,rho_out):
+def both_perodic_boundaries(grid1,grid2,rho_in,rho_out,testsForBoundary):
     ##### Andreas
     w = np.array([4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36])  # weights
     c = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],  # velocities, x components
