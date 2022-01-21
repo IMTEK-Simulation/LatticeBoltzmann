@@ -19,7 +19,7 @@ import time
 
 # global variables
 relaxation = 0.5
-size_x = 50
+size_x = 100
 size_y = 50
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -143,12 +143,12 @@ def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
     ##########
-    equilibrium_in = equilibrium_on_array(rho_in, ux[:, -2], uy[:, -2])
+    equilibrium_in = equilibrium_on_array(rho_in, ux[-2,:], uy[-2, :])
     # inlet 1,5,8
     grid[:, 0, :] = equilibrium_in + (grid[:, -2, :] - equilibrium[:, -2, :])
 
     # outlet 3,6,7
-    equilibrium_out = equilibrium_on_array(rho_out, ux[:, 1], uy[:, 1])
+    equilibrium_out = equilibrium_on_array(rho_out, ux[1, :], uy[1, :])
     # check for correct sizes
     grid[:, -1, :] = equilibrium_out + (grid[:, 1, :] - equilibrium[:, 1, :])
 

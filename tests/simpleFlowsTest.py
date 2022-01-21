@@ -616,30 +616,28 @@ class testsForBoundary(unittest.TestCase):
     def test_for_nonquadratic_sizes(self):
         # basic setup
         #channels = 9
-        lenght = 12
-        width = 10
+        size_x = 14
+        size_y = 10
         rho_null = 1
-        rho = rho_null * np.ones((lenght, width))
-        ux = np.zeros((lenght, width))
-        uy = np.zeros((lenght, width))
+        rho = rho_null * np.ones((size_x,size_y))
+        ux = np.zeros((size_x , size_y))
+        uy = np.zeros((size_x , size_y))
         grid = equilibrium_on_array_test(rho, ux, uy)
         diff = 0.0001
         rho_in = rho_null + diff
         rho_out = rho_null - diff
         ### basic function
-        # TODO here again
         # get all the values
         rho, ux, uy = caluculate_real_values(grid)
         equilibrium = equilibrium_on_array_test(rho, ux, uy)
         ##########
         # that bad boy has the wrong size _-_
-        equilibrium_in = equilibrium_on_array_test(rho_in, ux[:, -2], uy[:, -2])
-        print(equilibrium_in.shape)
+        equilibrium_in = equilibrium_on_array_test(rho_in, ux[-2, :], uy[-2, :])
         # inlet 1,5,8
         grid[:, 0, :] = equilibrium_in + (grid[:, -2, :] - equilibrium[:, -2, :])
 
         # outlet 3,6,7
-        equilibrium_out = equilibrium_on_array_test(rho_out, ux[:, 1], uy[:, 1])
+        equilibrium_out = equilibrium_on_array_test(rho_out, ux[1,: ], uy[1, :])
         # check for correct sizes
         grid[:, -1, :] = equilibrium_out + (grid[:, 1, :] - equilibrium[:, 1, :])
 
