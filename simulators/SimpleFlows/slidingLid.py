@@ -26,8 +26,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-size_x = 50
-size_y = 50
+steps = 1000
+uw = 1
+size_x = 100
+size_y = 100
 relaxation = 0.5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -88,7 +90,7 @@ def bounce_back(grid,uw):
 def sliding_lid():
     print("Sliding Lid")
     # init the variables
-    steps = 10000
+    steps = 1000
     uw = 0.01
 
     # initizlize the gird
