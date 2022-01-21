@@ -72,22 +72,22 @@ def caluculate_rho_ux_uy(grid):
 def bounce_back(grid,uw):
     #### Left + Right
     # right so x = 0
-    grid[1, 1, :] = grid[3, 0, :]
-    grid[5, 1, :] = np.roll(grid[7, 0, :],1)
-    grid[8, 1, :] = np.roll(grid[6, 0, :],-1)
+    grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
+    grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
+    grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
     # left so x = -1
-    grid[3, -2, :] = grid[1, -1, :]
-    grid[6, -2, :] = np.roll(grid[8, -1, :],1)
-    grid[7, -2, :] = np.roll(grid[5, -1, :],-1)
+    grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
+    grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
+    grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
     #### TOP + Bottom
     # for bottom y = 0
-    grid[2, :, 1] = grid[4, :, 0]
-    grid[5, :, 1] = np.roll(grid[7, :, 0], 1)
-    grid[6, :, 1] = np.roll(grid[8, :, 0], -1)
+    grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
+    grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
+    grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
     # for top y = -1
-    grid[4, :, -2] = grid[2, :, -1]
-    grid[7, :, -2] = np.roll(grid[5, :, -1], 1) - 1 / 6 * uw
-    grid[8, :, -2] = np.roll(grid[6, :, -1], -1) + 1 / 6 * uw
+    grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
+    grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
+    grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
 # body
 def sliding_lid():
@@ -109,6 +109,7 @@ def sliding_lid():
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
 
+    print(grid[2,0,:])
     # visualize
     x = np.arange(0, size_x)
     y = np.arange(0, size_y)
