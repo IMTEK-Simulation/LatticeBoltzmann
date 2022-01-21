@@ -190,8 +190,7 @@ def couette_flow():
 def poiseuille_flow():
     # main code
     print("Poiseuille Flow")
-    #steps = 4533
-    uw = 0
+    uw = 0.001
     steps = 4000 # crashes 4533
     rho_in = rho_null+diff
     rho_out = rho_null-diff
@@ -216,11 +215,57 @@ def poiseuille_flow():
     # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
     # plt.show()
     # stolen couette flowl code ;)
-    plt.plot(ux[10, 1:-2])
+    number_of_cuts_in_x = 5
+    for i in range(1,number_of_cuts_in_x):
+        point = int(i*size_x/number_of_cuts_in_x)
+        plt.plot(ux[point, 1:-1],label = "x = {}".format(point) )
+    plt.legend()
     plt.xlabel('Position in cross section')
     plt.ylabel('velocity')
     plt.title('Pouisuelle flow')
     plt.show()
+
+def pouisuelle_flow_fancy():
+    # main code
+    print("Poiseuille Flow fancy")
+    runs = 10
+    uw = 0.000
+    steps = 4000  # crashes 4533
+    rho_in = rho_null + diff
+    rho_out = rho_null - diff
+    # initialize
+    rho = np.ones((size_x + 2, size_y + 2))
+    ux = np.zeros((size_x + 2, size_y + 2))
+    uy = np.zeros((size_x + 2, size_y + 2))
+    grid = equilibrium_on_array(rho, ux, uy)
+
+    # plot related stuff
+    x = np.arange(0, size_x)
+    y = np.arange(0, size_y)
+    X, Y = np.meshgrid(x, y)
+
+    # loop
+    for k in range(runs):
+        uw += 0.001
+        uw = round(uw,3)
+        for i in range(steps):
+            periodic_boundary_with_pressure_variations(grid, rho_in, rho_out)
+            stream(grid)
+            bounce_back(grid, uw)
+            rho, ux, uy = caluculate_real_values(grid)
+            collision(grid, rho, ux, uy)
+            point = int(size_x/2)
+            #
+        plt.plot(ux[point, 1:-1], label="uw = {}".format(uw))
+    ## end plot
+    plt.legend()
+    plt.xlabel('Position in cross section')
+    plt.ylabel('velocity')
+    plt.title('Pouisuelle flow with diffrent u-Walls')
+    plt.show()
+
+
+
 
 
 def constant_velocity_in_boundary_flow():
@@ -252,17 +297,17 @@ def constant_velocity_in_boundary_flow():
     # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
     # plt.show()
     # stolen couette flowl code ;)
-    plt.plot(ux[int(1+size_x/2), 1:-2])
+    plt.plot(ux[int(1+size_x/2), 1:-2], color = "green")
     plt.xlabel('Position in cross section')
     plt.ylabel('velocity')
     plt.title('Constant velocity')
     plt.show()
 
-
 ####
 # function
-#couette_flow()
-poiseuille_flow()
-#constant_velocity_in_boundary_flow()
+# couette_flow()
+# poiseuille_flow()
+pouisuelle_flow_fancy()
+# constant_velocity_in_boundary_flow()
 
 
