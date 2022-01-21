@@ -57,14 +57,17 @@ def equilibrium(rho,ux,uy):
                      (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
                      (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
+
 def collision(grid,rho,ux,uy):
     grid -= relaxation * (grid - equilibrium(rho, ux, uy))
+
 
 def caluculate_rho_ux_uy(grid):
     rho = np.sum(grid, axis=0)  # sums over each one individually
     ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
+
 
 def bounce_back(grid,uw):
     #### Left + Right
@@ -76,7 +79,7 @@ def bounce_back(grid,uw):
     grid[3, -2, :] = grid[1, -1, :]
     grid[6, -2, :] = np.roll(grid[8, -1, :],1)
     grid[7, -2, :] = np.roll(grid[5, -1, :],-1)
-    ### TOP + Bottom
+    #### TOP + Bottom
     # for bottom y = 0
     grid[2, :, 1] = grid[4, :, 0]
     grid[5, :, 1] = np.roll(grid[7, :, 0], 1)
@@ -111,6 +114,7 @@ def sliding_lid():
     y = np.arange(0, size_y)
     X, Y = np.meshgrid(x, y)
     plt.streamplot(X,Y,ux[1:-1,1:-1],uy[1:-1,1:-1])
+    plt.title("Sliding Lid")
     plt.show()
 
 

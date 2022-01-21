@@ -209,11 +209,11 @@ def poiseuille_flow():
         collision(grid, rho, ux, uy)
 
     # visualize
-    x = np.arange(0, size_x)
-    y = np.arange(0, size_y)
+    x = np.arange(0, size_x+2)
+    y = np.arange(0, size_y+2)
     X, Y = np.meshgrid(x, y)
-    # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
-    # plt.show()
+    #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
+    #plt.show()
     # stolen couette flowl code ;)
     number_of_cuts_in_x = 5
     for i in range(1,number_of_cuts_in_x):
@@ -294,8 +294,8 @@ def constant_velocity_in_boundary_flow():
     x = np.arange(0, size_x)
     y = np.arange(0, size_y)
     X, Y = np.meshgrid(x, y)
-    # plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
-    # plt.show()
+    plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
+    plt.show()
     # stolen couette flowl code ;)
     plt.plot(ux[int(1+size_x/2), 1:-2], color = "green")
     plt.xlabel('Position in cross section')
@@ -306,8 +306,8 @@ def constant_velocity_in_boundary_flow():
 ####
 # function
 # couette_flow()
-# poiseuille_flow()
-pouisuelle_flow_fancy()
+poiseuille_flow()
+# pouisuelle_flow_fancy()
 # constant_velocity_in_boundary_flow()
 
 
