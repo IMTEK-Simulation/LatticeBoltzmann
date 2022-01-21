@@ -36,10 +36,10 @@ def get_eigen_include(eigen_version='3.4.0'):
     eigen_path = '{}/depend/eigen-{}'.format(root, eigen_version)
     if not os.path.exists(eigen_path):
         os.makedirs(eigen_path, exist_ok=True)
-        #https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
-        #os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
+        # https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2
+        # os.system('curl -L http://bitbucket.org/eigen/eigen/get/{}.tar.bz2 | tar -jx -C {} --strip-components 1'.format(eigen_version, eigen_path))
         # TODO this seems to be broken, ill copy manually
-        #os.system('curl -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2 | tar'.format(eigen_version, eigen_path))
+        # os.system('curl -L https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2 | tar'.format(eigen_version, eigen_path))
     return(eigen_path)
 
 
@@ -121,7 +121,7 @@ class BuildExt(build_ext):
             ext.extra_compile_args = opts
         build_ext.build_extensions(self)
 
-
+# run --help-commands to get all the cmds mostly install and build_clib
 setup(
     name='PyLB',
     version=__version__,
