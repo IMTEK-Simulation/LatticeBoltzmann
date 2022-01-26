@@ -25,12 +25,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 100
+steps = 1000
 size_x = 200
 size_y = 200
-amplitude = 0.01
+amplitude = 0.1
 periode = 1
-relaxation = 0.1
+relaxation = 0.2
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 
@@ -76,7 +76,7 @@ def shear_wave_decay():
     # initizlize the gird
     rho = np.ones((size_x, size_y))
     ux = np.zeros((size_x, size_y))
-    ux[int(size_x / 2), :] = shear_wave
+    ux[:, :] = shear_wave
     uy = np.zeros((size_x, size_y))
     grid = equilibrium(rho, ux, uy)
 
@@ -89,8 +89,6 @@ def shear_wave_decay():
         rho,ux,uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
         ###
-        #plt.plot(ux[int(size_x / 2), :])
-        #plt.show()
         # analize the amplitude
         ux_fft = np.fft.fft(ux[int(size_x/2),:])
         ampl = 2/size_y* np.abs(ux_fft)
@@ -99,8 +97,22 @@ def shear_wave_decay():
 
     # visualize
     # visualize amplitude response?!
+    fig, ax = plt.subplots()
+    textstr = '\n'.join((
+        r'size = %d x %d' % (size_x,size_y ),
+        r'omega = %.02f' % (relaxation,)
+    ))
+    # these are matplotlib.patch.Patch properties
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    ax.text(0.6, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+            verticalalignment='top', bbox=props)
+
     plt.plot(amplitude_array)
     plt.title("Shear Wave Decay")
+    plt.ylabel("Amplitude")
+    plt.xlabel("# of steps")
     plt.show()
 
 
