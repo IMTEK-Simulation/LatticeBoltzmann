@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 1000
+steps = 3000
 size_x = 200
 size_y = 200
 amplitude = 0.1
