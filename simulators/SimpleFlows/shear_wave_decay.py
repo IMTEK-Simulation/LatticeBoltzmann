@@ -95,8 +95,14 @@ def shear_wave_decay():
         ampl = np.max(ampl)
         amplitude_array.append(ampl)
 
+    # theoretical solution
+    x = np.arange(0,steps)
+    v = 1/3 * (1/relaxation - 1/2)
+    k_y = 2 * np.pi/size_x
+    # some sort of -e-fkt
+    u_theo = amplitude * np.exp(-v*k_y*k_y*x)
+
     # visualize
-    # visualize amplitude response?!
     fig, ax = plt.subplots()
     textstr = '\n'.join((
         r'size = %d x %d' % (size_x,size_y ),
@@ -106,13 +112,15 @@ def shear_wave_decay():
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
     # place a text box in upper left in axes coords
-    ax.text(0.6, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+    ax.text(0.64, 0.8, textstr, transform=ax.transAxes, fontsize=14,
             verticalalignment='top', bbox=props)
 
-    plt.plot(amplitude_array)
+    plt.plot(amplitude_array, label = "Simulated")
+    plt.plot(u_theo, color = "red",label = "Theoretically")
     plt.title("Shear Wave Decay")
     plt.ylabel("Amplitude")
     plt.xlabel("# of steps")
+    plt.legend()
     plt.show()
 
 
