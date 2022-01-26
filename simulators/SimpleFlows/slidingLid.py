@@ -82,6 +82,7 @@ def bounce_back(grid,uw):
     grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
 
     #### TOP + Bottom
+    # TODO rho_wall
     # for bottom y = 0
     grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
     grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
