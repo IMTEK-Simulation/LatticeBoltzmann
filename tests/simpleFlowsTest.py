@@ -5,6 +5,7 @@ The purpose of this file is to help develop the simpleFlows
 
 import unittest
 import numpy as np
+import matplotlib.pyplot as plt
 
 '''
 Tester for Streaming
@@ -699,6 +700,23 @@ class testsForNewCollision(unittest.TestCase):
                 eq = equlibrium_function(rho[k, l], ux[k, l], uy[k, l])
                 for c in range(channels):
                     self.assertEqual(eq[c], eq2[c, k, l])
+
+class testsForShearWave(unittest.TestCase):
+    def test_initial_shear_wave(self):
+        nx = 200
+        x_k = np.arange(nx)
+        s = np.linspace(0, 2*np.pi, nx)
+        wavevector = (2 * np.pi / nx) * x_k
+        uy_k = np.sin(wavevector)
+        shear_wave = np.sin(s)
+        for i in range(nx):
+            self.assertAlmostEqual(wavevector[i],s[i],delta = 0.1)
+            self.assertAlmostEqual(uy_k[i],shear_wave[i],delta= 0.1)
+        '''
+        the two methods produce different results, they do not agree if i go 
+        an order of magitude smaller
+        '''
+
 
 '''
 functions

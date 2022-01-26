@@ -28,9 +28,9 @@ import matplotlib.pyplot as plt
 steps = 100
 size_x = 200
 size_y = 200
-amplitude = 1
+amplitude = 0.01
 periode = 1
-relaxation = 0.5
+relaxation = 0.1
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 
@@ -80,9 +80,6 @@ def shear_wave_decay():
     uy = np.zeros((size_x, size_y))
     grid = equilibrium(rho, ux, uy)
 
-    # get in the shear wave
-    # np sin?
-    shear_wave = amplitude * np.sin(periode*(np.linspace(-np.pi,np.pi,size_y)))
     amplitude_array = []
 
     # loop
@@ -91,18 +88,19 @@ def shear_wave_decay():
         stream(grid)
         rho,ux,uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
-        plt.plot(ux[int(size_x / 2), :])
-        plt.show()
+        ###
+        #plt.plot(ux[int(size_x / 2), :])
+        #plt.show()
         # analize the amplitude
         ux_fft = np.fft.fft(ux[int(size_x/2),:])
         ampl = 2/size_y* np.abs(ux_fft)
         ampl = np.max(ampl)
-        amplitude_array.append( ampl)
-        #amplitude_array += ampl
+        amplitude_array.append(ampl)
 
     # visualize
     # visualize amplitude response?!
-    plt.plot(ux[int(size_x / 2), :])
+    plt.plot(amplitude_array)
+    plt.title("Shear Wave Decay")
     plt.show()
 
 
