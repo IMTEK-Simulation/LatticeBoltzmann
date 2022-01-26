@@ -26,10 +26,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 1000
-uw = 1
-size_x = 100
-size_y = 100
+steps = 3000
+uw = 0.1
+size_x = 50
+size_y = 50
 relaxation = 0.5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -70,6 +70,7 @@ def caluculate_rho_ux_uy(grid):
 
 
 def bounce_back(grid,uw):
+
     #### Left + Right
     # right so x = 0
     grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
@@ -79,6 +80,7 @@ def bounce_back(grid,uw):
     grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
     grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
     grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
+
     #### TOP + Bottom
     # for bottom y = 0
     grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
@@ -92,9 +94,6 @@ def bounce_back(grid,uw):
 # body
 def sliding_lid():
     print("Sliding Lid")
-    # init the variables
-    steps = 1000
-    uw = 0.01
 
     # initizlize the gird
     rho = np.ones((size_x+2,size_y+2))
@@ -109,7 +108,7 @@ def sliding_lid():
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
 
-    print(grid[2,0,:])
+    # print(grid[2,0,:])
     # visualize
     x = np.arange(0, size_x)
     y = np.arange(0, size_y)
@@ -117,6 +116,13 @@ def sliding_lid():
     plt.streamplot(X,Y,ux[1:-1,1:-1],uy[1:-1,1:-1])
     plt.title("Sliding Lid")
     plt.show()
+    '''
+    plt.plot(ux[int(1 + size_x / 2), 1:-1], color="green")
+    plt.xlabel('Position in cross section')
+    plt.ylabel('velocity')
+    plt.title('Constant velocity')
+    plt.show()
+    '''
 
 
 
