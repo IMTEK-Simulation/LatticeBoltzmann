@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 2000
+steps = 100
 size_x = 200
 size_y = 200
 amplitude = 1
@@ -70,27 +70,39 @@ def caluculate_rho_ux_uy(grid):
 # main body
 def shear_wave_decay():
     print("Shear Wave Decay")
+    # shear wave
+    shear_wave = amplitude * np.sin(periode * (np.linspace(-np.pi, np.pi, size_y)))
 
     # initizlize the gird
     rho = np.ones((size_x, size_y))
     ux = np.zeros((size_x, size_y))
+    ux[int(size_x / 2), :] = shear_wave
     uy = np.zeros((size_x, size_y))
     grid = equilibrium(rho, ux, uy)
 
     # get in the shear wave
     # np sin?
     shear_wave = amplitude * np.sin(periode*(np.linspace(-np.pi,np.pi,size_y)))
-    ux[int(size_x/2),:] = shear_wave
+    amplitude_array = []
 
     # loop
     for i in range(steps):
+        # standard procedure
         stream(grid)
         rho,ux,uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
+        plt.plot(ux[int(size_x / 2), :])
+        plt.show()
+        # analize the amplitude
+        ux_fft = np.fft.fft(ux[int(size_x/2),:])
+        ampl = 2/size_y* np.abs(ux_fft)
+        ampl = np.max(ampl)
+        amplitude_array.append( ampl)
+        #amplitude_array += ampl
 
     # visualize
     # visualize amplitude response?!
-    plt.plot(ux[int(size_x/2),:])
+    plt.plot(ux[int(size_x / 2), :])
     plt.show()
 
 
