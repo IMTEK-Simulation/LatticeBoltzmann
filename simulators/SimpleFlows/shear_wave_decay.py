@@ -26,9 +26,10 @@ import scipy.optimize
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 3000
+steps = 1000
 size_x = 200
 size_y = 200
+k_y = 2*2*np.pi/size_x
 amplitude = 0.1
 periode = 1
 relaxation = 0.2
@@ -70,7 +71,6 @@ def caluculate_rho_ux_uy(grid):
 
 # fit stuff
 def theo_Exp(x, v):
-    k_y = 2 * np.pi / size_x
     return amplitude * np.exp(-v*k_y*k_y*x)
 
 
@@ -78,7 +78,8 @@ def theo_Exp(x, v):
 def shear_wave_decay():
     print("Shear Wave Decay")
     # shear wave
-    shear_wave = amplitude * np.sin(periode * (np.linspace(0, 2*np.pi, size_y)))
+    x_values = k_y * np.arange(0,size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
     # initizlize the gird
     rho = np.ones((size_x, size_y))
     ux = np.zeros((size_x, size_y))
@@ -104,7 +105,6 @@ def shear_wave_decay():
     # theoretical solution
     x = np.arange(0,steps)
     v = 1/3 * (1/relaxation - 1/2)
-    k_y = 2 * np.pi/size_x
     # some sort of -e-fkt
     u_theo = amplitude * np.exp(-v*k_y*k_y*x)
 
@@ -118,6 +118,7 @@ def shear_wave_decay():
     textstr = '\n'.join((
         r'size = %d x %d' % (size_x,size_y ),
         r'omega = %.02f' % (relaxation,),
+        r'amplitude = %.02f' % (amplitude,),
         r'v_theo = %.02f' % (v,),
         r'v_sim = %.02f' % (v_s,)
     ))
@@ -125,7 +126,7 @@ def shear_wave_decay():
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
     # place a text box in upper left in axes coords
-    ax.text(0.72, 0.8, textstr, transform=ax.transAxes, fontsize=11,
+    ax.text(0.71, 0.82, textstr, transform=ax.transAxes, fontsize=11,
             verticalalignment='top', bbox=props)
 
     plt.plot(amplitude_array, label = "Simulated")
