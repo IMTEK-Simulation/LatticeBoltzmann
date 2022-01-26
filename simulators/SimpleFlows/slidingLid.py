@@ -26,10 +26,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 3000
+steps = 6000
 uw = 0.1
-size_x = 50
-size_y = 50
+size_x = 200
+size_y = 200
 relaxation = 0.5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -113,7 +113,7 @@ def sliding_lid():
     x = np.arange(0, size_x)
     y = np.arange(0, size_y)
     X, Y = np.meshgrid(x, y)
-    plt.streamplot(X,Y,ux[1:-1,1:-1],uy[1:-1,1:-1])
+    plt.streamplot(X,Y,ux[1:-1,1:-1].T,uy[1:-1,1:-1].T)
     plt.title("Sliding Lid")
     plt.show()
     '''
