@@ -22,6 +22,7 @@ if i understood this corretly i just give the sim a random velocity in the middl
 '''
 # imports
 import numpy as np
+import scipy.optimize
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
@@ -67,12 +68,17 @@ def caluculate_rho_ux_uy(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
+# fit stuff
+def theo_Exp(x, v):
+    k_y = 2 * np.pi / size_x
+    return amplitude * np.exp(-v*k_y*k_y*x)
+
+
 # main body
 def shear_wave_decay():
     print("Shear Wave Decay")
     # shear wave
-    shear_wave = amplitude * np.sin(periode * (np.linspace(-np.pi, np.pi, size_y)))
-
+    shear_wave = amplitude * np.sin(periode * (np.linspace(0, 2*np.pi, size_y)))
     # initizlize the gird
     rho = np.ones((size_x, size_y))
     ux = np.zeros((size_x, size_y))
@@ -102,17 +108,24 @@ def shear_wave_decay():
     # some sort of -e-fkt
     u_theo = amplitude * np.exp(-v*k_y*k_y*x)
 
+    ###
+    param,cv = scipy.optimize.curve_fit(theo_Exp,x,amplitude_array)
+    v_s = param[0]
+    print(v_s)
+    print(v)
     # visualize
     fig, ax = plt.subplots()
     textstr = '\n'.join((
         r'size = %d x %d' % (size_x,size_y ),
-        r'omega = %.02f' % (relaxation,)
+        r'omega = %.02f' % (relaxation,),
+        r'v_theo = %.02f' % (v,),
+        r'v_sim = %.02f' % (v_s,)
     ))
     # these are matplotlib.patch.Patch properties
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
     # place a text box in upper left in axes coords
-    ax.text(0.64, 0.8, textstr, transform=ax.transAxes, fontsize=14,
+    ax.text(0.72, 0.8, textstr, transform=ax.transAxes, fontsize=11,
             verticalalignment='top', bbox=props)
 
     plt.plot(amplitude_array, label = "Simulated")
