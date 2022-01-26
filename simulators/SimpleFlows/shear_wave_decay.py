@@ -18,14 +18,18 @@ for this look at the simpleFlowsTest.
 my todos:
 implement the shear wave decay should orient myself fully to the course now
 needs collsision, streaming, equilibrium
+if i understood this corretly i just give the sim a random velocity in the middle that is sinlike?!
 '''
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-size_x = 50
-size_y = 50
+steps = 2000
+size_x = 200
+size_y = 200
+amplitude = 1
+periode = 1
 relaxation = 0.5
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -66,6 +70,30 @@ def caluculate_rho_ux_uy(grid):
 # main body
 def shear_wave_decay():
     print("Shear Wave Decay")
+
+    # initizlize the gird
+    rho = np.ones((size_x, size_y))
+    ux = np.zeros((size_x, size_y))
+    uy = np.zeros((size_x, size_y))
+    grid = equilibrium(rho, ux, uy)
+
+    # get in the shear wave
+    # np sin?
+    shear_wave = amplitude * np.sin(periode*(np.linspace(-np.pi,np.pi,size_y)))
+    ux[int(size_x/2),:] = shear_wave
+
+    # loop
+    for i in range(steps):
+        stream(grid)
+        rho,ux,uy = caluculate_rho_ux_uy(grid)
+        collision(grid,rho,ux,uy)
+
+    # visualize
+    # visualize amplitude response?!
+    plt.plot(ux[int(size_x/2),:])
+    plt.show()
+
+
 
 # call
 shear_wave_decay()
