@@ -26,11 +26,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 6000
+#TODO reynolds Zahl nach 1000
+re = 1000
+steps = 10000
 uw = 0.1
-size_x = 200
-size_y = 200
-relaxation = 0.5
+size_x = 300
+size_y = 300
+relaxation = 1/((3*re/(size_x*uw)-1/2))
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # main methods
