@@ -282,6 +282,50 @@ def shear_wave_decay_fft_analyise(amplitude,relaxation,ky):
     plt.legend()
     plt.show()
 
+def shear_wave_different_times(amplitude,relaxation,ky_factor):
+    print("Shear Wave Decay Fourier Analysis at different timesteps")
+    # stuff for the basic simulation
+    runs = 9000
+    ky = ky_factor* k_y
+    x_values = ky * np.arange(0, size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
+
+    # initizlize the gird
+    rho = np.ones((size_x, size_y))
+    ux = np.zeros((size_x, size_y))
+    ux[:, :] = shear_wave
+    uy = np.zeros((size_x, size_y))
+    grid = equilibrium(rho, ux, uy)
+
+    #
+    plt.figure(figsize=(12,9), dpi = 100)
+    # loop
+    for i in range(runs +1):
+        # standard procedure
+        stream(grid)
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        collision_with_relaxation(grid, rho, ux, uy, relaxation)
+        # every 1000 runs do an analysis
+        # plot it into one diagram only analyse ux
+        if i % 3000 == 0:
+            label_string = 'Timestep {}'.format(i)
+            freq, fourier = do_fft_analysis(ux[int(size_x / 2), :])
+            norm = np.linalg.norm(fourier)
+            fourier = fourier/norm
+            plt.plot(freq,fourier, label = label_string)
+
+    plt.legend()
+    title_string ="Fourier analysis at different timesteps\n" + \
+        "Amplitude {}".format(amplitude) + " ,relaxation {}".format(relaxation) + " , {}*ky".format(ky_factor) +", size {}".format(size_x)
+    plt.title(title_string)
+    plt.xlabel("Frequency")
+    plt.ylabel("Normalized Amplitude")
+    plt.show()
+
+
+def shear_wave_different_values():
+    pass
+
 
 def plotter_shear_wave():
     sample_freq = size_x
@@ -331,7 +375,8 @@ def do_fft_analysis(signal):
 # calls
 # shear_wave_decay()
 # rapid_call()
-shear_wave_decay_fft_analyise(0.1,0.2,k_y*20)
+#shear_wave_decay_fft_analyise(0.1,0.2,k_y*20)
+shear_wave_different_times(0.1,0.2,10)
 #plotter_shear_wave()
 #example_fft()
 
