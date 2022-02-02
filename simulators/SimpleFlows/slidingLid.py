@@ -25,14 +25,15 @@ could rework the bounce back to be more streamlined
 import numpy as np
 import matplotlib.pyplot as plt
 
-# initial variables and sizes
+# initial variables and sizess
 #TODO reynolds Zahl nach 1000
 re = 1000
-steps = 10000
+base_lenght = 300
+steps = 100000
 uw = 0.1
-size_x = 300
-size_y = 300
-relaxation = 1/((3*re/(size_x*uw)-1/2))
+size_x = base_lenght
+size_y = base_lenght
+relaxation = (2*re)/(6*base_lenght*uw+re)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # main methods
