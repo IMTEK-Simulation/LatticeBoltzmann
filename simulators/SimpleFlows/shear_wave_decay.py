@@ -26,13 +26,13 @@ import scipy.optimize
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 3000
+steps = 10
 size_x = 200
 size_y = 200
 k_y = 2*np.pi/size_x
-amplitude = 0.1
+amplitude_global = 0.1
 periode = 1
-relaxation = 0.2
+relaxation_global = 0.2
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 
@@ -62,7 +62,7 @@ def equilibrium(rho,ux,uy):
 
 
 def collision(grid,rho,ux,uy):
-    grid -= relaxation * (grid - equilibrium(rho, ux, uy))
+    grid -= relaxation_global * (grid - equilibrium(rho, ux, uy))
 
 
 def collision_with_relaxation(grid,rho,ux,uy,relaxxation):
@@ -77,17 +77,24 @@ def caluculate_rho_ux_uy(grid):
 
 # fit stuff
 def theo_Exp(x, v):
-    return amplitude * np.exp(-v*k_y*k_y*x)
+    return amplitude_global * np.exp(-v*k_y*k_y*x)
 
 def theo_exp_with_variables(x,v,ky,amplitud):
     return amplitud * np.exp(-v * ky * ky * x)
 
 # main body
 def shear_wave_decay():
+    '''
+    Original Shear Wave simulatates the function an then fits the exponential decay to it
+
+    Returns
+    -------
+
+    '''
     print("Shear Wave Decay")
     # shear wave
     x_values = k_y * np.arange(0,size_x)
-    shear_wave = amplitude * np.sin(periode * x_values)
+    shear_wave = amplitude_global * np.sin(periode * x_values)
     # initizlize the gird
     rho = np.ones((size_x, size_y))
     ux = np.zeros((size_x, size_y))
@@ -112,21 +119,21 @@ def shear_wave_decay():
 
     # theoretical solution
     x = np.arange(0,steps)
-    v = 1/3 * (1/relaxation - 1/2)
+    v = 1/3 * (1/relaxation_global - 1/2)
     # some sort of -e-fkt
-    u_theo = amplitude * np.exp(-v*k_y*k_y*x)
+    u_theo = amplitude_global * np.exp(-v*k_y*k_y*x)
 
     ###
     param,cv = scipy.optimize.curve_fit(theo_Exp,x,amplitude_array)
     v_s = param[0]
-    print(v_s)
-    print(v)
+    #print(v_s)
+    #print(v)
     # visualize
     fig, ax = plt.subplots()
     textstr = '\n'.join((
         r'size = %d x %d' % (size_x,size_y ),
-        r'omega = %.02f' % (relaxation,),
-        r'amplitude = %.02f' % (amplitude,),
+        r'omega = %.02f' % (relaxation_global,),
+        r'amplitude = %.02f' % (amplitude_global,),
         r'v_theo = %.02f' % (v,),
         r'v_sim = %.02f' % (v_s,)
     ))
@@ -145,13 +152,25 @@ def shear_wave_decay():
     plt.legend()
     plt.show()
 
-def shear_wave_decay_more(amplitud,relaxxation,ky):
+def shear_wave_decay_more(amplitude,relaxation,ky):
+    '''
+    Calls the shear_wave_decay with
+    Parameters
+    ----------
+    amplitude
+    relaxxation
+    ky
+
+    Returns
+    -------
+
+    '''
     # return Params
     v_theoretical = 0
     v_simualated = 0
     amplitude_array = []
     x_values = ky * np.arange(0, size_x)
-    shear_wave = amplitud * np.sin(periode * x_values)
+    shear_wave = amplitude * np.sin(periode * x_values)
 
     # initizlize the gird
     rho = np.ones((size_x, size_y))
@@ -165,7 +184,7 @@ def shear_wave_decay_more(amplitud,relaxxation,ky):
         # standard procedure
         stream(grid)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
-        collision_with_relaxation(grid, rho, ux, uy,relaxxation)
+        collision_with_relaxation(grid, rho, ux, uy,relaxation)
         ###
         # analize the amplitude
         ux_fft = np.fft.fft(ux[int(size_x / 2), :])
@@ -175,19 +194,19 @@ def shear_wave_decay_more(amplitud,relaxxation,ky):
 
     # v_theoretical
     x = np.arange(0, steps)
-    v_theoretical = 1 / 3 * (1 / relaxxation - 1 / 2)
+    v_theoretical = 1 / 3 * (1 / relaxation - 1 / 2)
     # some sort of -e-fkt
-    amplitude_theo = amplitud * np.exp(-v_theoretical * ky * ky * x)
+    amplitude_theo = amplitude * np.exp(-v_theoretical * ky * ky * x)
 
     # v_simulated
-    # lambda wrapper for ky and amplitud
-    param, cv = scipy.optimize.curve_fit(lambda x,v : theo_exp_with_variables(x,v,ky,amplitud), x, amplitude_array)
+    # lambda wrapper for ky and amplitude
+    param, cv = scipy.optimize.curve_fit(lambda x,v : theo_exp_with_variables(x,v,ky,amplitude), x, amplitude_array)
     v_simualated = param[0]
 
     return v_theoretical, v_simualated,amplitude_theo, amplitude_array
 
 def rapid_call():
-    print("Mass caller")
+    print("Mass caller, Generate six")
     # put v theo and v sim in the labels
     # original amplitude
     v_theoretical_array = []
@@ -234,10 +253,11 @@ def rapid_call():
 
     plt.show()
 
+def shear_wave_decay_fft_analyise(amplitude,relaxation,ky):
+    pass
 
 
-
-# call
-#shear_wave_decay()
+# calls
+shear_wave_decay()
 rapid_call()
 
