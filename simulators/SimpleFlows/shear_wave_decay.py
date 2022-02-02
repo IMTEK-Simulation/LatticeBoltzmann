@@ -26,7 +26,7 @@ import scipy.optimize
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 1000
+steps = 100
 size_x = 300
 size_y = 300
 k_y = 2*np.pi/size_x
@@ -254,6 +254,7 @@ def rapid_call():
     plt.show()
 
 def shear_wave_decay_fft_analyise(amplitude,relaxation,ky):
+    print("Fourier Analysis of the shear wave decay")
     # stuff for the basic simulation
     x_values = ky * np.arange(0, size_x)
     shear_wave = amplitude * np.sin(periode * x_values)
@@ -274,9 +275,11 @@ def shear_wave_decay_fft_analyise(amplitude,relaxation,ky):
 
     # fft analysiation
     # should only make sense after the loop as we do not recorde the amplitude all the time
-    ux_fourier  = np.fft.fft(ux[int(size_x / 2), :])
-    #ux_freq = np.fft.fftfreq(ux[int(size_x / 2), :])
-    plt.plot(ux_fourier.real)
+    freq_y, transform_y =  do_fft_analysis(uy[int(size_x / 2), :])
+    freq_x, transform_x =  do_fft_analysis(ux[int(size_x / 2), :])
+    plt.plot(freq_x,transform_x, label = "ux")
+    plt.plot(freq_y, transform_y, label = "uy")
+    plt.legend()
     plt.show()
 
 
@@ -313,12 +316,22 @@ def example_fft():
     plt.plot(freq,abs(fourier_transform))
     plt.show()
 
+def do_fft_analysis(signal):
+    sample_freq = len(signal)
+    sample_time = 1 / sample_freq
+    fourier_transform = np.fft.fft(signal) / len(signal)
+    fourier_transform = fourier_transform[range(int(len(signal) / 2))]
+    tp_count = len(signal)
+    values = np.arange(int(tp_count) / 2)
+    time_period = tp_count / 100
+    freq = values / time_period
+    return freq, abs(fourier_transform)
 
 
 # calls
 # shear_wave_decay()
 # rapid_call()
-# shear_wave_decay_fft_analyise(0.1,0.2,k_y)
-plotter_shear_wave()
+shear_wave_decay_fft_analyise(0.1,0.2,k_y*20)
+#plotter_shear_wave()
 #example_fft()
 
