@@ -461,7 +461,7 @@ def do_fft_analysis(signal):
     sample_freq = len(signal)
     sample_time = 1 / sample_freq
     fourier_transform = np.fft.fft(signal) / len(signal)
-    # fourier_transform = fourier_transform[range(int(len(signal) / 2))]
+    fourier_transform = fourier_transform[range(int(len(signal) / 2))]
     tp_count = len(signal)
     values = np.arange(int(tp_count) / 2)
     time_period = tp_count / sample_freq
