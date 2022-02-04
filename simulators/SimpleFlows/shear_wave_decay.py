@@ -13,20 +13,13 @@ This module should be able to work on its own, but it will be with basically no 
 for this look at the simpleFlowsTest.
 '''
 
-# Todo: remove me
-'''
-my todos:
-implement the shear wave decay should orient myself fully to the course now
-needs collsision, streaming, equilibrium
-if i understood this corretly i just give the sim a random velocity in the middle that is sinlike?!
-'''
 # imports
 import numpy as np
 import scipy.optimize
 import matplotlib.pyplot as plt
 
 # initial variables and sizes
-steps = 100
+steps = 2000
 size_x = 300
 size_y = 300
 k_y = 2*np.pi/size_x
@@ -253,9 +246,10 @@ def rapid_call():
 
     plt.show()
 
-def shear_wave_decay_fft_analyise(amplitude,relaxation,ky):
+def shear_wave_decay_fft_analyise(amplitude,relaxation,ky_factor):
     print("Fourier Analysis of the shear wave decay")
     # stuff for the basic simulation
+    ky = k_y * ky_factor
     x_values = ky * np.arange(0, size_x)
     shear_wave = amplitude * np.sin(periode * x_values)
 
@@ -323,8 +317,86 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
     plt.show()
 
 
-def shear_wave_different_values():
-    pass
+def shear_wave_decay_return(amplitude,relaxation,ky_factor):
+    # stuff for the basic simulation
+    ky = k_y * ky_factor
+    x_values = ky * np.arange(0, size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
+
+    # initizlize the gird
+    rho = np.ones((size_x, size_y))
+    ux = np.zeros((size_x, size_y))
+    ux[:, :] = shear_wave
+    uy = np.zeros((size_x, size_y))
+    grid = equilibrium(rho, ux, uy)
+
+    # loop
+    for i in range(steps):
+        # standard procedure
+        stream(grid)
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        collision_with_relaxation(grid, rho, ux, uy, relaxation)
+
+    return ux, uy
+
+def analyse_different_values():
+    print("Analyse diffrent k_ys")
+    # call patterns
+    num_of_patterns = 8
+    amplitude = 0.1
+    relaxation = 0.2
+    amplitude_call_pattern = np.ones(num_of_patterns) * amplitude
+    relaxation_call_pattern = np.ones(num_of_patterns) * relaxation
+    ky_factor_call_pattern = (np.arange(num_of_patterns)+1) * 2
+    # save bins
+    ux_bin = []
+    uy_bin = []
+    freq_x_bin = []
+    fourier_x_bin = []
+    freq_y_bin = []
+    fourier_y_bin = []
+    # run all patterns
+    for i in range(num_of_patterns):
+        # call function
+        ux, uy = shear_wave_decay_return(amplitude_call_pattern[i],relaxation_call_pattern[i],ky_factor_call_pattern[i])
+        # only save the value in the middle the  rest can be discarded
+        ux_bin.append(ux[int(size_x / 2), :])
+        uy_bin.append(uy[int(size_x / 2), :])
+    # do a fft analysis
+    for i in range(num_of_patterns):
+        freq_x, fourier_x = do_fft_analysis(ux_bin[i])
+        freq_y, fourier_y = do_fft_analysis(uy_bin[i])
+        # append
+        freq_x_bin.append(freq_x)
+        freq_y_bin.append(freq_y)
+        fourier_x_bin.append(fourier_x)
+        fourier_y_bin.append(fourier_y)
+    # plotting
+    x = 0
+    y = 0
+    fig_size = (10 * 2.5, 8 * 2.5)
+    axs = plt.figure(figsize=fig_size).subplots(4, 2)
+    for i in range(num_of_patterns):
+        # actual plotting
+        axs[y, x].plot(freq_x_bin[i],fourier_x_bin[i],label = "ux")
+        axs[y, x].plot(freq_y_bin[i],fourier_y_bin[i],label = "uy")
+        title_string = "Amplitude {}".format(amplitude_call_pattern[i]) \
+                       + " ,relaxation {}".format(relaxation_call_pattern[i]) + \
+                       " , {}*ky".format(ky_factor_call_pattern[i]) \
+                       +", size {}".format(size_x)
+        axs[y,x].set_title(title_string)
+        axs[y, x].set_xlabel("Frequency")
+        axs[y, x].set_ylabel("Amplitude")
+        axs[y,x].legend()
+        # counting
+        x += 1
+        if x == 2:
+            x = 0
+        if (i + 1) % 2 == 0 and i != 0:
+            y += 1
+
+    # dont forget
+    plt.show()
 
 
 def plotter_shear_wave():
@@ -375,8 +447,8 @@ def do_fft_analysis(signal):
 # calls
 # shear_wave_decay()
 # rapid_call()
-#shear_wave_decay_fft_analyise(0.1,0.2,k_y*20)
-shear_wave_different_times(0.1,0.2,10)
+# shear_wave_different_times(0.1,0.2,10)
+analyse_different_values()
 #plotter_shear_wave()
 #example_fft()
 
