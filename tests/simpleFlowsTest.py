@@ -5,6 +5,7 @@ The purpose of this file is to help develop the simpleFlows
 
 import unittest
 import numpy as np
+from mpi4py import MPI
 import matplotlib.pyplot as plt
 
 '''
@@ -274,12 +275,6 @@ class testsInStreaming(unittest.TestCase):
         # print(grid)
         # print(grid[1,:,:,]) # gives the elements with the index 0
 
-
-'''
-tester to get an understanding about the collision operation
-'''
-
-
 class testsInCollision(unittest.TestCase):
     ###
     def test_equilbrium_function(self):
@@ -313,11 +308,6 @@ class testsInCollision(unittest.TestCase):
         # do streaming
         stream(grid)
         # this should conclude 1 step
-
-
-'''
-Tests for the boundary
-'''
 
 class testsForBoundary(unittest.TestCase):
     # i use the original stream here couse it is equivalent to the implementation in the last test
@@ -653,7 +643,6 @@ class testsForBoundary(unittest.TestCase):
         grid = np.zeros((9,5,3))
         #print(grid.shape[1])
 
-
 class testsForNewCollision(unittest.TestCase):
     def test_faster_principal_calc(self):
         # init stuff
@@ -718,8 +707,17 @@ class testsForShearWave(unittest.TestCase):
         '''
 
 
+class testsForMPI(unittest.TestCase):
+    def test_rank(self):
+        rank = MPI.COMM_WORLD.Get_rank()
+        size = MPI.COMM_WORLD.Get_size()
+        print('Rank {}/{} is alive.'.format(rank, size))
+        self.assertTrue(False)
+
+
 '''
-functions
+functions:
+Quick disclaimer i think half of them dont really work correctlly
 '''
 # Copy pasta
 c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],

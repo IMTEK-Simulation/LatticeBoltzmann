@@ -22,16 +22,20 @@ needs streaming, collsion, equiblrium, bounce back, mpi-decomposition
 
 # imports
 import numpy as np
+from mpi4py import MPI
 import matplotlib.pyplot as plt
 
-# initial variables and sizes
-size_x = 50
-size_y = 50
-relaxation = 0.5
+# initial variables and sizess
+re = 1000
+base_lenght = 300
+steps = 100000
+uw = 0.1
+size_x = base_lenght
+size_y = base_lenght
+relaxation = (2*re)/(6*base_lenght*uw+re)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
-
-# main functions
+# main methods
 def stream(grid):
     for i in range(1,9):
         grid[i] = np.roll(grid[i],velocity_set[i], axis = (0,1))
@@ -55,8 +59,10 @@ def equilibrium(rho,ux,uy):
                      (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
                      (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
+
 def collision(grid,rho,ux,uy):
     grid -= relaxation * (grid - equilibrium(rho, ux, uy))
+
 
 def caluculate_rho_ux_uy(grid):
     rho = np.sum(grid, axis=0)  # sums over each one individually
@@ -64,9 +70,45 @@ def caluculate_rho_ux_uy(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
-# main body
-def sliding_lid_with_MPI():
-    print("Sliding Lid with MPI")
 
-# caller
-sliding_lid_with_MPI()
+def bounce_back(grid,uw):
+    #### Left + Right
+    # right so x = 0
+    grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
+    grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
+    grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
+    # left so x = -1
+    grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
+    grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
+    grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
+
+    #### TOP + Bottom
+    # for bottom y = 0
+    grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
+    grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
+    grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
+    # for top y = -1
+    grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
+    grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
+    grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
+
+# body
+def sliding_lid_mpi():
+    print("Sliding Lid")
+
+    # initizlize the gird
+    rho = np.ones((size_x+2,size_y+2))
+    ux = np.zeros((size_x+2,size_y+2))
+    uy = np.zeros((size_x+2,size_y+2))
+    grid = equilibrium(rho,ux,uy)
+
+    # loop
+    for i in range(steps):
+        stream(grid)
+        bounce_back(grid,uw)
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        collision(grid,rho,ux,uy)
+
+
+# call
+sliding_lid_mpi()
