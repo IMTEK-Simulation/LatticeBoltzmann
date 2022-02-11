@@ -13,20 +13,11 @@ This module should be able to work on its own, but it will be with basically no 
 for this look at the simpleFlowsTest.
 '''
 
-# Todo: remove me
-'''
-my todos:
-implement the sliding lid 3 boundaries just as bounce back, 1 is sliding over it
-needs streaming, collision, equilibrium, bounce back but more complicated
-use streamplot for a visualization
-could rework the bounce back to be more streamlined
-'''
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
 
 # initial variables and sizess
-#TODO reynolds Zahl nach 1000
 re = 1000
 base_lenght = 300
 steps = 100000
@@ -114,11 +105,22 @@ def sliding_lid():
 
     # print(grid[2,0,:])
     # visualize
+    # values
     x = np.arange(0, size_x)
     y = np.arange(0, size_y)
     X, Y = np.meshgrid(x, y)
-    plt.streamplot(X,Y,ux[1:-1,1:-1].T,uy[1:-1,1:-1].T)
+    speed = np.sqrt(ux[1:-1,1:-1].T ** 2 + uy[1:-1,1:-1].T ** 2)
+    # plot
+    plt.streamplot(X,Y,ux[1:-1,1:-1].T,uy[1:-1,1:-1].T, color = speed, cmap= plt.cm.jet)
+    ax = plt.gca()
+    ax.set_xlim([0, 301])
+    ax.set_ylim([0, 301])
     plt.title("Sliding Lid")
+    plt.xlabel("x-Position")
+    plt.ylabel("y-Position")
+    fig = plt.colorbar()
+    fig.set_label("Velocity u(x,y,t)", rotation=270,labelpad = 15)
+    plt.savefig('temp.png')
     plt.show()
     '''
     plt.plot(ux[int(1 + size_x / 2), 1:-1], color="green")
