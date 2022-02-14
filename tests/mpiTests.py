@@ -13,6 +13,7 @@ Test- and Playground for the mpi implementation
  -> send and recive random stuff
     -> maybe do some unittests here not sure thou ;<;
  -> try out domain decomposition i guess (sendrecv lol)
+ -> test the seperation into top left usw.
 '''
 import unittest
 from mpi4py import MPI
