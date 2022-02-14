@@ -19,6 +19,7 @@ Test- and Playground for the mpi implementation
  https://zoomadmin.com/HowToInstall/UbuntuPackage/python3-mpi4py
  use cart_comm
  use cartcomm.shift 
+ just use the code from the slides lol twoards the end
 '''
 import unittest
 from mpi4py import MPI
