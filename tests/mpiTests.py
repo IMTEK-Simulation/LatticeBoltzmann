@@ -36,6 +36,7 @@ def monte_carlo():
     ###
     ntotal = 1000000
     nlocal = ntotal//size
+    print(nlocal)
     if rank == 0:
         # for all the cases when it can not be divided equally
         nlocal = ntotal - nlocal*(size-1)
@@ -49,15 +50,35 @@ def monte_carlo():
     comm.Reduce(nsucess,reduced_nsucess, op= MPI.SUM, root = 0)
     return f"{4*reduced_nsucess/ntotal}"
 
+def data_exchanger():
+    # for some reason i have to do this
+    import numpy as np
+    import time
+    ###
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
+    rank = comm.Get_rank()
+    ###
+    time.sleep(rank) # sleps 0 or 1 s
+    ###
+    if rank == 0:
+        pass
+    elif rank == 1:
+        pass
+
+
+
+
 # Main caller
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
                  ) as rc:
     # get a broadcast_view on the cluster which is best
+    print(rc.ids)
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(monte_carlo)
+    r = view.apply_async(monte_carlo)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
