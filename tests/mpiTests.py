@@ -7,7 +7,7 @@ Test- and Playground for the mpi implementation
         -> create the cartisian thingi
 
 '''
-# TODO
+# TODO remove me !!
 '''
  -> monte carlo implementation get the first feel ;<;
  -> send and recive random stuff
