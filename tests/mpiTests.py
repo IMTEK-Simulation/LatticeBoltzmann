@@ -17,13 +17,22 @@ Test- and Playground for the mpi implementation
  -> will have to run those tests on my own pc as i have more than 4 processors
  -> dont forget how to install!! sudo apt install mpi4py
  https://zoomadmin.com/HowToInstall/UbuntuPackage/python3-mpi4py
+ use cart_comm
+ use cartcomm.shift 
 '''
 import unittest
 from mpi4py import MPI
 import ipyparallel as ipp
+import multiprocessing
+import os
+import psutil
 
 # basic core count
-cores = 2
+print(multiprocessing.cpu_count()) # actually returns the number of threads lol
+print(os.cpu_count())
+print(psutil.cpu_count(logical=False))
+# only psutil how i want it to lol
+cores = psutil.cpu_count(logical=False)
 
 def mpi_example():
     comm = MPI.COMM_WORLD
