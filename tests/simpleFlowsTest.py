@@ -6,6 +6,7 @@ The purpose of this file is to help develop the simpleFlows
 import unittest
 import numpy as np
 from mpi4py import MPI
+import ipyparallel as ipp
 import matplotlib.pyplot as plt
 
 '''
@@ -708,11 +709,23 @@ class testsForShearWave(unittest.TestCase):
 
 
 class testsForMPI(unittest.TestCase):
-    def test_rank(self):
+    def test_if_works(self):
         rank = MPI.COMM_WORLD.Get_rank()
         size = MPI.COMM_WORLD.Get_size()
+        #print('Rank {}/{} is alive.'.format(rank, size))
+        # Test out weather or not MPI works at all
+        self.assertEqual(rank,0)
+        self.assertEqual(size,1)
+
+    def test_parrallel(self):
+        # i assume im missing something here as i just get a single core for the mpi
+        comm = MPI.COMM_WORLD
+        size = comm.Get_size()
+        rank = comm.Get_rank()
         print('Rank {}/{} is alive.'.format(rank, size))
-        self.assertTrue(False)
+        # cant easially get more than 1 thread for testing will put into an extra file
+        # as this one is already messy enough
+
 
 
 '''
