@@ -11,8 +11,8 @@ Test- and Playground for the mpi implementation
 '''
  -> monte carlo implementation get the first feel ;<;
  -> send and recive random stuff
-    -> maybe do some unittests here not sure thou
- -> try out domain decomposition i guess  
+    -> maybe do some unittests here not sure thou ;<;
+ -> try out domain decomposition i guess (sendrecv lol)
 '''
 import unittest
 from mpi4py import MPI
@@ -61,11 +61,17 @@ def data_exchanger():
     ###
     time.sleep(rank) # sleps 0 or 1 s
     ###
+    return_value = np.arange(0,10)
     if rank == 0:
-        pass
+        return_value = return_value*3
+        # send the value to the next rank
+        comm.Send(return_value,dest=1,tag=99)
     elif rank == 1:
-        pass
+        values = np.arange(0,10)
+        comm.Recv(values,source=0,tag=99)
+        return_value = values
 
+    return f"{return_value}"
 
 
 
@@ -74,11 +80,11 @@ def data_exchanger():
 with ipp.Cluster(engines='mpi', n=cores
                  ) as rc:
     # get a broadcast_view on the cluster which is best
-    print(rc.ids)
+    # print(rc.ids)
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_async(monte_carlo)
+    r = view.apply_async(data_exchanger)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
