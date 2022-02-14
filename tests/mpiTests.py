@@ -7,7 +7,13 @@ Test- and Playground for the mpi implementation
         -> create the cartisian thingi
 
 '''
-
+# TODO
+'''
+ -> monte carlo implementation get the first feel
+ -> send and recive random stuff
+    -> maybe do some unittests here not sure thou
+ -> try out domain decomposition i guess  
+'''
 import unittest
 import numpy as np
 from mpi4py import MPI
@@ -19,6 +25,9 @@ cores = 2
 def mpi_example():
     comm = MPI.COMM_WORLD
     return f"Hello World from rank {comm.Get_rank()}. total ranks={comm.Get_size()}"
+
+# try out the monte carlo stuff
+
 
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
