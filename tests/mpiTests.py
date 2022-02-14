@@ -87,7 +87,16 @@ def data_exchanger():
 
     return f"{return_value}"
 
-
+def basic_sendrecv_snippet(f_ikl):
+    # odd variables
+    comm = MPI.COMM_WORLD
+    left_dst = 1
+    left_src = 1
+    # actual code
+    recvbuf = f_ikl[:,-1,:].copy()
+    comm.Sendrecv(f_ikl[:,1,:].copy(),left_dst,
+                  recvbuf= recvbuf,source=left_src)
+    f_ikl[:,-1,:] = recvbuf
 
 # Main caller
 # request an MPI cluster with 2 engines
