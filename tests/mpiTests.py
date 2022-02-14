@@ -49,6 +49,7 @@ def monte_carlo():
     comm.Reduce(nsucess,reduced_nsucess, op= MPI.SUM, root = 0)
     return f"{4*reduced_nsucess/ntotal}"
 
+# Main caller
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
                  ) as rc:
