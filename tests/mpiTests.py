@@ -14,6 +14,8 @@ Test- and Playground for the mpi implementation
     -> maybe do some unittests here not sure thou ;<;
  -> try out domain decomposition i guess (sendrecv lol)
  -> test the seperation into top left usw.
+ -> will have to run those tests on my own pc as i have more than 4 processors
+ -> dont forget how to install!! sudo apt install mpi4py
 '''
 import unittest
 from mpi4py import MPI
