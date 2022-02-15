@@ -139,7 +139,6 @@ def communicator_with_2cpus():
 
 
 
-
 # Main caller
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
