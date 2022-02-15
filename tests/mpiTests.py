@@ -141,14 +141,14 @@ def shift_stuff():
     # size stuff
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    comm = MPI.COMM_WORLD.Create_cart((2,1), periods=(False,False))
+    comm = MPI.COMM_WORLD.Create_cart((1,2), periods=(False,False))
     return_value = 0
     #
     if rank == 0:
-        return_value = comm.Shift(0,1) # right
+        return_value = comm.Shift(1,1) # right/top
         # second number is the destination first is yiberish
     if rank == 1:
-        return_value = comm.Shift(0,-1) # left
+        return_value = comm.Shift(1,-1) # left/bottom
 
     ###
     return f"{return_value}"
