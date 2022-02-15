@@ -276,6 +276,7 @@ class testsInStreaming(unittest.TestCase):
         # print(grid)
         # print(grid[1,:,:,]) # gives the elements with the index 0
 
+
 class testsInCollision(unittest.TestCase):
     ###
     def test_equilbrium_function(self):
@@ -309,6 +310,7 @@ class testsInCollision(unittest.TestCase):
         # do streaming
         stream(grid)
         # this should conclude 1 step
+
 
 class testsForBoundary(unittest.TestCase):
     # i use the original stream here couse it is equivalent to the implementation in the last test
@@ -644,6 +646,7 @@ class testsForBoundary(unittest.TestCase):
         grid = np.zeros((9,5,3))
         #print(grid.shape[1])
 
+
 class testsForNewCollision(unittest.TestCase):
     def test_faster_principal_calc(self):
         # init stuff
@@ -691,6 +694,7 @@ class testsForNewCollision(unittest.TestCase):
                 for c in range(channels):
                     self.assertEqual(eq[c], eq2[c, k, l])
 
+
 class testsForShearWave(unittest.TestCase):
     def test_initial_shear_wave(self):
         nx = 200
@@ -722,9 +726,36 @@ class testsForMPI(unittest.TestCase):
         comm = MPI.COMM_WORLD
         size = comm.Get_size()
         rank = comm.Get_rank()
-        print('Rank {}/{} is alive.'.format(rank, size))
+        # print('Rank {}/{} is alive.'.format(rank, size))
         # cant easially get more than 1 thread for testing will put into an extra file
         # as this one is already messy enough
+
+class testGoodGridCreation(unittest.TestCase):
+    def test_grid_creation_twoplus(self):
+        # basic idea make the grid 2 bigger than the actual domain
+        # no need to any bs magic to the grid
+        # could also do it the harder way and look for a way to create grids
+        # without the need to recheck lol
+        base_size = 300
+        Nx = base_size+2
+        Ny = base_size+2
+
+    def test_grid_creation_compicated(self):
+        # keep the orignial grid sizes
+        base_size = 300
+        Nx = base_size
+        Ny = base_size
+
+    def test_grid_creation_positions(self):
+        # call structure
+        base_grid_size = 300
+        pos = np.array([[0,0,0,1,1,1,2,2,2],
+                        [0,1,2,0,1,2,0,1,2]]).T
+        # return grid based on the position of my array
+        for i in range(9):
+            grid = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size)
+
+        self.assertTrue(False)
 
 
 
@@ -735,9 +766,12 @@ Quick disclaimer i think half of them dont really work correctlly
 # Copy pasta
 c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T
+
+
 def stream(f_ikl):
     for i in range(1, 9):
         f_ikl[i] = np.roll(f_ikl[i], c_ic[i], axis=(0, 1))
+
 
 def equlibrium_function(rho, ux, uy):
     # TODO ask for the explicit reduction of the function 3.54 in the book especially the delta
@@ -755,6 +789,7 @@ def equlibrium_function(rho, ux, uy):
     equilibrium[7] = rho / 36 * (1 - 3 * uxy + 9 * ux * uy + 3 * uu)
     equilibrium[8] = rho / 36 * (1 + 3 * uxy - 9 * ux * uy + 3 * uu)
     return equilibrium
+
 
 def equilibrium_on_array_test(rho,ux,uy):
     uxy_3plus = 3 * (ux + uy)
@@ -775,6 +810,7 @@ def equilibrium_on_array_test(rho,ux,uy):
                     (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
                     (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
+
 def calculate_3pincipal_values(gridpoint):
     # just the basic equations
     rho = np.sum(gridpoint)
@@ -794,6 +830,7 @@ def streaming(grid):
         grid[j] = np.roll(grid[j], velocity_set[j])
     for j in range(5, 9):
         grid[j] = np.roll(grid[j], velocity_set[j], axis=(0, 1))
+
 
 def baunce_back_resting_wall(grid):
     # baunce back without any velocity gain
@@ -828,6 +865,7 @@ def baunce_back_resting_wall(grid):
     grid[5, :, max_size_y] = 0
     grid[6, :, max_size_y] = 0
 
+
 def baunce_back_top_moving(grid,uw):
     # baunce back without any velocity gain
     max_size_x = grid.shape()[1] # x
@@ -861,6 +899,7 @@ def baunce_back_top_moving(grid,uw):
     grid[5, :, max_size_y] = 0
     grid[6, :, max_size_y] = 0
 
+
 def good_pressure_variation(g,pin,pout):
     w = np.array([4 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 9, 1 / 36, 1 / 36, 1 / 36, 1 / 36])  # weights
     c = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],  # velocities, x components
@@ -888,6 +927,7 @@ def good_pressure_variation(g,pin,pout):
     g[:, 0, :] = fin
     g[:, -1, :] = fout
 
+
 def caluculate_real_values(grid):
     '''
     Calculates rho, ux, uy
@@ -904,7 +944,15 @@ def caluculate_real_values(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
+def apply_compicated_boundaries(pox,poy,base_grid_size):
+    print(pox)
+    print(poy)
 
+def apply_two_extra_layers(pox,poy):
+    pass
+
+
+# andreas
 def own_periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
 
     # get all the values
