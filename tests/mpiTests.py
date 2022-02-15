@@ -35,6 +35,7 @@ print(psutil.cpu_count(logical=False))
 # only psutil how i want it to lol
 cores = psutil.cpu_count(logical=False)
 
+# basic example
 def mpi_example():
     comm = MPI.COMM_WORLD
     return f"Hello World from rank {comm.Get_rank()}. total ranks={comm.Get_size()}"
@@ -64,6 +65,7 @@ def monte_carlo():
     comm.Reduce(nsucess,reduced_nsucess, op= MPI.SUM, root = 0)
     return f"{4*reduced_nsucess/ntotal}"
 
+# exchange data
 def data_exchanger():
     # for some reason i have to do this
     import numpy as np
@@ -90,13 +92,52 @@ def data_exchanger():
 def basic_sendrecv_snippet(f_ikl):
     # odd variables
     comm = MPI.COMM_WORLD
+    ###
     left_dst = 1
     left_src = 1
+    ##
     # actual code
     recvbuf = f_ikl[:,-1,:].copy()
+    # comm.Sendrecv(buffer send, destination
+    #               buffer recev, source
+    # f_ikl[:,1,:].copy() Zelle links wird gesendet
     comm.Sendrecv(f_ikl[:,1,:].copy(),left_dst,
                   recvbuf= recvbuf,source=left_src)
     f_ikl[:,-1,:] = recvbuf
+
+def communicator_with_2cpus():
+    # size just in x so its easier to actually part into 2
+    import numpy as np
+    nx = 10
+    #
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
+    rank = comm.Get_rank()
+    local_nx = nx//size
+    #
+    local_nx = local_nx+1
+    return_array = np.zeros((local_nx,2))
+
+    if rank == 0:
+        return_array[-2,:] = 5 # send second last
+        # now send the content of the last to the next
+        recvbuf = return_array[-1,:]
+        comm.Sendrecv(return_array[-2].copy(),1,recvbuf=recvbuf,source=0)
+        # comm.Send(return_array[-2].copy(), dest=1, tag = 99)
+        # comm.Recv(recvbuf,source=1)
+        return_array[-1] = recvbuf # recive in the ghost zell
+        #
+    elif rank == 1:
+        return_array[1,:] = 23
+        recvbuf = return_array[0,:]
+        comm.Sendrecv(return_array[1].copy(),0,recvbuf = recvbuf,source=1)
+        # comm.Send(return_array[1], dest=0)
+        # comm.Recv(recvbuf, source=0, tag = 99)
+        return_array[0] = recvbuf
+    #####
+    return f"{return_array}"
+
+
 
 # Main caller
 # request an MPI cluster with 2 engines
@@ -107,7 +148,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_async(data_exchanger)
+    r = view.apply_sync(communicator_with_2cpus)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
