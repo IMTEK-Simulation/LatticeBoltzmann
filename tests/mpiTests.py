@@ -137,7 +137,21 @@ def communicator_with_2cpus():
     #####
     return f"{return_array}"
 
+def shift_stuff():
+    # size stuff
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+    comm = MPI.COMM_WORLD.Create_cart((2,1), periods=(False,False))
+    return_value = 0
+    #
+    if rank == 0:
+        return_value = comm.Shift(0,1) # right
+        # second number is the destination first is yiberish
+    if rank == 1:
+        return_value = comm.Shift(0,-1) # left
 
+    ###
+    return f"{return_value}"
 
 # Main caller
 # request an MPI cluster with 2 engines
@@ -148,7 +162,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(communicator_with_2cpus)
+    r = view.apply_sync(shift_stuff)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
