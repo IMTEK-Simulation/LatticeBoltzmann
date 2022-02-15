@@ -94,7 +94,7 @@ def basic_sendrecv_snippet(f_ikl):
     comm = MPI.COMM_WORLD
     ###
     left_dst = 1
-    left_src = 1
+    left_src = 1 # ranks of the processes in the comminicator
     ##
     # actual code
     recvbuf = f_ikl[:,-1,:].copy()
