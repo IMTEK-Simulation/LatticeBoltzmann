@@ -122,7 +122,7 @@ def communicator_with_2cpus():
         return_array[-2,:] = 5 # send second last
         # now send the content of the last to the next
         recvbuf = return_array[-1,:]
-        comm.Sendrecv(return_array[-2].copy(),1,recvbuf=recvbuf,source=0)
+        comm.Sendrecv(return_array[-2].copy(),1,recvbuf=recvbuf,source=1)
         # comm.Send(return_array[-2].copy(), dest=1, tag = 99)
         # comm.Recv(recvbuf,source=1)
         return_array[-1] = recvbuf # recive in the ghost zell
@@ -130,7 +130,7 @@ def communicator_with_2cpus():
     elif rank == 1:
         return_array[1,:] = 23
         recvbuf = return_array[0,:]
-        comm.Sendrecv(return_array[1].copy(),0,recvbuf = recvbuf,source=1)
+        comm.Sendrecv(return_array[1].copy(),0,recvbuf = recvbuf,source=0)
         # comm.Send(return_array[1], dest=0)
         # comm.Recv(recvbuf, source=0, tag = 99)
         return_array[0] = recvbuf
