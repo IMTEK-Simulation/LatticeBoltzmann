@@ -29,6 +29,7 @@ import matplotlib.pyplot as plt
 # initial variables and sizess
 re = 1000
 base_lenght = 300
+rank_in_one_direction = 2 # for an MPI thingi with 9 processes -> 3x3 field
 steps = 100000
 uw = 0.1
 size_x = base_lenght
@@ -112,6 +113,8 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
 
     '''
     info = mpiPackageStructure()
+    info.rank = rank
+    info.size = size
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
     info.size_x = base_grid//(max_x+1) + 2
@@ -239,7 +242,7 @@ def comunicate(grid,info):
 # body
 def sliding_lid_mpi():
     print("Sliding Lid")
-
+    return
     # initizlize the gird
     rho = np.ones((size_x+2,size_y+2))
     ux = np.zeros((size_x+2,size_y+2))
@@ -257,5 +260,9 @@ def sliding_lid_mpi():
 # call
 # sliding_lid_mpi()
 comm = MPI.COMM_WORLD
-info = fill_mpi_struct_fields(4,9,2,2,300)
+gridsize = 300
+info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
+                              rank_in_one_direction,rank_in_one_direction,base_lenght)
+print(info)
+
 
