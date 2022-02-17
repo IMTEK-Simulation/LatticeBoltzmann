@@ -284,6 +284,8 @@ def sliding_lid_mpi(process_info):
         plt.savefig('temp.png')
         plt.show()
 
+
+
 # call
 # sliding_lid_mpi()
 comm = MPI.COMM_WORLD
