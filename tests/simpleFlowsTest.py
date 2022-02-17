@@ -755,7 +755,7 @@ class testGoodGridCreation(unittest.TestCase):
         subsize = base_grid_size//3
         # return grid based on the position of my array
         for i in range(9):
-            (x,y) = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size,2,2)
+            (x,y) = apply_boundaries(pos[i,0],pos[i,1],base_grid_size,2,2)
             # look weather or not the shapes are ok
             if i == 0: # top left corner
                 self.assertEqual((subsize +1,subsize+1),(x,y))
@@ -858,7 +858,8 @@ class testGoodGridCreation(unittest.TestCase):
         self.assertFalse(struct.boundaries_info.apply_top)
         self.assertFalse(struct.boundaries_info.apply_right)
         self.assertFalse(struct.boundaries_info.apply_bottom)
-
+        # btw where my boundaries are false i have to comunicate
+        # every cell gets an layer around it, what id do with it depends on the boundaryinfo
 
 '''
 functions:
@@ -1063,24 +1064,14 @@ def caluculate_real_values(grid):
     return rho,ux,uy
 
 
-def apply_compicated_boundaries(pox,poy,base_grid_size, max_x,max_y):
+def apply_boundaries(pox,poy,base_grid_size, max_x,max_y):
     # print(pox)
     # sprint(poy)
     # define the sizes
     # TODO look out for the edge cases actually ok for me idc just watch out
     subsize_x = base_grid_size//(max_x+1)
     subsize_y = base_grid_size//(max_y+1)
-    # case corner right top
-    # case corner right bottom
-    # case corner left top
-    # case corner left bottum
-    # case top
-    # case bottom
-    # case right
-    # case left
-    # in the volume
-    # only done once per run can be done slow
-
+    ##
     if pox == 0 or pox == max_x:
         subsize_x += 1
         if poy == 0 or poy == max_y:
@@ -1143,7 +1134,8 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     info = mpiPackageStructure()
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
-    info.size_x,info.size_y = apply_compicated_boundaries(info.pos_x,info.pos_y,base_grid,max_x,max_y)
+    info.size_x = base_grid//(max_x+1) +2
+    info.size_y = base_grid //(max_y + 1) + 2
     #
     return info
 

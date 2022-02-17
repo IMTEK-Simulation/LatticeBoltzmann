@@ -56,6 +56,59 @@ class mpiPackageStructure:
     pos_x : int = -1
     pos_y : int = -1
 
+# set functions for the mpi Package Structure
+def set_boundary_info(pox,poy,max_x,max_y):
+    info = boundariesApplied(False,False,False,False)
+    ##
+    if pox == 0:
+        info.apply_top = True
+    if poy == 0:
+        info.apply_left = True
+    if pox == max_x:
+        info.apply_bottom = True
+    if poy == max_y:
+        info.apply_right = True
+    ##
+    # print(info)
+    return info
+
+def get_postions_out_of_rank_size_quadratic(rank,size):
+    ##
+    # assume to be quadratic
+    edge_lenght = int(np.sqrt(size))
+    if edge_lenght*edge_lenght != size:
+        return -1,-1
+    ###
+    pox = rank//edge_lenght
+    poy = rank % edge_lenght
+    ###
+    return pox,poy
+
+
+def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
+    '''
+
+    Parameters
+    ----------
+    rank
+    size
+    max_x starts from 0
+    max_y starts from 0
+    base_grid
+
+    Returns
+    -------
+
+    '''
+    info = mpiPackageStructure()
+    info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
+    info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
+    info.size_x = base_grid//(max_x+1) + 2
+    info.size_y = base_grid //(max_y + 1) + 2
+    #
+    return info
+
+
 # main methods
 def stream(grid):
     for i in range(1,9):
@@ -161,3 +214,5 @@ def sliding_lid_mpi():
 
 # call
 # sliding_lid_mpi()
+info = fill_mpi_struct_fields(4,9,2,2,300)
+print(info)
