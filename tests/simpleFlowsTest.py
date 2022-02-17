@@ -6,6 +6,7 @@ The purpose of this file is to help develop the simpleFlows
 import unittest
 import numpy as np
 from mpi4py import MPI
+from dataclasses import dataclass
 import ipyparallel as ipp
 import matplotlib.pyplot as plt
 
@@ -754,28 +755,109 @@ class testGoodGridCreation(unittest.TestCase):
         subsize = base_grid_size//3
         # return grid based on the position of my array
         for i in range(9):
-            grid = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size,2,2)
+            (x,y) = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size,2,2)
+            # look weather or not the shapes are ok
             if i == 0: # top left corner
-                self.assertEqual((subsize +1,subsize+1),grid.shape)
+                self.assertEqual((subsize +1,subsize+1),(x,y))
             elif i == 1:
-                self.assertEqual((subsize +1,subsize),grid.shape)
+                self.assertEqual((subsize +1,subsize),(x,y))
             elif i == 2: # top right corner
-                self.assertEqual((subsize +1,subsize+1),grid.shape)
+                self.assertEqual((subsize +1,subsize+1),(x,y))
             elif i == 3:
-                self.assertEqual((subsize,subsize+1),grid.shape)
+                self.assertEqual((subsize,subsize+1),(x,y))
             elif i == 4: # middle
-                self.assertEqual((subsize +2,subsize+2),grid.shape)
+                self.assertEqual((subsize +2,subsize+2),(x,y))
             elif i == 5:
-                self.assertEqual((subsize ,subsize+1),grid.shape)
+                self.assertEqual((subsize ,subsize+1),(x,y))
             elif i == 6: # bottom left corner
-                self.assertEqual((subsize +1,subsize+1),grid.shape)
+                self.assertEqual((subsize +1,subsize+1),(x,y))
             elif i == 7: #
-                self.assertEqual((subsize+1 ,subsize),grid.shape)
+                self.assertEqual((subsize+1 ,subsize),(x,y))
             elif i == 8: # bottom right corner
-                self.assertEqual((subsize +1,subsize+1),grid.shape)
+                self.assertEqual((subsize +1,subsize+1),(x,y))
 
         # self.assertTrue(False)
 
+    def test_grid_creation_boundary_info(self):
+        pos = np.array([[0, 0, 0, 1, 1, 1, 2, 2, 2],
+                        [0, 1, 2, 0, 1, 2, 0, 1, 2]]).T
+
+        test = boundariesApplied(False,False,False,False)
+        for i in range(9):
+            test = set_boundary_info(pos[i,0],pos[i,1],2,2)
+            # check stuff kinda messy as each on is check individually
+            if i == 0: # top left corner
+                self.assertTrue(test.apply_top)
+                self.assertTrue(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 1:
+                self.assertTrue(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 2: # top right corner
+                self.assertTrue(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertTrue(test.apply_right)
+            elif i == 3:
+                self.assertFalse(test.apply_top)
+                self.assertTrue(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 4: # middle
+                self.assertFalse(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 5:
+                self.assertFalse(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertFalse(test.apply_bottom)
+                self.assertTrue(test.apply_right)
+            elif i == 6: # bottom left corner
+                self.assertFalse(test.apply_top)
+                self.assertTrue(test.apply_left)
+                self.assertTrue(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 7: #
+                self.assertFalse(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertTrue(test.apply_bottom)
+                self.assertFalse(test.apply_right)
+            elif i == 8: # bottom right corner
+                self.assertFalse(test.apply_top)
+                self.assertFalse(test.apply_left)
+                self.assertTrue(test.apply_bottom)
+                self.assertTrue(test.apply_right)
+
+    def test_rank_size_postion(self):
+        size = 9
+        pos = np.array([[0, 0, 0, 1, 1, 1, 2, 2, 2],
+                        [0, 1, 2, 0, 1, 2, 0, 1, 2]]).T
+        for i in range(size):
+            pox, poy = get_postions_out_of_rank_size_quadratic(i,size)
+            self.assertEqual(pos[i,0], pox)
+            self.assertEqual(pos[i,1], poy)
+
+    def test_write_structure(self):
+        rank = 4
+        size = 9
+        max_x = 2
+        max_y = 2
+        grid_size = 300
+        #
+        struct = fill_mpi_struct_fields(rank,size,max_x,max_y,grid_size)
+        # test all the values
+        self.assertEqual(struct.pos_x,1)
+        self.assertEqual(struct.pos_y,1)
+        self.assertEqual(struct.size_x,102)
+        self.assertEqual(struct.size_y,102)
+        self.assertFalse(struct.boundaries_info.apply_left)
+        self.assertFalse(struct.boundaries_info.apply_top)
+        self.assertFalse(struct.boundaries_info.apply_right)
+        self.assertFalse(struct.boundaries_info.apply_bottom)
 
 
 '''
@@ -786,6 +868,23 @@ Quick disclaimer i think half of them dont really work correctlly
 c_ic = np.array([[0,  1,  0, -1,  0,  1, -1, -1,  1],
                  [0,  0,  1,  0, -1,  1,  1, -1, -1]]).T
 
+@dataclass
+class boundariesApplied:
+    # left right top bottom
+    apply_left : bool = False
+    apply_right: bool = False
+    apply_top:bool = False
+    apply_bottom: bool = False
+
+@dataclass
+class mpiPackageStructure:
+    # apply for boundaries
+    boundaries_info: boundariesApplied  = (False,False,False,False)
+    # sizes and position in the whole grid
+    size_x: int = -1
+    size_y: int = -1
+    pos_x : int = -1
+    pos_y : int = -1
 
 def stream(f_ikl):
     for i in range(1, 9):
@@ -963,11 +1062,12 @@ def caluculate_real_values(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
+
 def apply_compicated_boundaries(pox,poy,base_grid_size, max_x,max_y):
-    print(pox)
-    print(poy)
+    # print(pox)
+    # sprint(poy)
     # define the sizes
-    # TODO look out for the edge cases actually ok for me idk just watch out
+    # TODO look out for the edge cases actually ok for me idc just watch out
     subsize_x = base_grid_size//(max_x+1)
     subsize_y = base_grid_size//(max_y+1)
     # case corner right top
@@ -994,9 +1094,58 @@ def apply_compicated_boundaries(pox,poy,base_grid_size, max_x,max_y):
     ###
     # print(subsize_x,subsize_y)
     # give the grid back
-    return np.zeros((subsize_x,subsize_y))
+    return (subsize_x,subsize_y)
 
 
+def set_boundary_info(pox,poy,max_x,max_y):
+    info = boundariesApplied(False,False,False,False)
+    ##
+    if pox == 0:
+        info.apply_top = True
+    if poy == 0:
+        info.apply_left = True
+    if pox == max_x:
+        info.apply_bottom = True
+    if poy == max_y:
+        info.apply_right = True
+    ##
+    # print(info)
+    return info
+
+def get_postions_out_of_rank_size_quadratic(rank,size):
+    ##
+    # assume to be quadratic
+    edge_lenght = int(np.sqrt(size))
+    if edge_lenght*edge_lenght != size:
+        return -1,-1
+    ###
+    pox = rank//edge_lenght
+    poy = rank % edge_lenght
+    ###
+    return pox,poy
+
+
+def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
+    '''
+
+    Parameters
+    ----------
+    rank
+    size
+    max_x starts from 0
+    max_y starts from 0
+    base_grid
+
+    Returns
+    -------
+
+    '''
+    info = mpiPackageStructure()
+    info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
+    info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
+    info.size_x,info.size_y = apply_compicated_boundaries(info.pos_x,info.pos_y,base_grid,max_x,max_y)
+    #
+    return info
 
 def apply_two_extra_layers(pox,poy):
     pass

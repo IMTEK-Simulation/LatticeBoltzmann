@@ -22,6 +22,7 @@ needs streaming, collsion, equiblrium, bounce back, mpi-decomposition
 
 # imports
 import numpy as np
+from dataclasses import dataclass
 from mpi4py import MPI
 import matplotlib.pyplot as plt
 
@@ -35,6 +36,26 @@ size_y = base_lenght
 relaxation = (2*re)/(6*base_lenght*uw+re)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
+
+# pack stuff so its together
+@dataclass
+class boundariesApplied:
+    # left right top bottom
+    apply_left : bool = False
+    apply_right: bool = False
+    apply_top:bool = False
+    apply_bottom: bool = False
+
+@dataclass
+class mpiPackageStructure:
+    # apply for boundaries
+    boundaries_info: boundariesApplied = (False,False,False,False)
+    # sizes and position in the whole grid
+    size_x: int = -1
+    size_y: int = -1
+    pos_x : int = -1
+    pos_y : int = -1
+
 # main methods
 def stream(grid):
     for i in range(1,9):
@@ -139,4 +160,4 @@ def sliding_lid_mpi():
 
 
 # call
-sliding_lid_mpi()
+# sliding_lid_mpi()
