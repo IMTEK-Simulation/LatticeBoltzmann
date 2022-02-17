@@ -861,6 +861,11 @@ class testGoodGridCreation(unittest.TestCase):
         # btw where my boundaries are false i have to comunicate
         # every cell gets an layer around it, what id do with it depends on the boundaryinfo
 
+    def test_neighbor_gridcells(self):
+        size = 9
+        for i in range(size):
+            neighbor = determin_neighbors(i,size)
+            print(neighbor)
 '''
 functions:
 Quick disclaimer i think half of them dont really work correctlly
@@ -877,10 +882,19 @@ class boundariesApplied:
     apply_top:bool = False
     apply_bottom: bool = False
 
+
+@dataclass
+class cellNeighbors:
+    left: int = -1
+    right: int = -1
+    top: int = -1
+    bottom: int = -1
+
 @dataclass
 class mpiPackageStructure:
     # apply for boundaries
     boundaries_info: boundariesApplied  = (False,False,False,False)
+    neighbors : cellNeighbors = (-1,-1,-1,-1)
     # sizes and position in the whole grid
     size_x: int = -1
     size_y: int = -1
@@ -1139,8 +1153,19 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     #
     return info
 
-def apply_two_extra_layers(pox,poy):
-    pass
+def determin_neighbors(rank,size):
+    # determin edge lenght
+    edge_lenght = int(np.sqrt(size))
+    if edge_lenght * edge_lenght != size:
+        return -1, -1
+    ###
+    neighbor = cellNeighbors()
+    neighbor.top = rank - edge_lenght
+    neighbor.bottom = rank + edge_lenght
+    neighbor.right = rank +1
+    neighbor.left = rank-1
+    return neighbor
+
 
 
 # andreas

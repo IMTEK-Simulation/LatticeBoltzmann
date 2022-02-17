@@ -47,14 +47,25 @@ class boundariesApplied:
     apply_bottom: bool = False
 
 @dataclass
+class cellNeighbors:
+    left: int = -1
+    right: int = -1
+    top: int = -1
+    bottom: int = -1
+
+@dataclass
 class mpiPackageStructure:
     # apply for boundaries
     boundaries_info: boundariesApplied = (False,False,False,False)
+    neighbors: cellNeighbors = (-1, -1, -1, -1)
     # sizes and position in the whole grid
     size_x: int = -1
     size_y: int = -1
     pos_x : int = -1
     pos_y : int = -1
+    # for MPI stuff
+    rank : int = -1
+    size : int = -1
 
 # set functions for the mpi Package Structure
 def set_boundary_info(pox,poy,max_x,max_y):
@@ -105,9 +116,22 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
     info.size_x = base_grid//(max_x+1) + 2
     info.size_y = base_grid //(max_y + 1) + 2
+    info.neighbors = determin_neighbors(rank,size)
     #
     return info
 
+def determin_neighbors(rank,size):
+    # determin edge lenght
+    edge_lenght = int(np.sqrt(size))
+    if edge_lenght * edge_lenght != size:
+        return -1, -1
+    ###
+    neighbor = cellNeighbors()
+    neighbor.top = rank - edge_lenght
+    neighbor.bottom = rank + edge_lenght
+    neighbor.right = rank + 1
+    neighbor.left = rank-1
+    return neighbor
 
 # main methods
 def stream(grid):
@@ -222,6 +246,7 @@ def sliding_lid_mpi():
 
 # call
 # sliding_lid_mpi()
+comm = MPI.COMM_WORLD
 info = fill_mpi_struct_fields(4,9,2,2,300)
 comunicate(info)
 grid = np.ones((info.size_x,info.size_y))
