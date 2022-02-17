@@ -216,3 +216,5 @@ def sliding_lid_mpi():
 # sliding_lid_mpi()
 info = fill_mpi_struct_fields(4,9,2,2,300)
 print(info)
+grid = np.ones((info.size_x,info.size_y))
+print(grid.shape)
