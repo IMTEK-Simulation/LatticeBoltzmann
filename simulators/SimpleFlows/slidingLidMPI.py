@@ -29,8 +29,8 @@ import matplotlib.pyplot as plt
 # initial variables and sizess
 re = 1000
 base_lenght = 300
-rank_in_one_direction = 2 # for an MPI thingi with 9 processes -> 3x3 field
-steps = 100000
+rank_in_one_direction = 0 # for an MPI thingi with 9 processes -> 3x3 field
+steps = 20
 uw = 0.1
 size_x = base_lenght
 size_y = base_lenght
@@ -240,29 +240,30 @@ def comunicate(grid,info):
     #####
 
 # body
-def sliding_lid_mpi():
+def sliding_lid_mpi(process_info):
     print("Sliding Lid")
     return
     # initizlize the gird
-    rho = np.ones((size_x+2,size_y+2))
-    ux = np.zeros((size_x+2,size_y+2))
-    uy = np.zeros((size_x+2,size_y+2))
+    rho = np.ones((process_info.size_x,process_info.size_y))
+    ux = np.zeros((process_info.size_x,process_info.size_y))
+    uy = np.zeros((process_info.size_x,process_info.size_y))
     grid = equilibrium(rho,ux,uy)
 
     # loop
     for i in range(steps):
         stream(grid)
-        bounce_back(grid,uw)
+        bounce_back_choosen(grid,uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
+        communicate(grid,process_info)
 
 
 # call
 # sliding_lid_mpi()
 comm = MPI.COMM_WORLD
 gridsize = 300
-info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
-                              rank_in_one_direction,rank_in_one_direction,base_lenght)
-print(info)
-
+process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
+                                      rank_in_one_direction,rank_in_one_direction,base_lenght)
+print(process_info)
+sliding_lid_mpi(process_info)
 
