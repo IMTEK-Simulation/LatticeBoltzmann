@@ -167,33 +167,41 @@ def bounce_back(grid,uw):
     grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
 
-def bounce_back_choosen(grid,uw,apply_left,apply_right,apply_top,apply_bottom):
+def bounce_back_choosen(grid,uw,info):
     # modification for the bounce back for the bigger grids
     #### Left + Right
-    if apply_right:
+    if info.boundaries_info.apply_right:
         # right so x = 0
         grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
         grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
         grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
-    if apply_left:
+    if info.boundaries_info.apply_left:
         # left so x = -1
         grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
         grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
         grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
     #### TOP + Bottom
-    if apply_bottom:
+    if info.boundaries_info.apply_bottom:
         # for bottom y = 0
         grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
         grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
         grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
-    if apply_top:
+    if info.boundaries_info.apply_top:
         # for top y = -1
         grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
         grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
         grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
-
-
+def comunicate(grid,info):
+    # if they are false we have to comunicate otherwise will have to do the boundary stuff
+    if not info.boundaries_info.apply_right:
+        pass
+    if not info.boundaries_info.apply_left:
+        pass
+    if not info.boundaries_info.apply_bottom:
+        pass
+    if not info.boundaries_info.apply_top:
+        pass
 # body
 def sliding_lid_mpi():
     print("Sliding Lid")
@@ -215,6 +223,6 @@ def sliding_lid_mpi():
 # call
 # sliding_lid_mpi()
 info = fill_mpi_struct_fields(4,9,2,2,300)
-print(info)
+comunicate(info)
 grid = np.ones((info.size_x,info.size_y))
 print(grid.shape)
