@@ -219,13 +219,23 @@ def bounce_back_choosen(grid,uw,info):
 def comunicate(grid,info):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     if not info.boundaries_info.apply_right:
-        pass
+        recvbuf = grid[:,0,:].copy()
+        comm.Sendrecv(grid[:,-2,:].copy(),info.neighbors.right,recvbuf = recvbuf)
+        grid[:,0,:] = recvbuf
     if not info.boundaries_info.apply_left:
-        pass
+        recvbuf = grid[:, -1, :].copy()
+        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.right, recvbuf=recvbuf)
+        grid[:, -1, :] = recvbuf
     if not info.boundaries_info.apply_bottom:
-        pass
+        recvbuf = grid[:, :, -1].copy()
+        comm.Sendrecv(grid[:, :, 1].copy(), info.neighbors.right, recvbuf=recvbuf)
+        grid[:, :, -1] = recvbuf
     if not info.boundaries_info.apply_top:
-        pass
+        recvbuf = grid[:, :, 0].copy()
+        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.right, recvbuf=recvbuf)
+        grid[:, :, 0] = recvbuf
+    #####
+
 # body
 def sliding_lid_mpi():
     print("Sliding Lid")
@@ -248,6 +258,4 @@ def sliding_lid_mpi():
 # sliding_lid_mpi()
 comm = MPI.COMM_WORLD
 info = fill_mpi_struct_fields(4,9,2,2,300)
-comunicate(info)
-grid = np.ones((info.size_x,info.size_y))
-print(grid.shape)
+
