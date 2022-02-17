@@ -134,6 +134,7 @@ def determin_neighbors(rank,size):
     neighbor.bottom = rank + edge_lenght
     neighbor.right = rank + 1
     neighbor.left = rank-1
+    ###
     return neighbor
 
 # main methods
@@ -242,7 +243,6 @@ def comunicate(grid,info):
 # body
 def sliding_lid_mpi(process_info):
     print("Sliding Lid")
-    return
     # initizlize the gird
     rho = np.ones((process_info.size_x,process_info.size_y))
     ux = np.zeros((process_info.size_x,process_info.size_y))
@@ -255,8 +255,34 @@ def sliding_lid_mpi(process_info):
         bounce_back_choosen(grid,uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
-        communicate(grid,process_info)
+        comunicate(grid,process_info)
 
+    # plot
+    # TODO not sure how to move the data
+    if process_info.rank == 0:
+        # reduce i guess
+        full_grid = grid
+
+
+        # recalculate ux and uy
+        idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
+        # acutal plot
+        x = np.arange(0, size_x)
+        y = np.arange(0, size_y)
+        X, Y = np.meshgrid(x, y)
+        speed = np.sqrt(full_ux[1:-1, 1:-1].T ** 2 + full_uy[1:-1, 1:-1].T ** 2)
+        # plot
+        plt.streamplot(X, Y, full_ux[1:-1, 1:-1].T, full_uy[1:-1, 1:-1].T, color=speed, cmap=plt.cm.jet)
+        ax = plt.gca()
+        ax.set_xlim([0,size_x+1])
+        ax.set_ylim([0, size_y+1])
+        plt.title("Sliding Lid")
+        plt.xlabel("x-Position")
+        plt.ylabel("y-Position")
+        fig = plt.colorbar()
+        fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
+        plt.savefig('temp.png')
+        plt.show()
 
 # call
 # sliding_lid_mpi()
