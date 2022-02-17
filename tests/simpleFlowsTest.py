@@ -751,11 +751,30 @@ class testGoodGridCreation(unittest.TestCase):
         base_grid_size = 300
         pos = np.array([[0,0,0,1,1,1,2,2,2],
                         [0,1,2,0,1,2,0,1,2]]).T
+        subsize = base_grid_size//3
         # return grid based on the position of my array
         for i in range(9):
-            grid = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size)
+            grid = apply_compicated_boundaries(pos[i,0],pos[i,1],base_grid_size,2,2)
+            if i == 0: # top left corner
+                self.assertEqual((subsize +1,subsize+1),grid.shape)
+            elif i == 1:
+                self.assertEqual((subsize +1,subsize),grid.shape)
+            elif i == 2: # top right corner
+                self.assertEqual((subsize +1,subsize+1),grid.shape)
+            elif i == 3:
+                self.assertEqual((subsize,subsize+1),grid.shape)
+            elif i == 4: # middle
+                self.assertEqual((subsize +2,subsize+2),grid.shape)
+            elif i == 5:
+                self.assertEqual((subsize ,subsize+1),grid.shape)
+            elif i == 6: # bottom left corner
+                self.assertEqual((subsize +1,subsize+1),grid.shape)
+            elif i == 7: #
+                self.assertEqual((subsize+1 ,subsize),grid.shape)
+            elif i == 8: # bottom right corner
+                self.assertEqual((subsize +1,subsize+1),grid.shape)
 
-        self.assertTrue(False)
+        # self.assertTrue(False)
 
 
 
@@ -944,9 +963,40 @@ def caluculate_real_values(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
-def apply_compicated_boundaries(pox,poy,base_grid_size):
+def apply_compicated_boundaries(pox,poy,base_grid_size, max_x,max_y):
     print(pox)
     print(poy)
+    # define the sizes
+    # TODO look out for the edge cases actually ok for me idk just watch out
+    subsize_x = base_grid_size//(max_x+1)
+    subsize_y = base_grid_size//(max_y+1)
+    # case corner right top
+    # case corner right bottom
+    # case corner left top
+    # case corner left bottum
+    # case top
+    # case bottom
+    # case right
+    # case left
+    # in the volume
+    # only done once per run can be done slow
+
+    if pox == 0 or pox == max_x:
+        subsize_x += 1
+        if poy == 0 or poy == max_y:
+            subsize_y += 1
+    elif poy == 0 or poy == max_y:
+        subsize_y += 1
+
+    else: # somewhere in the middle
+        subsize_x += 2
+        subsize_y += 2
+    ###
+    # print(subsize_x,subsize_y)
+    # give the grid back
+    return np.zeros((subsize_x,subsize_y))
+
+
 
 def apply_two_extra_layers(pox,poy):
     pass
