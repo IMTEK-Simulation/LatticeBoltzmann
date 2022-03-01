@@ -39,14 +39,6 @@ def indiviaual_clall():
                                                         ,rank_in_one_direction,base_lenght,
                                                        relaxation,steps,uw)
     #
-    process_info.boundaries_info.apply_right = True
-    process_info.boundaries_info.apply_left = True
-    process_info.boundaries_info.apply_top = True
-    process_info.boundaries_info.apply_bottom = True
-    if rank == 0:
-        process_info.boundaries_info.apply_right = False
-    if rank == 1:
-        process_info.boundaries_info.apply_left = False
     slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
