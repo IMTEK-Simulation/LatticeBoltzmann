@@ -331,6 +331,6 @@ def call():
 # call()
 # process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
 #collapse_data(process_info,np.zeros((26,26)))
-g = np.zeros((9,27,27))
-k = g[:,1:-1,1:-1]
-print(k.shape)
+# g = np.zeros((9,27,27))
+# k = g[:,1:-1,1:-1]
+# print(k.shape)
