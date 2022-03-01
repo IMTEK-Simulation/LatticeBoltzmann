@@ -301,7 +301,6 @@ def sliding_lid_mpi(process_info,comm):
         X, Y = np.meshgrid(x, y)
         speed = np.sqrt(full_ux.T ** 2 + full_uy.T ** 2)
         # plot
-        '''
         plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
         ax = plt.gca()
         ax.set_xlim([0,process_info.base_grid+1])
@@ -313,7 +312,7 @@ def sliding_lid_mpi(process_info,comm):
         fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
         plt.savefig('slidingLid.png')
         plt.show()
-        '''
+
 
 
 def call():
