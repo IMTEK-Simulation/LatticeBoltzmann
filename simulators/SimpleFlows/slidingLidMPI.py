@@ -245,6 +245,7 @@ def comunicate(grid,info,comm):
         grid[:, :, 0] = recvbuf
     #####
 
+
 # body
 def sliding_lid_mpi(process_info,comm):
     # print("Sliding Lid")
