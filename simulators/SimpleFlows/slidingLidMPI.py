@@ -247,8 +247,9 @@ def comunicate(grid,info,comm):
 
 
 def collapse_data(process_info,grid,comm):
-    full_grid = np.zeros((process_info.base_grid, process_info.base_grid))
+    full_grid = np.ones((process_info.base_grid, process_info.base_grid))
     # process 0 gets the data and does the visualization
+    '''
     if process_info.rank == 0:
         original_x = process_info.size_x-2 # ie the base size of the grid on that the
         original_y = process_info.size_y-2 # calculation ran
@@ -257,16 +258,17 @@ def collapse_data(process_info,grid,comm):
         for i in range(1,process_info.size):
             # recive
             temp = np.zeros((original_x,original_y))
-            comm.Recv(temp,source = i)
+            # comm.Recv(temp,source = i)
             # write at the right location
             # get the right x and y locations of the origin
             pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
-            full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))]
+            full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))] = temp
     # all the others send to p0
     else:
         # send stuff + curbe stuff from the sides
-        comm.Send(grid[:,1:-1,1:-1],dest=0)
-
+        # comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
+        pass
+    '''
     return full_grid
 
 
@@ -288,10 +290,9 @@ def sliding_lid_mpi(process_info,comm):
         comunicate(grid,process_info,comm)
 
     # aquire the data
-    # full_grid = collapse_data(process_info,grid,comm)
+    full_grid = collapse_data(process_info,grid,comm)
     # print
-    if process_info.rank == 0:
-        full_grid = grid
+    if process_info.rank == -1:
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot

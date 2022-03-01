@@ -38,7 +38,7 @@ def indiviaual_clall():
                                                         ,rank_in_one_direction,base_lenght,
                                                        relaxation,steps,uw)
     #
-    # slidingLidMPI.sliding_lid_mpi(process_info,comm)
+    slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
 # multiple caller
