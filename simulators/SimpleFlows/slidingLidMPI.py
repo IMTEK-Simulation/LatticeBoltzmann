@@ -25,6 +25,8 @@ import numpy as np
 from dataclasses import dataclass
 from mpi4py import MPI
 import matplotlib.pyplot as plt
+import ipyparallel as ipp
+import psutil
 
 # initial variables and sizess
 re = 1000
@@ -37,6 +39,7 @@ size_y = base_lenght
 relaxation = (2*re)/(6*base_lenght*uw+re)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
+cores = psutil.cpu_count(logical= False)
 
 # pack stuff so its together
 @dataclass
@@ -220,7 +223,7 @@ def bounce_back_choosen(grid,uw,info):
         grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
         grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
-def comunicate(grid,info):
+def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     if not info.boundaries_info.apply_right:
         recvbuf = grid[:,0,:].copy()
@@ -241,7 +244,7 @@ def comunicate(grid,info):
     #####
 
 # body
-def sliding_lid_mpi(process_info):
+def sliding_lid_mpi(process_info,comm):
     print("Sliding Lid")
     # initizlize the gird
     rho = np.ones((process_info.size_x,process_info.size_y))
@@ -255,7 +258,7 @@ def sliding_lid_mpi(process_info):
         bounce_back_choosen(grid,uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
-        comunicate(grid,process_info)
+        comunicate(grid,process_info,comm)
 
     # plot
     # TODO not sure how to move the data
@@ -288,10 +291,16 @@ def sliding_lid_mpi(process_info):
 
 # call
 # sliding_lid_mpi()
-comm = MPI.COMM_WORLD
-gridsize = 300
-process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
-                                      rank_in_one_direction,rank_in_one_direction,base_lenght)
-print(process_info)
-sliding_lid_mpi(process_info)
+def indiviaual_clall():
+    comm = MPI.COMM_WORLD
+    gridsize = 300
+    process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
+                                          rank_in_one_direction,rank_in_one_direction,base_lenght)
+    print(process_info)
+    sliding_lid_mpi(process_info,comm)
 
+# multiple caller
+with ipp.Cluster(engienes= 'mpi', n = cores) as rc:
+    view = rc.broadcast_view()
+    r = view.apply_sync(indiviaual_clall)
+    print("\n".join(r))
