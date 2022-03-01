@@ -70,6 +70,10 @@ class mpiPackageStructure:
     # for MPI stuff
     rank : int = -1
     size : int = -1
+    # overall
+    relaxation : int = -1
+    base_lenght: int = -1
+    steps : int = -1
 
 # set functions for the mpi Package Structure
 def set_boundary_info(pox,poy,max_x,max_y):

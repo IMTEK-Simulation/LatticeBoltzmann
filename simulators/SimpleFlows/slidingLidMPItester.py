@@ -33,7 +33,7 @@ def indiviaual_clall():
     process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction,rank_in_one_direction,base_lenght)
     # print(process_info)
     # print(comm.Get_size(),comm.Get_rank())
-    # sliding_lid_mpi(process_info,comm)
+    # slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
 #multiple caller
