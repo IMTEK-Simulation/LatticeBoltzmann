@@ -47,7 +47,7 @@ def indiviaual_clall():
         process_info.boundaries_info.apply_right = False
     if rank == 1:
         process_info.boundaries_info.apply_left = False
-    # slidingLidMPI.sliding_lid_mpi(process_info,comm)
+    slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
 #multiple caller
