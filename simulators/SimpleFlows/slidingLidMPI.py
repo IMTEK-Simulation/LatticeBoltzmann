@@ -28,15 +28,7 @@ import matplotlib.pyplot as plt
 import ipyparallel as ipp
 import psutil
 
-# initial variables and sizess
-re = 1000
-base_lenght = 300
-rank_in_one_direction = 0 # for an MPI thingi with 9 processes -> 3x3 field
-steps = 20
-uw = 0.1
-size_x = base_lenght
-size_y = base_lenght
-relaxation = (2*re)/(6*base_lenght*uw+re)
+# only vars
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 cores = psutil.cpu_count(logical= False)
@@ -72,8 +64,9 @@ class mpiPackageStructure:
     size : int = -1
     # overall
     relaxation : int = -1
-    base_lenght: int = -1
+    base_grid: int = -1
     steps : int = -1
+    uw : int = -1
 
 # set functions for the mpi Package Structure
 def set_boundary_info(pox,poy,max_x,max_y):
@@ -104,7 +97,7 @@ def get_postions_out_of_rank_size_quadratic(rank,size):
     return pox,poy
 
 
-def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
+def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
     '''
 
     Parameters
@@ -119,6 +112,7 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     -------
 
     '''
+    #
     info = mpiPackageStructure()
     info.rank = rank
     info.size = size
@@ -128,6 +122,10 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     info.size_y = base_grid //(max_y + 1) + 2
     info.neighbors = determin_neighbors(rank,size)
     #
+    info.relaxation = relaxation
+    info.base_grid = base_grid
+    info.steps = steps
+    info.uw = uw
     return info
 
 def determin_neighbors(rank,size):
@@ -169,7 +167,7 @@ def equilibrium(rho,ux,uy):
                      (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
 
-def collision(grid,rho,ux,uy):
+def collision(grid,rho,ux,uy,relaxation):
     grid -= relaxation * (grid - equilibrium(rho, ux, uy))
 
 
@@ -257,11 +255,11 @@ def sliding_lid_mpi(process_info,comm):
     grid = equilibrium(rho,ux,uy)
 
     # loop
-    for i in range(steps):
+    for i in range(process_info.steps):
         stream(grid)
-        bounce_back_choosen(grid,uw,process_info)
+        bounce_back_choosen(grid,process_info.uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
-        collision(grid,rho,ux,uy)
+        collision(grid,rho,ux,uy,process_info.relaxation)
         comunicate(grid,process_info,comm)
 
     # plot
@@ -274,15 +272,15 @@ def sliding_lid_mpi(process_info,comm):
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
-        x = np.arange(0, size_x)
-        y = np.arange(0, size_y)
+        x = np.arange(0, process_info.base_grid)
+        y = np.arange(0, process_info.base_grid)
         X, Y = np.meshgrid(x, y)
         speed = np.sqrt(full_ux[1:-1, 1:-1].T ** 2 + full_uy[1:-1, 1:-1].T ** 2)
         # plot
         plt.streamplot(X, Y, full_ux[1:-1, 1:-1].T, full_uy[1:-1, 1:-1].T, color=speed, cmap=plt.cm.jet)
         ax = plt.gca()
-        ax.set_xlim([0,size_x+1])
-        ax.set_ylim([0, size_y+1])
+        ax.set_xlim([0,process_info.base_grid+1])
+        ax.set_ylim([0, process_info.base_grid+1])
         plt.title("Sliding Lid")
         plt.xlabel("x-Position")
         plt.ylabel("y-Position")
@@ -293,10 +291,20 @@ def sliding_lid_mpi(process_info,comm):
 
 
 def call():
-    # sliding_lid_mpi()
+    # vars
+    steps = 100
+    re = 1000
+    base_lenght = 300
+    rank_in_one_direction = 0  # for an MPI thingi with 9 processes -> 3x3 field
+    uw = 0.1
+    relaxation = (2 * re) / (6 * base_lenght * uw + re)
+    # calls
     comm = MPI.COMM_WORLD
-    gridsize = 300
     process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
-                                          rank_in_one_direction,rank_in_one_direction,base_lenght)
+                                          rank_in_one_direction,rank_in_one_direction,base_lenght,
+                                          relaxation,steps,uw)
     print(process_info)
     sliding_lid_mpi(process_info,comm)
+
+
+# call()
