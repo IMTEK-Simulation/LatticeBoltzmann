@@ -25,12 +25,17 @@ cores = psutil.cpu_count(logical= False)
 # sliding_lid_mpi()
 def indiviaual_clall():
     import slidingLidMPI
-    comm = MPI.COMM_WORLD
     base_lenght = 300
-    size_x = base_lenght
-    size_y = base_lenght
+    steps = 0
+    re = 1000
+    uw = 0.1
+    relaxation = (2 * re) / (6 * base_lenght * uw + re)
     rank_in_one_direction = 3  # for an MPI thingi with 9 processes -> 3x3 field
-    process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction,rank_in_one_direction,base_lenght)
+    ###
+    comm = MPI.COMM_WORLD
+    process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction
+                                                        ,rank_in_one_direction,base_lenght,
+                                                        relaxation,steps,uw)
     # print(process_info)
     # print(comm.Get_size(),comm.Get_rank())
     # slidingLidMPI.sliding_lid_mpi(process_info,comm)
