@@ -117,7 +117,7 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
     info.rank = rank
     info.size = size
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
-    info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x-1,max_y-1)
+    info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x-1,max_y-1) # i should know my own code lol
     info.size_x = base_grid//(max_x + 1) + 2
     info.size_y = base_grid //(max_y + 1) + 2
     info.neighbors = determin_neighbors(rank,size)
@@ -260,7 +260,7 @@ def sliding_lid_mpi(process_info,comm):
         bounce_back_choosen(grid,process_info.uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy,process_info.relaxation)
-        # comunicate(grid,process_info,comm)
+        comunicate(grid,process_info,comm)
 
     # plot
     # TODO not sure how to move the data
