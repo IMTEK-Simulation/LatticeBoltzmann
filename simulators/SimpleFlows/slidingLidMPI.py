@@ -247,14 +247,13 @@ def comunicate(grid,info,comm):
 
 
 def collapse_data(process_info,grid,comm):
-    full_grid = np.ones((process_info.base_grid, process_info.base_grid))
+    full_grid = np.ones((9,process_info.base_grid, process_info.base_grid))
     # process 0 gets the data and does the visualization
-    '''
     if process_info.rank == 0:
         original_x = process_info.size_x-2 # ie the base size of the grid on that the
         original_y = process_info.size_y-2 # calculation ran
         # write the own stuff into it first
-        full_grid[:,0:original_x,0:original_y] = grid
+        full_grid[:,0:original_x,0:original_y] = grid[:,1:-1,1:-1]
         for i in range(1,process_info.size):
             # recive
             temp = np.zeros((original_x,original_y))
@@ -268,7 +267,6 @@ def collapse_data(process_info,grid,comm):
         # send stuff + curbe stuff from the sides
         # comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
         pass
-    '''
     return full_grid
 
 
@@ -292,16 +290,19 @@ def sliding_lid_mpi(process_info,comm):
     # aquire the data
     full_grid = collapse_data(process_info,grid,comm)
     # print
-    if process_info.rank == -1:
+    if process_info.rank == 0:
+        print("Making Image")
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
+
         x = np.arange(0, process_info.base_grid)
         y = np.arange(0, process_info.base_grid)
         X, Y = np.meshgrid(x, y)
-        speed = np.sqrt(full_ux[1:-1, 1:-1].T ** 2 + full_uy[1:-1, 1:-1].T ** 2)
+        speed = np.sqrt(full_ux.T ** 2 + full_uy.T ** 2)
         # plot
-        plt.streamplot(X, Y, full_ux[1:-1, 1:-1].T, full_uy[1:-1, 1:-1].T, color=speed, cmap=plt.cm.jet)
+        '''
+        plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
         ax = plt.gca()
         ax.set_xlim([0,process_info.base_grid+1])
         ax.set_ylim([0, process_info.base_grid+1])
@@ -312,11 +313,12 @@ def sliding_lid_mpi(process_info,comm):
         fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
         plt.savefig('slidingLid.png')
         plt.show()
+        '''
 
 
 def call():
     # vars
-    steps = 100
+    steps = 1000
     re = 1000
     base_lenght = 300
     rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field

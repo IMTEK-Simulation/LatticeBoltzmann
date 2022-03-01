@@ -47,4 +47,4 @@ print("Executing with " + str(cores) + " Cores")
 with ipp.Cluster(engines= 'mpi', n = cores) as rc:
     view = rc.broadcast_view()
     r = view.apply_sync(indiviaual_clall)
-    print("\n".join(r))
+    # print("\n".join(r))
