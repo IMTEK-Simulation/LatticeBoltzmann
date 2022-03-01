@@ -245,6 +245,29 @@ def comunicate(grid,info,comm):
         grid[:, :, 0] = recvbuf
     #####
 
+def collapse_data(process_info,grid,comm):
+    full_grid = np.zeros((process_info.base_grid, process_info.base_grid))
+    # process 0 gets the data and does the visualization
+    if process_info.rank == 0:
+        original_x = process_info.size_x-2 # ie the base size of the grid on that the
+        original_y = process_info.size_y-2 # calculation ran
+        # write the own stuff into it first
+        full_grid[:,0:original_x,0:original_y] = grid
+        for i in range(1,process_info.size):
+            # recive
+            temp = np.zeros((original_x,original_y))
+            comm.Recv(temp,source = i)
+            # write at the right location
+            # get the right x and y locations of the origin
+            pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
+            full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))]
+    # all the others send to p0
+    else:
+        # send stuff + curbe stuff from the sides
+        comm.Send(grid[:,1:-1,1:-1],dest=0)
+
+    return full_grid
+
 
 # body
 def sliding_lid_mpi(process_info,comm):
@@ -263,13 +286,10 @@ def sliding_lid_mpi(process_info,comm):
         collision(grid,rho,ux,uy,process_info.relaxation)
         comunicate(grid,process_info,comm)
 
-    # plot
-    # TODO not sure how to move the data
-    if process_info.rank == -1:
-        # reduce i guess
-        full_grid = grid
-
-
+    # aquire the data
+    full_grid = collapse_data(process_info,grid,comm)
+    # print
+    if process_info.rank == 0:
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
@@ -309,3 +329,8 @@ def call():
 
 
 # call()
+# process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
+#collapse_data(process_info,np.zeros((26,26)))
+g = np.zeros((9,27,27))
+k = g[:,1:-1,1:-1]
+print(k.shape)
