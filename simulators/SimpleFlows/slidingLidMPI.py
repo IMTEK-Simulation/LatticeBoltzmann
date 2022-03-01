@@ -256,8 +256,8 @@ def collapse_data(process_info,grid,comm):
         full_grid[:,0:original_x,0:original_y] = grid[:,1:-1,1:-1]
         for i in range(1,process_info.size):
             # recive
-            temp = np.zeros((original_x,original_y))
-            # comm.Recv(temp,source = i)
+            temp = np.zeros((9,original_x,original_y))
+            comm.Recv(temp,source = i)
             # write at the right location
             # get the right x and y locations of the origin
             pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
@@ -265,8 +265,8 @@ def collapse_data(process_info,grid,comm):
     # all the others send to p0
     else:
         # send stuff + curbe stuff from the sides
-        # comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
-        pass
+        comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
+
     return full_grid
 
 
@@ -292,6 +292,15 @@ def sliding_lid_mpi(process_info,comm):
     # print
     if process_info.rank == 0:
         print("Making Image")
+        '''
+        fig = plt.figure()
+        x = np.arange(0,10)
+        y = np.sin(x)
+        ax = fig.gca()
+        ax.plot(x,y)
+        plt.savefig("test.png")
+        '''
+        # full_grid = np.zeros((9,300,300))
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
@@ -301,17 +310,19 @@ def sliding_lid_mpi(process_info,comm):
         X, Y = np.meshgrid(x, y)
         speed = np.sqrt(full_ux.T ** 2 + full_uy.T ** 2)
         # plot
-        plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
+        plt.streamplot(X,Y,full_ux.T,full_uy.T)
+        # plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
         ax = plt.gca()
-        ax.set_xlim([0,process_info.base_grid+1])
-        ax.set_ylim([0, process_info.base_grid+1])
+        ax.set_xlim([0, process_info.base_grid + 1])
+        ax.set_ylim([0, process_info.base_grid + 1])
         plt.title("Sliding Lid")
         plt.xlabel("x-Position")
         plt.ylabel("y-Position")
-        fig = plt.colorbar()
-        fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-        plt.savefig('slidingLid.png')
+        # fig = plt.colorbar()
+        # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
+        plt.savefig('slidingLidmpi.png')
         plt.show()
+
 
 
 
@@ -333,8 +344,10 @@ def call():
 
 
 # call()
-# process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
-#collapse_data(process_info,np.zeros((26,26)))
+#comm = MPI.COMM_WORLD
+#process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
+#fg = collapse_data(process_info,np.ones((9,152,152)),comm)
+#print(fg.shape)
 # g = np.zeros((9,27,27))
 # k = g[:,1:-1,1:-1]
 # print(k.shape)
