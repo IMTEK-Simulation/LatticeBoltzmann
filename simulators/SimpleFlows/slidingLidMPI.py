@@ -118,8 +118,8 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
     info.size = size
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x-1,max_y-1) # i should know my own code lol
-    info.size_x = base_grid//(max_x + 1) + 2
-    info.size_y = base_grid //(max_y + 1) + 2
+    info.size_x = base_grid//(max_x) + 2
+    info.size_y = base_grid //(max_y) + 2
     info.neighbors = determin_neighbors(rank,size)
     #
     info.relaxation = relaxation
@@ -290,7 +290,7 @@ def sliding_lid_mpi(process_info,comm):
     # aquire the data
     # full_grid = collapse_data(process_info,grid,comm)
     # print
-    if process_info.rank == -1:
+    if process_info.rank == 0:
         full_grid = grid
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
@@ -318,7 +318,7 @@ def call():
     steps = 100
     re = 1000
     base_lenght = 300
-    rank_in_one_direction = 0  # for an MPI thingi with 9 processes -> 3x3 field
+    rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     # calls
@@ -336,3 +336,4 @@ def call():
 # g = np.zeros((9,27,27))
 # k = g[:,1:-1,1:-1]
 # print(k.shape)
+# call()
