@@ -27,6 +27,7 @@ from mpi4py import MPI
 import matplotlib.pyplot as plt
 import ipyparallel as ipp
 import psutil
+import os
 
 # only vars
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
@@ -286,20 +287,13 @@ def sliding_lid_mpi(process_info,comm):
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy,process_info.relaxation)
         comunicate(grid,process_info,comm)
-
+    os.sleep(1)
+    '''
     # aquire the data
     full_grid = collapse_data(process_info,grid,comm)
     # print
     if process_info.rank == 0:
         print("Making Image")
-        '''
-        fig = plt.figure()
-        x = np.arange(0,10)
-        y = np.sin(x)
-        ax = fig.gca()
-        ax.plot(x,y)
-        plt.savefig("test.png")
-        '''
         # full_grid = np.zeros((9,300,300))
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
@@ -322,7 +316,7 @@ def sliding_lid_mpi(process_info,comm):
         # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
         plt.savefig('slidingLidmpi.png')
         plt.show()
-
+    '''
 
 
 
