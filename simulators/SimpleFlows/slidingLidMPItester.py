@@ -31,6 +31,7 @@ def indiviaual_clall():
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     rank_in_one_direction = 2  # for an MPI thingi with 9 processes -> 3x3 field
+    # 4 cores 2x2 u put 2 in there
     ###
     comm = MPI.COMM_WORLD
     process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction
