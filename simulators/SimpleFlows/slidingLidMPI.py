@@ -225,6 +225,7 @@ def bounce_back_choosen(grid,uw,info):
         grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
         grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
+
 def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     if not info.boundaries_info.apply_right:
@@ -243,7 +244,7 @@ def comunicate(grid,info,comm):
         recvbuf = grid[:, :, 0].copy()
         comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf)
         grid[:, :, 0] = recvbuf
-    #####
+
 
 def collapse_data(process_info,grid,comm):
     full_grid = np.zeros((process_info.base_grid, process_info.base_grid))
@@ -287,9 +288,10 @@ def sliding_lid_mpi(process_info,comm):
         comunicate(grid,process_info,comm)
 
     # aquire the data
-    full_grid = collapse_data(process_info,grid,comm)
+    # full_grid = collapse_data(process_info,grid,comm)
     # print
-    if process_info.rank == 0:
+    if process_info.rank == -1:
+        full_grid = grid
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
@@ -307,7 +309,7 @@ def sliding_lid_mpi(process_info,comm):
         plt.ylabel("y-Position")
         fig = plt.colorbar()
         fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-        plt.savefig('temp.png')
+        plt.savefig('slidingLid.png')
         plt.show()
 
 

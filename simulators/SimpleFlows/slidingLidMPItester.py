@@ -34,7 +34,6 @@ def indiviaual_clall():
     # 4 cores 2x2 u put 2 in there
     ###
     comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
     process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction
                                                         ,rank_in_one_direction,base_lenght,
                                                        relaxation,steps,uw)
@@ -42,7 +41,9 @@ def indiviaual_clall():
     slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
-#multiple caller
+# multiple caller
+print("Executing with " + str(cores) + " Cores")
+
 with ipp.Cluster(engines= 'mpi', n = cores) as rc:
     view = rc.broadcast_view()
     r = view.apply_sync(indiviaual_clall)
