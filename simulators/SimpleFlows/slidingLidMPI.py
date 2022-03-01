@@ -260,11 +260,11 @@ def sliding_lid_mpi(process_info,comm):
         bounce_back_choosen(grid,process_info.uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy,process_info.relaxation)
-        comunicate(grid,process_info,comm)
+        # comunicate(grid,process_info,comm)
 
     # plot
     # TODO not sure how to move the data
-    if process_info.rank == 0:
+    if process_info.rank == -1:
         # reduce i guess
         full_grid = grid
 
