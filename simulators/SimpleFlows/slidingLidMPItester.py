@@ -26,7 +26,7 @@ cores = psutil.cpu_count(logical= False)
 def indiviaual_clall():
     import slidingLidMPI
     base_lenght = 300
-    steps = 0
+    steps = 1
     re = 1000
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
@@ -36,9 +36,7 @@ def indiviaual_clall():
     process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction
                                                         ,rank_in_one_direction,base_lenght,
                                                         relaxation,steps,uw)
-    # print(process_info)
-    # print(comm.Get_size(),comm.Get_rank())
-    # slidingLidMPI.sliding_lid_mpi(process_info,comm)
+    slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
 #multiple caller
