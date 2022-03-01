@@ -120,7 +120,7 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid):
     info.size = size
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x,max_y)
-    info.size_x = base_grid//(max_x+1) + 2
+    info.size_x = base_grid//(max_x + 1) + 2
     info.size_y = base_grid //(max_y + 1) + 2
     info.neighbors = determin_neighbors(rank,size)
     #
@@ -245,7 +245,7 @@ def comunicate(grid,info,comm):
 
 # body
 def sliding_lid_mpi(process_info,comm):
-    print("Sliding Lid")
+    # print("Sliding Lid")
     # initizlize the gird
     rho = np.ones((process_info.size_x,process_info.size_y))
     ux = np.zeros((process_info.size_x,process_info.size_y))
@@ -288,19 +288,11 @@ def sliding_lid_mpi(process_info,comm):
         plt.show()
 
 
-
-# call
-# sliding_lid_mpi()
-def indiviaual_clall():
+def call():
+    # sliding_lid_mpi()
     comm = MPI.COMM_WORLD
     gridsize = 300
     process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
                                           rank_in_one_direction,rank_in_one_direction,base_lenght)
     print(process_info)
     sliding_lid_mpi(process_info,comm)
-
-# multiple caller
-with ipp.Cluster(engienes= 'mpi', n = cores) as rc:
-    view = rc.broadcast_view()
-    r = view.apply_sync(indiviaual_clall)
-    print("\n".join(r))
