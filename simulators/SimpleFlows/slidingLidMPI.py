@@ -287,8 +287,8 @@ def sliding_lid_mpi(process_info,comm):
     # aquire the data
     full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
     # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
-    time.sleep(1) #Todo: very random
-    # full_grid = collapse_data(process_info,grid,comm)
+    # time.sleep(1) #Todo: very random
+    full_grid = collapse_data(process_info,grid,comm)
     # print
     if process_info.rank == -1:
         print("Making Image")
