@@ -158,14 +158,19 @@ def look_weather_deadlock():
     import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    steps = 1000
+    steps = 10000
     re = 1000
     base_lenght = 300
     rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     comm = MPI.COMM_WORLD
-    process_info = slidingLidMPI.fill_mpi_struct_fields(rank,size,1,2,base_lenght,relaxation,steps,uw)
+    process_info = slidingLidMPI.fill_mpi_struct_fields(rank,size,2,1,base_lenght,relaxation,steps,uw)
+    if rank == 0:
+        process_info.boundaries_info.apply_bottom = True
+        process_info.boundaries_info.apply_top = True
+        process_info.boundaries_info.apply_right = False
+        process_info.boundaries_info.apply_left = True
     if rank == 1:
         process_info.boundaries_info.apply_bottom = True
         process_info.boundaries_info.apply_top = True
@@ -181,14 +186,14 @@ def test_colapse_data():
     import numpy as np
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    steps = 1000
+    steps = 10000
     re = 1000
     base_lenght = 300
     rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     comm = MPI.COMM_WORLD
-    process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 1, 2, base_lenght, relaxation, steps, uw)
+    process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 1, base_lenght, relaxation, steps, uw)
     if rank == 1:
         process_info.boundaries_info.apply_bottom = True
         process_info.boundaries_info.apply_top = True

@@ -274,10 +274,23 @@ def colapse_data_2c(process_info,grid,comm):
         original_y = process_info.size_y - 2  # calculation ran
         temp = np.zeros((9, original_x, original_y))
         comm.Recv(temp, source=1)
-        full_grid = np.concatenate((grid[:, 1:-1, 1:-1].copy(), temp), axis=2)
+        full_grid = np.concatenate((grid[:, 1:-1, 1:-1].copy(), temp), axis=1)
     if process_info.rank == 1:
         comm.Send(grid[:, 1:-1, 1:-1].copy(), dest=0)
     return full_grid
+
+def comunicate_data_2c(grid,info,comm):
+    if not info.boundaries_info.apply_left:
+        # rank 1
+        recvbuf = grid[:, 0, :].copy()
+        comm.Sendrecv(grid[:, -2, :].copy(), info.neighbors.left, recvbuf=recvbuf)
+        grid[:, 0, :] = recvbuf
+    if not info.boundaries_info.apply_right:
+        # rank 0
+        recvbuf = grid[:, -1, :].copy()
+        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.right, recvbuf=recvbuf)
+        grid[:, -1, :] = recvbuf
+
 
 # body
 def sliding_lid_mpi(process_info,comm):
@@ -294,13 +307,15 @@ def sliding_lid_mpi(process_info,comm):
         bounce_back_choosen(grid,process_info.uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy,process_info.relaxation)
-        comunicate(grid,process_info,comm)
+        # comunicate(grid,process_info,comm)
+        comunicate_data_2c(grid, process_info, comm)
 
     # aquire the data
     full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
     # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
     # full_grid = collapse_data(process_info,grid,comm)
     full_grid = colapse_data_2c(process_info,grid,comm)
+    # full_grid = grid[:,1:-1,1:-1].copy()
     # print
     if process_info.rank == 0:
         print("Making Image")
@@ -331,14 +346,14 @@ def sliding_lid_mpi(process_info,comm):
 
 def call():
     # vars
-    steps = 1000
+    steps = 10000
     re = 1000
     base_lenght = 300
     rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     # calls
-    comm = MPI.COMM_WORLD.Create_cart((2,2), periods=(False,False))
+    comm = MPI.COMM_WORLD
     process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
                                           rank_in_one_direction,rank_in_one_direction,base_lenght,
                                           relaxation,steps,uw)
