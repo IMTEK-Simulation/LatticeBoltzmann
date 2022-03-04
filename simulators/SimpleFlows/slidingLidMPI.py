@@ -266,8 +266,18 @@ def collapse_data(process_info,grid,comm):
 
     return full_grid
 
-def colapse_data_2c(process_info,gird,comm):
-    pass
+
+def colapse_data_2c(process_info,grid,comm):
+    full_grid = np.zeros(9)
+    if process_info.rank == 0:
+        original_x = process_info.size_x - 2  # ie the base size of the grid on that the
+        original_y = process_info.size_y - 2  # calculation ran
+        temp = np.zeros((9, original_x, original_y))
+        comm.Recv(temp, source=1)
+        full_grid = np.concatenate((grid[:, 1:-1, 1:-1].copy(), temp), axis=2)
+    if process_info.rank == 1:
+        comm.Send(grid[:, 1:-1, 1:-1].copy(), dest=0)
+    return full_grid
 
 # body
 def sliding_lid_mpi(process_info,comm):
@@ -289,9 +299,10 @@ def sliding_lid_mpi(process_info,comm):
     # aquire the data
     full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
     # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
-    full_grid = collapse_data(process_info,grid,comm)
+    # full_grid = collapse_data(process_info,grid,comm)
+    full_grid = colapse_data_2c(process_info,grid,comm)
     # print
-    if process_info.rank == -1:
+    if process_info.rank == 0:
         print("Making Image")
         # full_grid = np.zeros((9,300,300))
         # recalculate ux and uy

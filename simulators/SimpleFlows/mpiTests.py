@@ -220,7 +220,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(test_colapse_data)
+    r = view.apply_sync(look_weather_deadlock)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
