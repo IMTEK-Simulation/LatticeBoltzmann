@@ -155,12 +155,26 @@ def shift_stuff():
 
 
 def look_weather_deadlock():
-    import slidingLidMPI
+    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
+    steps = 1000
+    re = 1000
+    base_lenght = 300
+    rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
+    uw = 0.1
+    relaxation = (2 * re) / (6 * base_lenght * uw + re)
+    comm = MPI.COMM_WORLD
+    process_info = slidingLidMPI.fill_mpi_struct_fields(rank,size,1,2,base_lenght,relaxation,steps,uw)
+    if rank == 1:
+        process_info.boundaries_info.apply_bottom = True
+        process_info.boundaries_info.apply_top = True
+        process_info.boundaries_info.apply_right = True
+        process_info.boundaries_info.apply_left = False
 
-
-
+    # try it out
+    slidingLidMPI.sliding_lid_mpi(process_info,comm)
+    return f"{process_info}"
 
 # Main caller
 # request an MPI cluster with 2 engines
@@ -171,7 +185,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(communicator_with_2cpus)
+    r = view.apply_sync(look_weather_deadlock)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow

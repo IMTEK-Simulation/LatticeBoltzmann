@@ -89,8 +89,6 @@ def get_postions_out_of_rank_size_quadratic(rank,size):
     ##
     # assume to be quadratic
     edge_lenght = int(np.sqrt(size))
-    if edge_lenght*edge_lenght != size:
-        return -1,-1
     ###
     pox = rank//edge_lenght
     poy = rank % edge_lenght
@@ -132,8 +130,6 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
 def determin_neighbors(rank,size):
     # determin edge lenght
     edge_lenght = int(np.sqrt(size))
-    if edge_lenght * edge_lenght != size:
-        return -1, -1
     ###
     neighbor = cellNeighbors()
     neighbor.top = rank - edge_lenght
@@ -292,9 +288,9 @@ def sliding_lid_mpi(process_info,comm):
     full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
     # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
     time.sleep(1) #Todo: very random
-    full_grid = collapse_data(process_info,grid,comm)
+    # full_grid = collapse_data(process_info,grid,comm)
     # print
-    if process_info.rank == 0:
+    if process_info.rank == -1:
         print("Making Image")
         # full_grid = np.zeros((9,300,300))
         # recalculate ux and uy
