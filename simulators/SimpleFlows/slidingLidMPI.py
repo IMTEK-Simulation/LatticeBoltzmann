@@ -274,7 +274,7 @@ def colapse_data_2c(process_info,grid,comm):
         original_y = process_info.size_y - 2  # calculation ran
         temp = np.zeros((9, original_x, original_y))
         comm.Recv(temp, source=1)
-        full_grid = np.concatenate((grid[:, 1:-1, 1:-1].copy(), temp), axis=1)
+        full_grid = np.concatenate((temp, grid[:, 1:-1, 1:-1].copy()), axis=1)
     if process_info.rank == 1:
         comm.Send(grid[:, 1:-1, 1:-1].copy(), dest=0)
     return full_grid
