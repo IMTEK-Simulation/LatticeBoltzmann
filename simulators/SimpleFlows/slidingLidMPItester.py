@@ -33,7 +33,7 @@ def indiviaual_clall():
     rank_in_one_direction = 2  # for an MPI thingi with 9 processes -> 3x3 field max = 3
     # 4 cores 2x2 u put 2 in there
     ###
-    comm = MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD.Create_cart((2,2), periods=(False,False))
     process_info = slidingLidMPI.fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(), rank_in_one_direction
                                                         ,rank_in_one_direction,base_lenght,
                                                        relaxation,steps,uw)

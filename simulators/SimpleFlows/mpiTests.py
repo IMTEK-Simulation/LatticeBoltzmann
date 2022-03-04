@@ -153,6 +153,15 @@ def shift_stuff():
     ###
     return f"{return_value}"
 
+
+def look_weather_deadlock():
+    import slidingLidMPI
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+
+
+
+
 # Main caller
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
