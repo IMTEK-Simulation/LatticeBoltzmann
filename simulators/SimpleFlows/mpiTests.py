@@ -176,6 +176,41 @@ def look_weather_deadlock():
     slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
+def test_colapse_data():
+    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import numpy as np
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+    steps = 1000
+    re = 1000
+    base_lenght = 300
+    rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
+    uw = 0.1
+    relaxation = (2 * re) / (6 * base_lenght * uw + re)
+    comm = MPI.COMM_WORLD
+    process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 1, 2, base_lenght, relaxation, steps, uw)
+    if rank == 1:
+        process_info.boundaries_info.apply_bottom = True
+        process_info.boundaries_info.apply_top = True
+        process_info.boundaries_info.apply_right = True
+        process_info.boundaries_info.apply_left = False
+
+    # initizlize the gird
+    rho = np.ones((process_info.size_x, process_info.size_y))
+    ux = np.zeros((process_info.size_x, process_info.size_y))
+    uy = np.zeros((process_info.size_x, process_info.size_y))
+    grid = slidingLidMPI.equilibrium(rho, ux, uy)
+    full_grid = np.zeros(9)
+    if process_info.rank ==0:
+        original_x = process_info.size_x - 2  # ie the base size of the grid on that the
+        original_y = process_info.size_y - 2  # calculation ran
+        temp = np.zeros((9, original_x, original_y))
+        comm.Recv(temp, source=1)
+        full_grid = np.concatenate((grid[:,1:-1,1:-1].copy(),temp),axis = 2)
+    if process_info.rank == 1:
+        comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
+    return f"{full_grid.shape}"
+
 # Main caller
 # request an MPI cluster with 2 engines
 with ipp.Cluster(engines='mpi', n=cores
@@ -185,7 +220,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(look_weather_deadlock)
+    r = view.apply_sync(test_colapse_data)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow

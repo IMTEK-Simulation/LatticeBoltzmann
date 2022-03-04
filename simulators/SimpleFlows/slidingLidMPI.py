@@ -257,8 +257,8 @@ def collapse_data(process_info,grid,comm):
             comm.Recv(temp,source = i)
             # write at the right location
             # get the right x and y locations of the origin
-            pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
-            full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))] = temp
+            # pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
+            # full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))] = temp
     # all the others send to p0
     else:
         # send stuff + curbe stuff from the sides
@@ -266,6 +266,8 @@ def collapse_data(process_info,grid,comm):
 
     return full_grid
 
+def colapse_data_2c(process_info,gird,comm):
+    pass
 
 # body
 def sliding_lid_mpi(process_info,comm):
@@ -287,7 +289,6 @@ def sliding_lid_mpi(process_info,comm):
     # aquire the data
     full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
     # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
-    # time.sleep(1) #Todo: very random
     full_grid = collapse_data(process_info,grid,comm)
     # print
     if process_info.rank == -1:
