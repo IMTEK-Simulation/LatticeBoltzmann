@@ -202,26 +202,26 @@ def bounce_back_choosen(grid,uw,info):
     # Right + Left
     if info.boundaries_info.apply_right:
         # right so x = -1
-        grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
-        grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
-        grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
+        grid[3, -2, :] = grid[1, -1, :]
+        grid[6, -2, :] = grid[8, -1, :]
+        grid[7, -2, :] = grid[5, -1, :]
     if info.boundaries_info.apply_left:
         # left so x = 0
-        grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
-        grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
-        grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
+        grid[1, 1, :] = grid[3, 0, :]
+        grid[5, 1, :] = grid[7, 0, :]
+        grid[8, 1, :] = grid[6, 0, :]
 
     # Bottom + Top
     if info.boundaries_info.apply_bottom:
         # for bottom y = 0
-        grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
-        grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
-        grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
+        grid[2, :, 1] = grid[4, :, 0]
+        grid[5, :, 1] = grid[7, :, 0]
+        grid[6, :, 1] = grid[8, :, 0]
     if info.boundaries_info.apply_top:
         # for top y = -1
-        grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
-        grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
-        grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
+        grid[4, :, -2] = grid[2, :, -1]
+        grid[7, :, -2] = grid[5, :, -1] - 1 / 6 * uw
+        grid[8, :, -2] = grid[6, :, -1] + 1 / 6 * uw
 
 
 def comunicate(grid,info,comm):
