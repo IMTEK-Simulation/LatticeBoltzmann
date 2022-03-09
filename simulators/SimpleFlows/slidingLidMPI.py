@@ -228,23 +228,23 @@ def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     # Right + Left
     if not info.boundaries_info.apply_right:
-        recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:,-2, :].copy(), info.neighbors.right, recvbuf=recvbuf)
-        grid[:, -1, :] = recvbuf
-    if not info.boundaries_info.apply_left:
         recvbuf = grid[:, 0, :].copy()
-        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.left, recvbuf=recvbuf)
+        comm.Sendrecv(grid[:,-2, :].copy(), info.neighbors.right, recvbuf=recvbuf)
         grid[:, 0, :] = recvbuf
+    if not info.boundaries_info.apply_left:
+        recvbuf = grid[:, -1, :].copy()
+        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.left, recvbuf=recvbuf)
+        grid[:, -1, :] = recvbuf
 
     # Bottom + Top
     if not info.boundaries_info.apply_bottom:
-        recvbuf = grid[:,: ,0 ].copy()
+        recvbuf = grid[:,: ,-1 ].copy()
         comm.Sendrecv(grid[:, :,1 ].copy(), info.neighbors.bottom, recvbuf=recvbuf)
-        grid[:, :, 1] = recvbuf
-    if not info.boundaries_info.apply_top:
-        recvbuf = grid[:, :, -1].copy()
-        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf)
         grid[:, :, -1] = recvbuf
+    if not info.boundaries_info.apply_top:
+        recvbuf = grid[:, :, 0].copy()
+        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf)
+        grid[:, :, 0] = recvbuf
 
 
 def collapse_data(process_info,grid,comm):
