@@ -248,12 +248,16 @@ def collapse_data(process_info,grid,comm):
         # write the own stuff into it first
         full_grid[:,0:original_x,0:original_y] = grid[:,1:-1,1:-1]
         temp = np.zeros((9,original_x,original_y))
-        comm.Recv(temp,source = 1)
-        full_grid[:,original_x:original_x*2,0:original_y] = temp
-        comm.Recv(temp, source=2)
-        full_grid[:, 0:original_x, original_y:original_y*2] = temp
-        comm.Recv(temp, source=3)
-        full_grid[:, original_x:original_x * 2, original_y:original_y*2] = temp
+        for i in range(1,process_info.size):
+            comm.Recv(temp,source = i)
+            y,x = get_postions_out_of_rank_size_quadratic(i,process_info.size)
+            # determin start end endpoints to copy to in the grid
+            copy_start_x = 0 + original_x*x
+            copy_end_x = original_x + original_x*x
+            copy_start_y = 0 + original_y*y
+            copy_end_y = original_y + original_y*y
+            # copy
+            full_grid[:,copy_start_x:copy_end_x,copy_start_y:copy_end_y] = temp
     # all the others send to p0
     else:
         comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
