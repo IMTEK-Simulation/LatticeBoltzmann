@@ -225,22 +225,6 @@ def bounce_back_choosen(grid,uw,info):
 
 def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
-    if not info.boundaries_info.apply_right:
-        recvbuf = grid[:,0,:].copy()
-        comm.Sendrecv(grid[:,-2,:].copy(),info.neighbors.right,recvbuf = recvbuf)
-        grid[:,0,:] = recvbuf
-    if not info.boundaries_info.apply_left:
-        recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.left, recvbuf=recvbuf)
-        grid[:, -1, :] = recvbuf
-    if not info.boundaries_info.apply_bottom:
-        recvbuf = grid[:, :, -1].copy()
-        comm.Sendrecv(grid[:, :, 1].copy(), info.neighbors.bottom, recvbuf=recvbuf)
-        grid[:, :, -1] = recvbuf
-    if not info.boundaries_info.apply_top:
-        recvbuf = grid[:, :, 0].copy()
-        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf)
-        grid[:, :, 0] = recvbuf
     ###
     if not info.boundaries_info.apply_left:
         # rank 1
@@ -255,24 +239,23 @@ def comunicate(grid,info,comm):
 
 
 def collapse_data(process_info,grid,comm):
-    full_grid = np.ones((9,process_info.base_grid, process_info.base_grid))
+    full_grid = np.zeros(2)
     # process 0 gets the data and does the visualization
     if process_info.rank == 0:
+        full_grid = np.ones((9, process_info.base_grid, process_info.base_grid))
         original_x = process_info.size_x-2 # ie the base size of the grid on that the
         original_y = process_info.size_y-2 # calculation ran
         # write the own stuff into it first
         full_grid[:,0:original_x,0:original_y] = grid[:,1:-1,1:-1]
-        for i in range(1,process_info.size):
-            # recive
-            temp = np.zeros((9,original_x,original_y))
-            comm.Recv(temp,source = i)
-            # write at the right location
-            # get the right x and y locations of the origin
-            # pox, poy = get_postions_out_of_rank_size_quadratic(i, process_info.size)
-            # full_grid[:,(original_x*pox):(original_x*(pox+1)),(original_y*poy):(original_y*(poy+1))] = temp
+        temp = np.zeros((9,original_x,original_y))
+        comm.Recv(temp,source = 1)
+        full_grid[:,original_x:original_x*2,0:original_y] = temp
+        comm.Recv(temp, source=2)
+        full_grid[:, 0:original_x, original_y:original_y*2] = temp
+        comm.Recv(temp, source=3)
+        full_grid[:, original_x:original_x * 2, original_y:original_y*2] = temp
     # all the others send to p0
     else:
-        # send stuff + curbe stuff from the sides
         comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
 
     return full_grid
@@ -318,7 +301,6 @@ def sliding_lid_mpi_2cores(process_info,comm):
         bounce_back_choosen(grid,process_info.uw,process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy,process_info.relaxation)
-        # comunicate(grid,process_info,comm)
         comunicate_data_2c(grid, process_info, comm)
 
     # aquire the data
@@ -359,8 +341,19 @@ def sliding_lid_mpi(process_info,comm):
     ux = np.zeros((process_info.size_x, process_info.size_y))
     uy = np.zeros((process_info.size_x, process_info.size_y))
     grid = equilibrium(rho, ux, uy)
+    # loop
+    for i in range(process_info.steps):
+        stream(grid)
+        bounce_back_choosen(grid, process_info.uw, process_info)
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        collision(grid, rho, ux, uy, process_info.relaxation)
+        comunicate(grid,process_info,comm)
 
-def plotter(full_gird,process_info):
+    # get full grid + plot
+    full_grid = collapse_data(process_info, grid, comm)
+    plotter(full_grid,process_info)
+
+def plotter(full_grid,process_info):
     #plot
     if process_info.rank == 0:
         print("Making Image")
