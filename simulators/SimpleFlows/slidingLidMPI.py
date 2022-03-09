@@ -225,14 +225,14 @@ def bounce_back_choosen(grid,uw,info):
 
 def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
-    if not info.boundaries_info.apply_right:
-        recvbuf = grid[:, :, -1].copy()
-        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.right, recvbuf=recvbuf)
-        grid[:, :, -1] = recvbuf
     if not info.boundaries_info.apply_left:
-        recvbuf = grid[:, :, 0].copy()
-        comm.Sendrecv(grid[:, :, 1].copy(), info.neighbors.left, recvbuf=recvbuf)
-        grid[:, :, 0] = recvbuf
+        recvbuf = grid[:, 0, :].copy()
+        comm.Sendrecv(grid[:, -2, :].copy(), dest = info.rank, recvbuf=recvbuf)
+        grid[:, 0, :] = recvbuf
+    if not info.boundaries_info.apply_right:
+        recvbuf = grid[:, -1, :].copy()
+        comm.Sendrecv(grid[:, 1, :].copy(), dest = info.rank, recvbuf=recvbuf)
+        grid[:, -1, :] = recvbuf
     if not info.boundaries_info.apply_bottom:
         recvbuf = grid[:,0 ,: ].copy()
         comm.Sendrecv(grid[:, 1,: ].copy(), info.neighbors.bottom, recvbuf=recvbuf)
