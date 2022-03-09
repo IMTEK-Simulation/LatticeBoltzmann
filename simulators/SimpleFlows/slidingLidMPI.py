@@ -201,15 +201,16 @@ def bounce_back_choosen(grid,uw,info):
     # modification for the bounce back for the bigger grids
     #### Left + Right
     if info.boundaries_info.apply_right:
-        # right so x = 0
-        grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
-        grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
-        grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
-    if info.boundaries_info.apply_left:
-        # left so x = -1
+        # right so x = -1
         grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
         grid[6, -2, 1:-1] = grid[8, -1, 1:-1]
         grid[7, -2, 1:-1] = grid[5, -1, 1:-1]
+    if info.boundaries_info.apply_left:
+        # left so x = 0
+        grid[1, 1, 1:-1] = grid[3, 0, 1:-1]
+        grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
+        grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
+
     #### TOP + Bottom
     if info.boundaries_info.apply_bottom:
         # for bottom y = 0
@@ -227,11 +228,11 @@ def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     if not info.boundaries_info.apply_left:
         recvbuf = grid[:, 0, :].copy()
-        comm.Sendrecv(grid[:, -2, :].copy(), dest = info.rank, recvbuf=recvbuf)
+        comm.Sendrecv(grid[:, 1, :].copy(), dest = 1, recvbuf=recvbuf, source = info.rank)
         grid[:, 0, :] = recvbuf
     if not info.boundaries_info.apply_right:
         recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:, 1, :].copy(), dest = info.rank, recvbuf=recvbuf)
+        comm.Sendrecv(grid[:,-2, :].copy(), dest = 0, recvbuf=recvbuf, source = info.rank)
         grid[:, -1, :] = recvbuf
     if not info.boundaries_info.apply_bottom:
         recvbuf = grid[:,0 ,: ].copy()
