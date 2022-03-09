@@ -155,7 +155,7 @@ def shift_stuff():
     return f"{return_value}"
 
 
-def look_weather_deadlock():
+def look_weather_deadlock_with_2cores():
     import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
@@ -182,7 +182,7 @@ def look_weather_deadlock():
     slidingLidMPI.sliding_lid_mpi(process_info,comm)
     return f"{process_info}"
 
-def test_colapse_data():
+def test_colapse_data_with_2cores():
     import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
     import numpy as np
     size = MPI.COMM_WORLD.Get_size()
