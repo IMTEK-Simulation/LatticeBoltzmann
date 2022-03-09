@@ -34,6 +34,7 @@ print(os.cpu_count())
 print(psutil.cpu_count(logical=False))
 # only psutil how i want it to lol
 cores = psutil.cpu_count(logical=False)
+cores = 2
 
 # basic example
 def mpi_example():
