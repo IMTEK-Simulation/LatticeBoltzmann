@@ -229,9 +229,26 @@ def test_colapse_data():
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 2, base_lenght, relaxation, steps, uw)
     # disable communication
-
+    process_info.boundaries_info.apply_bottom = True
+    process_info.boundaries_info.apply_top = True
+    process_info.boundaries_info.apply_right = True
+    process_info.boundaries_info.apply_left = True
     # run sim
     slidingLidMPI.sliding_lid_mpi(process_info, comm)
+    return f"{process_info}"
+
+def test_data_creation():
+    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import numpy as np
+    comm = MPI.COMM_WORLD
+    size = MPI.COMM_WORLD.Get_size()
+    rank = MPI.COMM_WORLD.Get_rank()
+    steps = 1000
+    re = 1000
+    base_lenght = 40
+    uw = 0.1
+    relaxation = (2 * re) / (6 * base_lenght * uw + re)
+    process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 2, base_lenght, relaxation, steps, uw)
     return f"{process_info}"
 
 # Main caller
@@ -243,7 +260,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(test_colapse_data)
+    r = view.apply_sync(test_data_creation)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow

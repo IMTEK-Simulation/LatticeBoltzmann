@@ -74,13 +74,13 @@ def set_boundary_info(pox,poy,max_x,max_y):
     info = boundariesApplied(False,False,False,False)
     ##
     if pox == 0:
-        info.apply_top = True
-    if poy == 0:
         info.apply_left = True
-    if pox == max_x:
+    if poy == 0:
         info.apply_bottom = True
-    if poy == max_y:
+    if pox == max_x:
         info.apply_right = True
+    if poy == max_y:
+        info.apply_top = True
     ##
     # print(info)
     return info
@@ -90,8 +90,8 @@ def get_postions_out_of_rank_size_quadratic(rank,size):
     # assume to be quadratic
     edge_lenght = int(np.sqrt(size))
     ###
-    pox = rank//edge_lenght
-    poy = rank % edge_lenght
+    pox = rank % edge_lenght
+    poy = rank//edge_lenght
     ###
     return pox,poy
 
@@ -132,8 +132,8 @@ def determin_neighbors(rank,size):
     edge_lenght = int(np.sqrt(size))
     ###
     neighbor = cellNeighbors()
-    neighbor.top = rank - edge_lenght
-    neighbor.bottom = rank + edge_lenght
+    neighbor.top = rank + edge_lenght
+    neighbor.bottom = rank - edge_lenght
     neighbor.right = rank + 1
     neighbor.left = rank-1
     ###
@@ -250,7 +250,7 @@ def collapse_data(process_info,grid,comm):
         temp = np.zeros((9,original_x,original_y))
         for i in range(1,process_info.size):
             comm.Recv(temp,source = i)
-            y,x = get_postions_out_of_rank_size_quadratic(i,process_info.size)
+            x,y = get_postions_out_of_rank_size_quadratic(i,process_info.size)
             # determin start end endpoints to copy to in the grid
             copy_start_x = 0 + original_x*x
             copy_end_x = original_x + original_x*x
@@ -351,7 +351,7 @@ def sliding_lid_mpi(process_info,comm):
         bounce_back_choosen(grid, process_info.uw, process_info)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid, rho, ux, uy, process_info.relaxation)
-        # comunicate(grid,process_info,comm)
+        comunicate(grid,process_info,comm)
 
     # get full grid + plot
     full_grid = collapse_data(process_info, grid, comm)
