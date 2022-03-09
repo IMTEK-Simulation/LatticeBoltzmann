@@ -199,7 +199,7 @@ def bounce_back(grid,uw):
 
 def bounce_back_choosen(grid,uw,info):
     # modification for the bounce back for the bigger grids
-    #### Left + Right
+    # Right + Left
     if info.boundaries_info.apply_right:
         # right so x = -1
         grid[3, -2, 1:-1] = grid[1, -1, 1:-1]
@@ -211,7 +211,7 @@ def bounce_back_choosen(grid,uw,info):
         grid[5, 1, 1:-1] = grid[7, 0, 1:-1]
         grid[8, 1, 1:-1] = grid[6, 0, 1:-1]
 
-    #### TOP + Bottom
+    # Bottom + Top
     if info.boundaries_info.apply_bottom:
         # for bottom y = 0
         grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
@@ -226,22 +226,25 @@ def bounce_back_choosen(grid,uw,info):
 
 def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
-    if not info.boundaries_info.apply_left:
-        recvbuf = grid[:, 0, :].copy()
-        comm.Sendrecv(grid[:, 1, :].copy(), dest = 1, recvbuf=recvbuf, source = info.rank)
-        grid[:, 0, :] = recvbuf
+    # Right + Left
     if not info.boundaries_info.apply_right:
         recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:,-2, :].copy(), dest = 0, recvbuf=recvbuf, source = info.rank)
+        comm.Sendrecv(grid[:,-2, :].copy(), info.neighbors.right, recvbuf=recvbuf)
         grid[:, -1, :] = recvbuf
-    if not info.boundaries_info.apply_bottom:
-        recvbuf = grid[:,0 ,: ].copy()
-        comm.Sendrecv(grid[:, 1,: ].copy(), info.neighbors.bottom, recvbuf=recvbuf)
+    if not info.boundaries_info.apply_left:
+        recvbuf = grid[:, 0, :].copy()
+        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.left, recvbuf=recvbuf)
         grid[:, 0, :] = recvbuf
+
+    # Bottom + Top
+    if not info.boundaries_info.apply_bottom:
+        recvbuf = grid[:,: ,0 ].copy()
+        comm.Sendrecv(grid[:, :,1 ].copy(), info.neighbors.bottom, recvbuf=recvbuf)
+        grid[:, :, 1] = recvbuf
     if not info.boundaries_info.apply_top:
-        recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:, -2, :].copy(), info.neighbors.top, recvbuf=recvbuf)
-        grid[:, -1, :] = recvbuf
+        recvbuf = grid[:, :, -1].copy()
+        comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf)
+        grid[:, :, -1] = recvbuf
 
 
 def collapse_data(process_info,grid,comm):
