@@ -265,8 +265,8 @@ def test_4_simulation():
     process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 2, base_lenght, relaxation, steps, uw)
     # process_info.boundaries_info.apply_left = True
     # process_info.boundaries_info.apply_right = True
-    process_info.boundaries_info.apply_top = True
-    process_info.boundaries_info.apply_bottom = True
+    # process_info.boundaries_info.apply_top = True
+    # process_info.boundaries_info.apply_bottom = True
     slidingLidMPI.sliding_lid_mpi(process_info, comm)
     return f"{process_info}"
 
