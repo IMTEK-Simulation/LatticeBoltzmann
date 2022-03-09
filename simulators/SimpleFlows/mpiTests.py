@@ -179,7 +179,7 @@ def look_weather_deadlock_with_2cores():
         process_info.boundaries_info.apply_left = False
 
     # try it out
-    slidingLidMPI.sliding_lid_mpi(process_info,comm)
+    slidingLidMPI.sliding_lid_mpi_2cores(process_info,comm)
     return f"{process_info}"
 
 def test_colapse_data_with_2cores():
@@ -226,7 +226,7 @@ with ipp.Cluster(engines='mpi', n=cores
     # suited for MPI style computation
     view = rc.broadcast_view()
     # run the mpi_example function on all engines in parallel
-    r = view.apply_sync(look_weather_deadlock)
+    r = view.apply_sync(look_weather_deadlock_with_2cores)
     # Retrieve and print the result from the engines
     print("\n".join(r))
 # at this point, the cluster processes have been shutdow
