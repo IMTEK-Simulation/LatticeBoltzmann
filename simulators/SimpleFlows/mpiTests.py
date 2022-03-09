@@ -263,6 +263,14 @@ def test_4_simulation():
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 2, base_lenght, relaxation, steps, uw)
+    process_info.boundaries_info.apply_bottom = True
+    process_info.boundaries_info.apply_top = True
+    process_info.boundaries_info.apply_right = True
+    process_info.boundaries_info.apply_left = True
+    if process_info.rank == 0:
+        process_info.boundaries_info.apply_right = False
+    if process_info.rank == 1:
+        process_info.boundaries_info.apply_left = False
     slidingLidMPI.sliding_lid_mpi(process_info, comm)
     return f"{process_info}"
 
