@@ -251,7 +251,7 @@ def collapse_data(process_info,grid,comm):
         full_grid[:,0:original_x,0:original_y] = grid[:,1:-1,1:-1]
         temp = np.zeros((9,original_x,original_y))
         for i in range(1,process_info.size):
-            comm.Recv(temp,source = i)
+            comm.Recv(temp,source = i,tag = i)
             x,y = get_postions_out_of_rank_size_quadratic(i,process_info.size)
             # determin start end endpoints to copy to in the grid
             copy_start_x = 0 + original_x*x
@@ -262,7 +262,7 @@ def collapse_data(process_info,grid,comm):
             full_grid[:,copy_start_x:copy_end_x,copy_start_y:copy_end_y] = temp
     # all the others send to p0
     else:
-        comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
+        comm.Send(grid[:,1:-1,1:-1].copy(),dest=0, tag = process_info.rank)
 
     return full_grid
 
@@ -308,8 +308,7 @@ def plotter(full_grid,process_info):
         plt.ylabel("y-Position")
         # fig = plt.colorbar()
         # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-        cores = process_info.size
-        savestring = "slidingLidmpi"+str(cores)+".png"
+        savestring = "slidingLidmpi"+str(process_info.size)+".png"
         plt.savefig(savestring)
         plt.show()
 
