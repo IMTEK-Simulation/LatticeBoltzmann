@@ -257,9 +257,9 @@ def test_4_simulation():
     comm = MPI.COMM_WORLD
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
-    steps = 1000
+    steps = 100000
     re = 1000
-    base_lenght = 40
+    base_lenght = 100
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     process_info = slidingLidMPI.fill_mpi_struct_fields(rank, size, 2, 2, base_lenght, relaxation, steps, uw)
