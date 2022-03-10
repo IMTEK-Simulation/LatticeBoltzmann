@@ -13,13 +13,6 @@ This module should be able to work on its own, but it will be with basically no 
 for this look at the simpleFlowsTest.
 '''
 
-# Todo: remove me
-'''
-my todos:
-porgramm the sliding lid but now do some domain decomposition and part the computation domain 
-needs streaming, collsion, equiblrium, bounce back, mpi-decomposition
-'''
-
 # imports
 import numpy as np
 from dataclasses import dataclass
@@ -272,81 +265,6 @@ def collapse_data(process_info,grid,comm):
         comm.Send(grid[:,1:-1,1:-1].copy(),dest=0)
 
     return full_grid
-
-
-def colapse_data_2c(process_info,grid,comm):
-    full_grid = np.zeros(9)
-    if process_info.rank == 0:
-        original_x = process_info.size_x - 2  # ie the base size of the grid on that the
-        original_y = process_info.size_y - 2  # calculation ran
-        temp = np.zeros((9, original_x, original_y))
-        comm.Recv(temp, source=1)
-        full_grid = np.concatenate((temp, grid[:, 1:-1, 1:-1].copy()), axis=1)
-    if process_info.rank == 1:
-        comm.Send(grid[:, 1:-1, 1:-1].copy(), dest=0)
-    return full_grid
-
-def comunicate_data_2c(grid,info,comm):
-    if not info.boundaries_info.apply_left:
-        # rank 1
-        recvbuf = grid[:, 0, :].copy()
-        comm.Sendrecv(grid[:, -2, :].copy(), info.neighbors.left, recvbuf=recvbuf)
-        grid[:, 0, :] = recvbuf
-    if not info.boundaries_info.apply_right:
-        # rank 0
-        recvbuf = grid[:, -1, :].copy()
-        comm.Sendrecv(grid[:, 1, :].copy(), info.neighbors.right, recvbuf=recvbuf)
-        grid[:, -1, :] = recvbuf
-
-
-# body
-def sliding_lid_mpi_2cores(process_info,comm):
-    # print("Sliding Lid")
-    # initizlize the gird
-    rho = np.ones((process_info.size_x,process_info.size_y))
-    ux = np.zeros((process_info.size_x,process_info.size_y))
-    uy = np.zeros((process_info.size_x,process_info.size_y))
-    grid = equilibrium(rho,ux,uy)
-
-    # loop
-    for i in range(process_info.steps):
-        stream(grid)
-        bounce_back_choosen(grid,process_info.uw,process_info)
-        rho, ux, uy = caluculate_rho_ux_uy(grid)
-        collision(grid,rho,ux,uy,process_info.relaxation)
-        comunicate_data_2c(grid, process_info, comm)
-
-    # aquire the data
-    full_grid = np.ones((9,process_info.base_grid,process_info.base_grid))
-    # comm.Reduce(grid[:,1:-1,1:-1].copy(),full_grid,op=MPI.SUM, root = 0)
-    # full_grid = collapse_data(process_info,grid,comm)
-    full_grid = colapse_data_2c(process_info,grid,comm)
-    # full_grid = grid[:,1:-1,1:-1].copy()
-    # print
-    if process_info.rank == 0:
-        print("Making Image")
-        # full_grid = np.zeros((9,300,300))
-        # recalculate ux and uy
-        idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
-        # acutal plot
-
-        x = np.arange(0, process_info.base_grid)
-        y = np.arange(0, process_info.base_grid)
-        X, Y = np.meshgrid(x, y)
-        speed = np.sqrt(full_ux.T ** 2 + full_uy.T ** 2)
-        # plot
-        plt.streamplot(X,Y,full_ux.T,full_uy.T)
-        # plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
-        ax = plt.gca()
-        ax.set_xlim([0, process_info.base_grid + 1])
-        ax.set_ylim([0, process_info.base_grid + 1])
-        plt.title("Sliding Lid")
-        plt.xlabel("x-Position")
-        plt.ylabel("y-Position")
-        # fig = plt.colorbar()
-        # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-        plt.savefig('slidingLidmpi.png')
-        plt.show()
 
 def sliding_lid_mpi(process_info,comm):
     #create grid based on process Info

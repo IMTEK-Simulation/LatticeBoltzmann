@@ -7,20 +7,7 @@ Test- and Playground for the mpi implementation
         -> create the cartisian thingi
 
 '''
-# TODO remove me !!
-'''
- -> monte carlo implementation get the first feel ;<;
- -> send and recive random stuff
-    -> maybe do some unittests here not sure thou ;<;
- -> try out domain decomposition i guess (sendrecv lol)
- -> test the seperation into top left usw.
- -> will have to run those tests on my own pc as i have more than 4 processors
- -> dont forget how to install!! sudo apt install mpi4py
- https://zoomadmin.com/HowToInstall/UbuntuPackage/python3-mpi4py
- use cart_comm
- use cartcomm.shift 
- just use the code from the slides lol twoards the end
-'''
+
 import unittest
 from mpi4py import MPI
 import ipyparallel as ipp
@@ -153,33 +140,6 @@ def shift_stuff():
     ###
     return f"{return_value}"
 
-
-def look_weather_deadlock_with_2cores():
-    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
-    size = MPI.COMM_WORLD.Get_size()
-    rank = MPI.COMM_WORLD.Get_rank()
-    steps = 10000
-    re = 1000
-    base_lenght = 300
-    rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
-    uw = 0.1
-    relaxation = (2 * re) / (6 * base_lenght * uw + re)
-    comm = MPI.COMM_WORLD
-    process_info = slidingLidMPI.fill_mpi_struct_fields(rank,size,2,1,base_lenght,relaxation,steps,uw)
-    if rank == 0:
-        process_info.boundaries_info.apply_bottom = True
-        process_info.boundaries_info.apply_top = True
-        process_info.boundaries_info.apply_right = False
-        process_info.boundaries_info.apply_left = True
-    if rank == 1:
-        process_info.boundaries_info.apply_bottom = True
-        process_info.boundaries_info.apply_top = True
-        process_info.boundaries_info.apply_right = True
-        process_info.boundaries_info.apply_left = False
-
-    # try it out
-    slidingLidMPI.sliding_lid_mpi_2cores(process_info,comm)
-    return f"{process_info}"
 
 def test_colapse_data_with_2cores():
     import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
