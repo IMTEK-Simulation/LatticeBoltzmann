@@ -36,7 +36,7 @@ def monte_carlo():
     size = comm.Get_size()
     rank = comm.Get_rank()
     ###
-    ntotal = 1000000
+    ntotal = 100000
     nlocal = ntotal//size
     print(nlocal)
     if rank == 0:

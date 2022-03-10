@@ -308,7 +308,9 @@ def plotter(full_grid,process_info):
         plt.ylabel("y-Position")
         # fig = plt.colorbar()
         # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-        plt.savefig('slidingLidmpi.png')
+        cores = process_info.size
+        savestring = "slidingLidmpi"+str(cores)+".png"
+        plt.savefig(savestring)
         plt.show()
 
 
