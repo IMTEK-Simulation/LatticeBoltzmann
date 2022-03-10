@@ -289,7 +289,6 @@ def plotter(full_grid,process_info):
     #plot
     if process_info.rank == 0:
         print("Making Image")
-        # full_grid = np.zeros((9,300,300))
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
         # acutal plot
@@ -299,16 +298,16 @@ def plotter(full_grid,process_info):
         X, Y = np.meshgrid(x, y)
         speed = np.sqrt(full_ux.T ** 2 + full_uy.T ** 2)
         # plot
-        plt.streamplot(X,Y,full_ux.T,full_uy.T)
-        # plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
+        # plt.streamplot(X,Y,full_ux.T,full_uy.T)
+        plt.streamplot(X, Y, full_ux.T, full_uy.T, color=speed, cmap=plt.cm.jet)
         ax = plt.gca()
         ax.set_xlim([0, process_info.base_grid + 1])
         ax.set_ylim([0, process_info.base_grid + 1])
         plt.title("Sliding Lid")
         plt.xlabel("x-Position")
         plt.ylabel("y-Position")
-        # fig = plt.colorbar()
-        # fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
+        fig = plt.colorbar()
+        fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
         savestring = "slidingLidmpi"+str(process_info.size)+".png"
         plt.savefig(savestring)
         plt.show()
