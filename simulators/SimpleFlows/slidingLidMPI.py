@@ -319,12 +319,15 @@ def call():
     steps = 1000
     re = 1000
     base_lenght = 40
-    rank_in_one_direction = 1  # for an MPI thingi with 9 processes -> 3x3 field
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     # calls
     comm = MPI.COMM_WORLD
-    process_info = fill_mpi_struct_fields(comm.Get_rank(),comm.Get_size(),
+    size = comm.Get_size()
+    rank_in_one_direction = int(np.sqrt(size)) # for an MPI thingi with 9 processes -> 3x3 field
+    if rank_in_one_direction*rank_in_one_direction != size:
+        return RuntimeError
+    process_info = fill_mpi_struct_fields(comm.Get_rank(),size,
                                           rank_in_one_direction,rank_in_one_direction,base_lenght,
                                           relaxation,steps,uw)
     print(process_info)
@@ -339,4 +342,4 @@ def call():
 # g = np.zeros((9,27,27))
 # k = g[:,1:-1,1:-1]
 # print(k.shape)
-# call()
+call()
