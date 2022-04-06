@@ -330,6 +330,7 @@ def call():
                                           rank_in_one_direction,rank_in_one_direction,base_lenght,
                                           relaxation,steps,uw)
     # print(process_info)
+    print(process_info.rank,process_info.size)
     sliding_lid_mpi(process_info,comm)
 
 
