@@ -13,7 +13,7 @@ import sys
 #print(sys.argv)
 
 callnumbers = np.square(np.arange(1,16))
-
+print (callnumbers)
 time = np.square(np.arange(1,16))
 
 print("Making Image")
