@@ -329,7 +329,7 @@ def call():
     process_info = fill_mpi_struct_fields(comm.Get_rank(),size,
                                           rank_in_one_direction,rank_in_one_direction,base_lenght,
                                           relaxation,steps,uw)
-    print(process_info)
+    # print(process_info)
     sliding_lid_mpi(process_info,comm)
 
 
