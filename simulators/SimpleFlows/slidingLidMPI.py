@@ -323,7 +323,7 @@ def plotter(full_grid,process_info):
 
 def call():
     # vars
-    steps = 100000
+    steps = 1000000
     re = 1000
     base_lenght = 300
     uw = 0.1
