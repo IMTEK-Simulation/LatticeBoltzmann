@@ -315,7 +315,7 @@ def plotter(full_grid,process_info):
 
 def call():
     # vars
-    steps = 1000
+    steps = 10000
     re = 1000
     base_lenght = 40
     uw = 0.1
@@ -341,4 +341,6 @@ def call():
 # g = np.zeros((9,27,27))
 # k = g[:,1:-1,1:-1]
 # print(k.shape)
+startime = time.time()
 call()
+print("Took {} s".format(time.time()-startime))
