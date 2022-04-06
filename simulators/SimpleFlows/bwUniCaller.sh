@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --time=00:15:00
+#SBATCH --time=00:30:00
 #SBATCH --partition=dev_multiple
 #SBATCH --ntasks-per-node=25
 #SBATCH --mail-user=christoph.mos.studium@gmail.com
