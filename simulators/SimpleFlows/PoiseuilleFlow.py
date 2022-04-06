@@ -1,10 +1,4 @@
 
-# Todo: remove us
-'''
-To get a basic feel for LB-Sim implement the  Poiseuille Flow between two plates
-
-
-'''
 '''
 Remider CodingRules: 
 Zeilenumbruch bei Spalte 120
