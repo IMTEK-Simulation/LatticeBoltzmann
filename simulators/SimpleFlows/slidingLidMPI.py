@@ -287,7 +287,7 @@ def sliding_lid_mpi(process_info,comm):
 
 def plotter(full_grid,process_info):
     #plot
-    if process_info.rank == 0:
+    if process_info.rank == -1:
         print("Making Image")
         # recalculate ux and uy
         idk,full_ux,full_uy = caluculate_rho_ux_uy(full_grid)
@@ -311,6 +311,14 @@ def plotter(full_grid,process_info):
         savestring = "slidingLidmpi"+str(process_info.size)+".png"
         plt.savefig(savestring)
         plt.show()
+
+    if process_info.rank == 0:
+        savestring = "slidingLidmpi"+str(process_info.size)+".txt"
+        f = open(savestring,"w")
+        totaltime = time.time() - startime
+        f.write(str(totaltime))
+        f.close()
+
 
 
 def call():
@@ -344,4 +352,3 @@ def call():
 # print(k.shape)
 startime = time.time()
 call()
-print("Took {} s".format(time.time()-startime))
