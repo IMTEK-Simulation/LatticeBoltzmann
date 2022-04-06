@@ -315,9 +315,9 @@ def plotter(full_grid,process_info):
 
 def call():
     # vars
-    steps = 10000
+    steps = 100000
     re = 1000
-    base_lenght = 40
+    base_lenght = 300
     uw = 0.1
     relaxation = (2 * re) / (6 * base_lenght * uw + re)
     # calls
