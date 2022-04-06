@@ -18,7 +18,7 @@ import numpy as np
 from dataclasses import dataclass
 from mpi4py import MPI
 import matplotlib.pyplot as plt
-import ipyparallel as ipp
+# import ipyparallel as ipp
 import psutil
 import time
 

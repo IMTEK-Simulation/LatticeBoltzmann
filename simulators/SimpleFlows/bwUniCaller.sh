@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --nodes=4
+#SBATCH --nodes=1
 #SBATCH --time=00:15:00
 #SBATCH --partition=dev_multiple
 #SBATCH --ntasks-per-node=25
