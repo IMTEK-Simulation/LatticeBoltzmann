@@ -177,8 +177,10 @@ def couette_flow():
     # stolen couette flowl code ;)
     plt.plot(ux[5,1:-2])
     plt.xlabel('Position in cross section')
-    plt.ylabel('velocity')
+    plt.ylabel('Velocity [m/s]')
     plt.title('Couette flow')
+    savestring = "CouetteFlow.png"
+    plt.savefig(savestring)
     plt.show()
 
 def poiseuille_flow():
@@ -209,14 +211,16 @@ def poiseuille_flow():
     #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
     #plt.show()
     # stolen couette flowl code ;)
-    number_of_cuts_in_x = 5
+    number_of_cuts_in_x = 2
     for i in range(1,number_of_cuts_in_x):
         point = int(i*size_x/number_of_cuts_in_x)
         plt.plot(ux[point, 1:-1],label = "x = {}".format(point) )
-    plt.legend()
+    # plt.legend()
     plt.xlabel('Position in cross section')
-    plt.ylabel('velocity')
+    plt.ylabel('Velocity [m/s]')
     plt.title('Pouisuelle flow')
+    savestring = "PouisuelleFlow.png"
+    plt.savefig(savestring)
     plt.show()
 
 def pouisuelle_flow_fancy():
@@ -224,7 +228,7 @@ def pouisuelle_flow_fancy():
     print("Poiseuille Flow fancy")
     runs = 10
     uw = 0.000
-    steps = 4000  # crashes 4533
+    steps = 5000  # crashes 4533
     rho_in = rho_null + diff
     rho_out = rho_null - diff
     # initialize
@@ -254,8 +258,10 @@ def pouisuelle_flow_fancy():
     ## end plot
     plt.legend()
     plt.xlabel('Position in cross section')
-    plt.ylabel('velocity')
+    plt.ylabel('Velocity [m/s]')
     plt.title('Pouisuelle flow with diffrent u-Walls')
+    savestring = "PouisuelleFlowFancy.png"
+    plt.savefig(savestring)
     plt.show()
 
 
@@ -301,7 +307,7 @@ def constant_velocity_in_boundary_flow():
 # function
 # couette_flow()
 poiseuille_flow()
-# pouisuelle_flow_fancy()
+pouisuelle_flow_fancy()
 # constant_velocity_in_boundary_flow()
 
 
