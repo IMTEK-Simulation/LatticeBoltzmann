@@ -19,6 +19,7 @@ velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 rho_null = 1
 diff = 0.001
+shear_viscosity = (1/relaxation-0.5)/3
 
 def equilibrium_on_array(rho,ux,uy):
     '''
@@ -185,7 +186,7 @@ def couette_flow():
 def poiseuille_flow():
     # main code
     print("Poiseuille Flow")
-    uw = 0.001
+    uw = 0.000
     steps = 4000 # crashes 4533
     rho_in = rho_null+diff
     rho_out = rho_null-diff
@@ -207,8 +208,10 @@ def poiseuille_flow():
     x = np.arange(0, size_x+2)
     y = np.arange(0, size_y+2)
     X, Y = np.meshgrid(x, y)
-    # u_analytical = np.arange(0,50)
-
+    delta = 2.0 * diff /size_x / shear_viscosity / 2.
+    y = np.linspace(0, size_y, size_y)
+    u_analytical = delta * y * (size_y - y) / 3.
+    plt.plot(u_analytical, label='Analytical')
     # plt.plot(u_analytical, label='analytical')
     number_of_cuts_in_x = 2
     for i in range(1,number_of_cuts_in_x):
