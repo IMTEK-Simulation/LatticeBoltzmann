@@ -220,7 +220,6 @@ def bounce_back_choosen(grid,uw,info):
 def comunicate(grid,info,comm):
     # if they are false we have to comunicate otherwise will have to do the boundary stuff
     # Right + Left
-    # Todo: i think they can still get messed up even with tags
     if not info.boundaries_info.apply_right:
         recvbuf = grid[:, -1, :].copy()
         comm.Sendrecv(grid[:,-2, :].copy(), info.neighbors.right, recvbuf=recvbuf, sendtag = 11, recvtag = 12)

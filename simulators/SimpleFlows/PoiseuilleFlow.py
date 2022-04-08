@@ -65,7 +65,6 @@ def collision(grid,rho,ux,uy):
     '''
 
     # calculate equilibrium + apply collision
-    # grid = grid - relaxation * (grid - equilbrium)
     grid -= relaxation * (grid-equilibrium_on_array(rho,ux,uy))
 
 def caluculate_real_values(grid):
@@ -112,13 +111,13 @@ def bounce_back(grid,uw):
     '''
     # baunce back without any velocity gain
     # for bottom y = 0
-    grid[2, :, 1] = grid[4, :, 0]
-    grid[5, :, 1] = np.roll(grid[7, :, 0],1)
-    grid[6, :, 1] = np.roll(grid[8, :, 0],-1)
-    # for top y = max_size_y
-    grid[4, :, -2] = grid[2, :, -1]
-    grid[7, :, -2] = np.roll(grid[5, :, -1],1) - 1 / 6 * uw
-    grid[8, :, -2] = np.roll(grid[6, :, -1],-1) + 1 / 6 * uw
+    grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
+    grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
+    grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
+    # for top y = -1
+    grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
+    grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
+    grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
 def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
     '''
@@ -208,14 +207,14 @@ def poiseuille_flow():
     x = np.arange(0, size_x+2)
     y = np.arange(0, size_y+2)
     X, Y = np.meshgrid(x, y)
-    #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
-    #plt.show()
-    # stolen couette flowl code ;)
+    # u_analytical = np.arange(0,50)
+
+    # plt.plot(u_analytical, label='analytical')
     number_of_cuts_in_x = 2
     for i in range(1,number_of_cuts_in_x):
         point = int(i*size_x/number_of_cuts_in_x)
-        plt.plot(ux[point, 1:-1],label = "x = {}".format(point) )
-    # plt.legend()
+        plt.plot(ux[point, 1:-1],label = "Calculated" )
+    plt.legend()
     plt.xlabel('Position in cross section')
     plt.ylabel('Velocity [m/s]')
     plt.title('Pouisuelle flow')
@@ -307,7 +306,7 @@ def constant_velocity_in_boundary_flow():
 # function
 # couette_flow()
 poiseuille_flow()
-pouisuelle_flow_fancy()
+# pouisuelle_flow_fancy()
 # constant_velocity_in_boundary_flow()
 
 
