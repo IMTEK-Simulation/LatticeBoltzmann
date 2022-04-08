@@ -32,25 +32,27 @@ time = np.array([17645.68878507614, #1
                  380.3805010318756, #225
                  ])
 time_good = np.array([
-                    17645.68878507614, #1
-                    2811.8762357234955, #4
-                    2074.2043981552124, #9
-                    881.9688158035278, #16
-                    #25
+                    19907.83862733841, #1
+                    4859.682349920273, #4
+                    2086.8067207336426, #9
+                    941.4743375778198, #16:
+                    701.873462677002, #25
                     575.2479498386383, #36
                     431.27615690231323, #100
                     393.5351839065552, #144
                     380.3805010318756, #225
+                    379.8842520713806, #400
                     ])
-processor_numbers = np.array([1,4,9,16,36,100,144,225])
-speedup=time_good[1]/time_good[1:]
+processor_numbers = np.array([1,4,9,16,25,36,100,144,225,400])
+speedup=time_good[0]/time_good[0:]
 print(time_good)
 print("Making Image")
 # recalculate ux and uy
-plt.title("Sliding Lid")
+plt.title("Speedup of the Sliding Lid:")
 plt.xlabel("Number of cores")
+# plt.xscale("log",base = 2)
 plt.ylabel("Speedup")
 savestring = "Amdahls" + "view" + ".png"
 plt.savefig(savestring)
-plt.plot(processor_numbers[1:],speedup)
+plt.plot(processor_numbers,speedup)
 plt.show()
