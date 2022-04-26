@@ -53,6 +53,6 @@ plt.xlabel("Number of cores")
 # plt.xscale("log",base = 2)
 plt.ylabel("Speedup")
 savestring = "Amdahls" + "view" + ".png"
-plt.savefig(savestring)
 plt.plot(processor_numbers,speedup)
+plt.savefig(savestring)
 plt.show()
