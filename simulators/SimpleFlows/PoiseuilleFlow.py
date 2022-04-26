@@ -22,18 +22,6 @@ diff = 0.001
 shear_viscosity = (1/relaxation-0.5)/3
 
 def equilibrium_on_array(rho,ux,uy):
-    '''
-    Calculates the equilibrium function for the whole array at once
-    Parameters
-    ----------
-    rho
-    ux
-    uy
-
-    Returns
-    -------
-
-    '''
     uxy_3plus = 3 * (ux + uy)
     uxy_3miuns = 3 * (ux - uy)
     uu = 3 * (ux * ux + uy * uy)
@@ -54,62 +42,20 @@ def equilibrium_on_array(rho,ux,uy):
 
 
 def collision(grid,rho,ux,uy):
-    '''
-    Performs the collision step and also calculated rho, ux, uy in the same step
-    Parameters
-    ----------
-    grid
-
-    Returns
-    -------
-    rho, ux, uy
-    '''
-
     # calculate equilibrium + apply collision
     grid -= relaxation * (grid-equilibrium_on_array(rho,ux,uy))
 
 def caluculate_real_values(grid):
-    '''
-    Calculates rho, ux, uy
-    Parameters
-    ----------
-    grid
-
-    Returns
-    -------
-
-    '''
     rho = np.sum(grid, axis=0)  # sums over each one individually
     ux = ((grid[1] + grid[5] + grid[8]) - (grid[3] + grid[6] + grid[7])) / rho
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
 def stream(grid):
-    '''
-    Performs the streaming step in place
-    Parameters
-    ----------
-    grid
-
-    Returns
-    -------
-
-    '''
     for i in range(1,9):
         grid[i] = np.roll(grid[i],velocity_set[i], axis = (0,1))
 
 def bounce_back(grid,uw):
-    '''
-    Perfomrs the bounce back
-    Parameters
-    ----------
-    grid
-    uw
-
-    Returns
-    -------
-
-    '''
     # baunce back without any velocity gain
     # for bottom y = 0
     grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
@@ -121,18 +67,6 @@ def bounce_back(grid,uw):
     grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
 def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
-    '''
-
-    Parameters
-    ----------
-    grid
-    rho_in
-    rho_out
-
-    Returns
-    -------
-
-    '''
     # get all the values
     rho, ux, uy = caluculate_real_values(grid)
     equilibrium = equilibrium_on_array(rho, ux, uy)
@@ -307,8 +241,8 @@ def constant_velocity_in_boundary_flow():
 
 ####
 # function
-# couette_flow()
-poiseuille_flow()
+couette_flow()
+# poiseuille_flow()
 # pouisuelle_flow_fancy()
 # constant_velocity_in_boundary_flow()
 
