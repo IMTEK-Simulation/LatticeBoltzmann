@@ -90,20 +90,6 @@ def get_postions_out_of_rank_size_quadratic(rank,size):
 
 
 def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
-    '''
-
-    Parameters
-    ----------
-    rank
-    size
-    max_x starts from 0
-    max_y starts from 0
-    base_grid
-
-    Returns
-    -------
-
-    '''
     #
     info = mpiPackageStructure()
     info.rank = rank
