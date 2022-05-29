@@ -21,6 +21,7 @@ rho_null = 1
 diff = 0.001
 shear_viscosity = (1/relaxation-0.5)/3
 
+
 def equilibrium_on_array(rho,ux,uy):
     uxy_3plus = 3 * (ux + uy)
     uxy_3miuns = 3 * (ux - uy)
@@ -43,7 +44,7 @@ def equilibrium_on_array(rho,ux,uy):
 
 def collision(grid,rho,ux,uy):
     # calculate equilibrium + apply collision
-    grid -= relaxation * (grid-equilibrium_on_array(rho,ux,uy))
+    grid -= relaxation * (grid-equilibrium_on_array(rho, ux,  uy))
 
 def caluculate_real_values(grid):
     rho = np.sum(grid, axis=0)  # sums over each one individually
@@ -57,12 +58,18 @@ def stream(grid):
 
 def bounce_back(grid,uw):
     # baunce back without any velocity gain
+    # btw why am i doing this from 1:-1 ???
+    # rho_wall = np.average(np.sum(grid,axis=0)) # doesnt do anything
+    # rho_wall = grid[0,:,-2] + grid[1,:,-2] + 2* grid[2,:,2]+ grid[3,:,-2] +2*grid[5,:,-2]+2*grid[6,:,-2] # neither do you
     # for bottom y = 0
     grid[2, 1:-1, 1] = grid[4, 1:-1, 0]
     grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
     grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
     # for top y = -1
     grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
+    # grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw * rho_wall[1:-1]
+    # grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw * rho_wall[1:-1]
+    ####
     grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
     grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
@@ -87,7 +94,8 @@ def couette_flow():
     # main code
     print("couette Flow")
     steps = 4000
-    uw = 1
+    plot_every = 10
+    uw = 0.1
 
     # initialize
     rho = np.ones((size_x,size_y+2))
@@ -101,15 +109,16 @@ def couette_flow():
         collision(grid,rho,ux,uy)
         stream(grid)
         bounce_back(grid,uw)
+        if (i % plot_every) == 0:
+            plot_every = plot_every*2
+            plt.plot(ux[50, 1:-1],label = "Step {}".format(i))
 
     # visualize
-    x = np.arange(0,size_x)
-    y = np.arange(0,size_y)
-    X,Y = np.meshgrid(x,y)
-    #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
-    #plt.show()
-    # stolen couette flowl code ;)
-    plt.plot(ux[5,1:-2])
+    #
+    x = np.arange(0,50)
+    y = uw*1/50*x
+    plt.plot(y, label ="Analytical")
+    plt.legend()
     plt.xlabel('Position in cross section')
     plt.ylabel('Velocity [m/s]')
     plt.title('Couette flow')
