@@ -69,7 +69,7 @@ def bounce_back(grid,uw):
     grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
     # grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw * rho_wall[1:-1]
     # grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw * rho_wall[1:-1]
-    ####
+    # code doesnt do anything so idk
     grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
     grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
 
