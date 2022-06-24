@@ -148,18 +148,16 @@ def poiseuille_flow():
         collision(grid, rho, ux, uy)
 
     # visualize
-    x = np.arange(0, size_x+2)
-    y = np.arange(0, size_y+2)
-    X, Y = np.meshgrid(x, y)
     delta = 2.0 * diff /size_x / shear_viscosity / 2.
-    y = np.linspace(0, size_y, size_y)
+    y = np.linspace(0, size_y, size_y+1) + 0.5
     u_analytical = delta * y * (size_y - y) / 3.
-    plt.plot(u_analytical, label='Analytical')
+    plt.plot(u_analytical[:-1], label='Analytical')
     # plt.plot(u_analytical, label='analytical')
     number_of_cuts_in_x = 2
     for i in range(1,number_of_cuts_in_x):
         point = int(i*size_x/number_of_cuts_in_x)
         plt.plot(ux[point, 1:-1],label = "Calculated" )
+    print(len(ux[25,1:-1]))
     plt.legend()
     plt.xlabel('Position in cross section')
     plt.ylabel('Velocity [m/s]')
@@ -250,8 +248,8 @@ def constant_velocity_in_boundary_flow():
 
 ####
 # function
-couette_flow()
-# poiseuille_flow()
+# couette_flow()
+poiseuille_flow()
 # pouisuelle_flow_fancy()
 # constant_velocity_in_boundary_flow()
 
