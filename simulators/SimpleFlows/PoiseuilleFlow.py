@@ -13,7 +13,7 @@ import time
 
 # global variables
 relaxation = 0.5
-size_x = 100
+size_x = 50
 size_y = 50
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -86,8 +86,8 @@ def periodic_boundary_with_pressure_variations(grid,rho_in,rho_out):
 def couette_flow():
     # main code
     print("couette Flow")
-    steps = 4000
-    uw = 1
+    steps = 2000
+    uw = 0.5
 
     # initialize
     rho = np.ones((size_x,size_y+2))
@@ -97,23 +97,24 @@ def couette_flow():
 
     # loop
     for i in range(steps):
-        rho, ux, uy = caluculate_real_values(grid)
-        collision(grid,rho,ux,uy)
         stream(grid)
-        bounce_back(grid,uw)
+        bounce_back(grid, uw)
+        rho, ux, uy = caluculate_real_values(grid)
+        collision(grid, rho, ux, uy)
 
     # visualize
-    x = np.arange(0,size_x)
-    y = np.arange(0,size_y)
-    X,Y = np.meshgrid(x,y)
-    #plt.streamplot(X,Y,ux[:,1:51],uy[:,1:51])
-    #plt.show()
-    # stolen couette flowl code ;)
-    plt.plot(ux[5,1:-2])
+    # analytical
+    x = np.arange(0,size_y)
+    y = x * 1/size_y* uw
+    # calculated
+    plt.plot(y,label = "Analytical")
+    plt.plot(ux[5,1:-2],label = "Calculated")
     plt.xlabel('Position in cross section')
     plt.ylabel('Velocity [m/s]')
     plt.title('Couette flow')
-    savestring = "CouetteFlow.png"
+    plt.legend()
+    # save the whole ordeal
+    savestring = "CouetteFlow2.png"
     plt.savefig(savestring)
     plt.show()
 

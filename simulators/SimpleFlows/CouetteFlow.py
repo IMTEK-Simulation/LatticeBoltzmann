@@ -24,14 +24,14 @@ print("Couetteflow")
 # velocity_set
 channels = 9
 relaxation = 0.5
-uw = 5
+uw = 0.1
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # grids
 size = 50
 topbottom_boundary = 2
 size_x = size                     # 50
-size_y = size #+ topbottom_boundary # 52
+size_y = size + topbottom_boundary # 52
 # initilization of the grids used
 grid = np.ones((channels,size_x,size_y))
 rho_v = np.zeros((size_x,size_y))
@@ -151,12 +151,12 @@ def slow_calc():
         bounce_back(grid, uw)
         # next step
     # print(grid)
+    return rho_v,ux_v,uy_v
 
 def fast_calc(rho,ux,uy):
     for i in range(steps):
-        rho, ux, uy = calculate_collision(grid)
-        # stream
         stream(grid)
+        rho, ux, uy = calculate_collision(grid)
         # baounce back
         bounce_back(grid,uw)
         # next step
@@ -164,12 +164,9 @@ def fast_calc(rho,ux,uy):
 
 ''' visualization '''
 #quiver?!
-rho_v, ux_v, uy_v = fast_calc(rho_v,ux_v,uy_v)
-x = np.arange(0,size_x)
-y = np.arange(0,size_y)
-X,Y = np.meshgrid(x,y)
-# UX, UY = np.meshgrid(ux, uy)
-plt.streamplot(X,Y,ux_v,uy_v)
+# rho_v, ux_v, uy_v = fast_calc(rho_v,ux_v,uy_v)
+# rho_v, ux_v, uy_v = slow_calc()
+plt.plot(ux_v[5, 1:-2])
 #print(ux)
 plt.show()
 
