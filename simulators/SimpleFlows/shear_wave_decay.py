@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 steps = 10000
 size_x = 300
 size_y = 300
-k_y = 2*np.pi/size_x
+k_y = 2*np.pi/size_x # why did i name this ky and not just periode
 amplitude_global = 0.1
 periode = 1
 relaxation_global = 0.2
@@ -397,7 +397,7 @@ def analyse_different_values():
     # plotting
     x = 0
     y = 0
-    fig_size = (10 * 2.5, 8 * 2.5)
+    fig_size = (10 * 2, 8 * 2)
     axs = plt.figure(figsize=fig_size).subplots(4, 2)
     for i in range(num_of_patterns):
         # actual plotting
@@ -470,9 +470,9 @@ def do_fft_analysis(signal):
 
 
 # calls
-# shear_wave_decay()
-# rapid_call()
-shear_wave_different_times(0.3,0.2,10)
+shear_wave_decay()
+rapid_call()
+# shear_wave_different_times(0.3,0.2,10)
 # analyse_different_values()
 #plotter_shear_wave()
 #example_fft()
