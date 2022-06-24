@@ -29,7 +29,7 @@ relaxation_global = 0.2
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 
-# main functions
+# main functions of the simulation
 def stream(grid):
     for i in range(1,9):
         grid[i] = np.roll(grid[i],velocity_set[i], axis = (0,1))
@@ -68,12 +68,59 @@ def caluculate_rho_ux_uy(grid):
     uy = ((grid[2] + grid[5] + grid[6]) - (grid[4] + grid[7] + grid[8])) / rho
     return rho,ux,uy
 
-# fit stuff
+# fitting stuff to the amplitude
 def theo_Exp(x, v):
     return amplitude_global * np.exp(-v*k_y*k_y*x)
 
 def theo_exp_with_variables(x,v,ky,amplitud):
     return amplitud * np.exp(-v * ky * ky * x)
+
+# helper functions
+def plotter_shear_wave():
+    sample_freq = size_x
+    sample_time  = 1/sample_freq
+    amplitude = 0.1
+    ky = k_y
+    x_values = ky * np.arange(0, size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
+    fourier_transform = np.fft.fft(shear_wave) / len(shear_wave)
+    fourier_transform = fourier_transform[range(int(len(shear_wave) / 2))]
+    tp_count = len(shear_wave)
+    values = np.arange(int(tp_count) / 2)
+    time_period = tp_count / 100
+    freq = values / time_period
+    plt.plot(freq[0:10], abs(fourier_transform[0:10]))
+    plt.show()
+
+def example_fft():
+    sampel_freq = 100
+    sample_time = 0.01
+    t = np.arange(0,10,sample_time)
+    signal1_freq = 3
+    signal2_freq = 9
+    amplitude1 = np.sin(2*np.pi*signal1_freq*t)
+    amplitude2 = np.sin(2*np.pi*signal2_freq*t)
+    ampitude = amplitude1 + amplitude2
+    fourier_transform = np.fft.fft(ampitude)/len(ampitude)
+    fourier_transform = fourier_transform[range(int(len(ampitude)/2))]
+    tp_count = len(ampitude)
+    values = np.arange(int(tp_count)/2)
+    time_period = tp_count/sampel_freq
+    freq = values/time_period
+    plt.plot(freq,abs(fourier_transform))
+    plt.show()
+
+def do_fft_analysis(signal):
+    sample_freq = len(signal)
+    sample_time = 1 / sample_freq
+    fourier_transform = np.fft.fft(signal) / len(signal)
+    fourier_transform = fourier_transform[range(int(len(signal) / 2))]
+    tp_count = len(signal)
+    values = np.arange(int(tp_count) / 2)
+    time_period = tp_count / sample_freq
+    freq = values / time_period
+    return freq, abs(fourier_transform)
+
 
 # main body
 def shear_wave_decay():
@@ -199,7 +246,7 @@ def shear_wave_decay_more(amplitude,relaxation,ky):
     return v_theoretical, v_simualated,amplitude_theo, amplitude_array
 
 def rapid_call():
-    print("Mass caller, Generate six")
+    print("Mass caller, Generate six non FFT-analysises")
     # put v theo and v sim in the labels
     # original amplitude
     v_theoretical_array = []
@@ -421,59 +468,38 @@ def analyse_different_values():
     # dont forget
     plt.show()
 
+def generate_omega_viscosity_graph():
+    # measured solution plot
+    # analytical solution plot
+    '''
+    Run a number of simulations with different omegas and record it i guess
+    ~ 10 maybe need to check of course form 0.03 till 1.7
+    remember that we did not think about the ugrad(u) term in the stokes equation
+    '''
 
-
-def plotter_shear_wave():
-    sample_freq = size_x
-    sample_time  = 1/sample_freq
-    amplitude = 0.1
-    ky = k_y
-    x_values = ky * np.arange(0, size_x)
-    shear_wave = amplitude * np.sin(periode * x_values)
-    fourier_transform = np.fft.fft(shear_wave) / len(shear_wave)
-    fourier_transform = fourier_transform[range(int(len(shear_wave) / 2))]
-    tp_count = len(shear_wave)
-    values = np.arange(int(tp_count) / 2)
-    time_period = tp_count / 100
-    freq = values / time_period
-    plt.plot(freq[0:10], abs(fourier_transform[0:10]))
+    # fix this to be right
+    omegas = np.linspace(0.03,1.7,100)
+    print(np.diff(omegas)[0])
+    viscoity = 1/3 *(1/omegas -1/2)
+    plt.plot(omegas,viscoity, label = "analytical")
+    # non individual plot stuff
+    plt.legend()
+    plt.xlabel("Omega")
+    plt.ylabel("Viscosity")
     plt.show()
 
-def example_fft():
-    sampel_freq = 100
-    sample_time = 0.01
-    t = np.arange(0,10,sample_time)
-    signal1_freq = 3
-    signal2_freq = 9
-    amplitude1 = np.sin(2*np.pi*signal1_freq*t)
-    amplitude2 = np.sin(2*np.pi*signal2_freq*t)
-    ampitude = amplitude1 + amplitude2
-    fourier_transform = np.fft.fft(ampitude)/len(ampitude)
-    fourier_transform = fourier_transform[range(int(len(ampitude)/2))]
-    tp_count = len(ampitude)
-    values = np.arange(int(tp_count)/2)
-    time_period = tp_count/sampel_freq
-    freq = values/time_period
-    plt.plot(freq,abs(fourier_transform))
-    plt.show()
-
-def do_fft_analysis(signal):
-    sample_freq = len(signal)
-    sample_time = 1 / sample_freq
-    fourier_transform = np.fft.fft(signal) / len(signal)
-    fourier_transform = fourier_transform[range(int(len(signal) / 2))]
-    tp_count = len(signal)
-    values = np.arange(int(tp_count) / 2)
-    time_period = tp_count / sample_freq
-    freq = values / time_period
-    return freq, abs(fourier_transform)
 
 
+
+''' 
+Function call area
+'''
 # calls
-shear_wave_decay()
-rapid_call()
+# shear_wave_decay()
+# rapid_call()
 # shear_wave_different_times(0.3,0.2,10)
 # analyse_different_values()
-#plotter_shear_wave()
-#example_fft()
+generate_omega_viscosity_graph()
+# plotter_shear_wave()
+# example_fft()
 
