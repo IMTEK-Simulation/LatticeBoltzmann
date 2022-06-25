@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 
 # initial variables and sizes
 steps = 10000
-size_x = 300
-size_y = 300
+size_x = 100
+size_y = 100
 k_y = 2*np.pi/size_x # why did i name this ky and not just periode
 amplitude_global = 0.1
 periode = 1
@@ -324,9 +324,9 @@ def shear_wave_decay_fft_analyise(amplitude,relaxation,ky_factor):
     plt.show()
 
 def shear_wave_different_times(amplitude,relaxation,ky_factor):
-    print("Shear Wave Decay Fourier Analysis at different timesteps")
+    print("Shear Wave, generates 4 diagrams with the fft amplitudes in different directions")
     # stuff for the basic simulation
-    runs = 10000
+    runs = 1000
     ky = ky_factor* k_y
     x_values = ky * np.arange(0, size_x)
     shear_wave = amplitude * np.sin(periode * x_values)
@@ -351,21 +351,24 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
 
 
     # label_string = ""
-    fig_size = (10 * 2.5, 8 * 2.5)
+    fig_size = (10 , 9.5)
     axs = plt.figure(figsize=fig_size).subplots(2, 2)
     # calcs
+    # int(size_x / 2) random point in der wave
     freq_x, fourier_x = do_fft_analysis(ux[int(size_x / 2), :])
     freq_y, fourier_y = do_fft_analysis(uy[int(size_x / 2), :])
     fourier_x = fourier_x/np.linalg.norm(fourier_x)
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ##
     axs[0, 0].plot(freq_x,fourier_x)
-    axs[0, 0].set_xlabel("Wave number")
-    axs[0, 0].set_ylabel("Amplitude vx(ky)")
+    axs[0, 0].set_title("Fourier Analysis of ux in x-Direction")
+    axs[0, 0].set_xlabel("Frequency")
+    axs[0, 0].set_ylabel("Normed Amplitude vx(ky)")
     ##
     axs[1, 0].plot(freq_y,fourier_y)
-    axs[1, 0].set_xlabel("Wave number")
-    axs[1, 0].set_ylabel("Amplitude vy(ky)")
+    axs[1, 0].set_title("Fourier Analysis of uy in x-Direction")
+    axs[1, 0].set_xlabel("Frequency")
+    axs[1, 0].set_ylabel("Normed Amplitude vy(ky)")
     ###
     freq_x, fourier_x = do_fft_analysis(ux[: ,int(size_x / 2)])
     freq_y, fourier_y = do_fft_analysis(uy[: ,int(size_x / 2)])
@@ -373,21 +376,26 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ####
     axs[0, 1].plot(freq_x, fourier_x)
-    axs[0, 1].set_xlabel("Wave number")
-    axs[0, 1].set_ylabel("Amplitude vx(kx)")
+    axs[0, 1].set_title("Fourier Analysis of ux in y-Direction")
+    axs[0, 1].set_xlabel("Frequency")
+    axs[0, 1].set_ylabel("Normed Amplitude vx(kx)")
     ##
     axs[1, 1].plot(freq_y, fourier_y)
-    axs[1, 1].set_xlabel("Wave number")
-    axs[1, 1].set_ylabel("Amplitude vy(kx)")
-    title_string = "Amplitude {}".format(amplitude) \
-                   + " ,relaxation {}".format(relaxation) + \
-                   " , {}*ky".format(ky_factor) \
-                   + ", size {}".format(size_x)
+    axs[1, 1].set_title("Fourier Analysis of uy in y-Direction")
+    axs[1, 1].set_xlabel("Frequency")
+    axs[1, 1].set_ylabel("Normed Amplitude vy(kx)")
+    title_string = "Frequency analysis with an initial shear wave" \
+                   "\n" \
+                   "Amplitude: {}".format(amplitude) \
+                   + " ,relaxation $\omega$: {}".format(relaxation) + \
+                   " ,k_y {}*$2\pi / L_g$".format(ky_factor) \
+                   + ", size {}x{}".format(size_x,size_y)
     plt.suptitle(title_string)
     plt.show()
 
 
 def shear_wave_decay_return(amplitude,relaxation,ky_factor):
+    print("8 diagrams with different kys that relax differently")
     # stuff for the basic simulation
     ky = k_y * ky_factor
     x_values = ky * np.arange(0, size_x)
@@ -497,9 +505,9 @@ Function call area
 # calls
 # shear_wave_decay()
 # rapid_call()
-# shear_wave_different_times(0.3,0.2,10)
+shear_wave_different_times(0.2,0.2,10)
 # analyse_different_values()
-generate_omega_viscosity_graph()
+# generate_omega_viscosity_graph()
 # plotter_shear_wave()
 # example_fft()
 
