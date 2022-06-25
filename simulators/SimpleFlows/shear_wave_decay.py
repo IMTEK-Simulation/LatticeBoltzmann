@@ -477,6 +477,7 @@ def analyse_different_values():
     plt.show()
 
 def generate_omega_viscosity_graph():
+    print("Omega vs Kinematic Shear Viscsity")
     # measured solution plot
     # analytical solution plot
     '''
@@ -484,12 +485,46 @@ def generate_omega_viscosity_graph():
     ~ 10 maybe need to check of course form 0.03 till 1.7
     remember that we did not think about the ugrad(u) term in the stokes equation
     '''
+    runs = 1000
+    ky = k_y
+    amplitude = 0.1
+    x_values = ky * np.arange(0, size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
+
+    # initizlize the gird
+    rho = np.ones((size_x, size_y))
+    ux = np.zeros((size_x, size_y))
+    ux[:, :] = shear_wave
+    uy = np.zeros((size_x, size_y))
+    grid = equilibrium(rho, ux, uy)
+    relaxation_space = np.linspace(0.01,1.7,101)
+    # relaxation_space = [0.2]
+    #
+    viscosity_calculated = []
+    # loop
+    for relaxation in relaxation_space:
+        for i in range(runs + 1):
+            # standard procedure
+            stream(grid)
+            rho, ux, uy = caluculate_rho_ux_uy(grid)
+            collision_with_relaxation(grid, rho, ux, uy, relaxation)
+            # calculate the kinematic viscosity of the thing
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        vis = np.mean(rho)*1/3*(1/relaxation-1/2)
+        viscosity_calculated.append(vis)
+        # reset the grid for the next calculation
+        rho = np.ones((size_x, size_y))
+        ux = np.zeros((size_x, size_y))
+        ux[:, :] = shear_wave
+        uy = np.zeros((size_x, size_y))
+        grid = equilibrium(rho, ux, uy)
 
     # fix this to be right
-    omegas = np.linspace(0.03,1.7,100)
-    print(np.diff(omegas)[0])
+    omegas = np.linspace(0.01,1.7,100)
+    # print(np.diff(omegas)[0])
     viscoity = 1/3 *(1/omegas -1/2)
     plt.plot(omegas,viscoity, label = "analytical")
+    plt.plot(relaxation_space,viscosity_calculated,label = "calculated")
     # non individual plot stuff
     plt.legend()
     plt.xlabel("Omega")
@@ -505,9 +540,9 @@ Function call area
 # calls
 # shear_wave_decay()
 # rapid_call()
-shear_wave_different_times(0.2,0.2,10)
+# shear_wave_different_times(0.2,0.2,10)
 # analyse_different_values()
-# generate_omega_viscosity_graph()
+generate_omega_viscosity_graph()
 # plotter_shear_wave()
 # example_fft()
 
