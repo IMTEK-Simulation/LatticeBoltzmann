@@ -485,6 +485,9 @@ def generate_omega_viscosity_graph():
     ~ 10 maybe need to check of course form 0.03 till 1.7
     remember that we did not think about the ugrad(u) term in the stokes equation
     '''
+    start_relax = 0.03
+    end_relax = 1.7
+    length_relax = 201
     runs = 1000
     ky = k_y
     amplitude = 0.1
@@ -497,7 +500,7 @@ def generate_omega_viscosity_graph():
     ux[:, :] = shear_wave
     uy = np.zeros((size_x, size_y))
     grid = equilibrium(rho, ux, uy)
-    relaxation_space = np.linspace(0.01,1.7,101)
+    relaxation_space = np.linspace(start_relax, end_relax, length_relax)
     # relaxation_space = [0.2]
     #
     viscosity_calculated = []
@@ -510,7 +513,16 @@ def generate_omega_viscosity_graph():
             collision_with_relaxation(grid, rho, ux, uy, relaxation)
             # calculate the kinematic viscosity of the thing
         rho, ux, uy = caluculate_rho_ux_uy(grid)
-        vis = np.mean(rho)*1/3*(1/relaxation-1/2)
+        # print(np.mean(rho))
+
+        ###
+        # 2 possibilities
+        # fit the data to a cure and then go see
+        # just use the equation and reform
+        ux_fft = np.fft.fft(ux[int(size_x / 2), :])
+        ampl = 2 / size_y * np.abs(ux_fft)
+        ampl = np.max(ampl)
+        vis = -np.log(ampl/amplitude)/((2*np.pi/size_x)**2*runs)
         viscosity_calculated.append(vis)
         # reset the grid for the next calculation
         rho = np.ones((size_x, size_y))
@@ -520,15 +532,16 @@ def generate_omega_viscosity_graph():
         grid = equilibrium(rho, ux, uy)
 
     # fix this to be right
-    omegas = np.linspace(0.01,1.7,100)
+    omegas = np.linspace(start_relax, end_relax, length_relax)
     # print(np.diff(omegas)[0])
     viscoity = 1/3 *(1/omegas -1/2)
     plt.plot(omegas,viscoity, label = "analytical")
-    plt.plot(relaxation_space,viscosity_calculated,label = "calculated")
+    plt.plot(relaxation_space,viscosity_calculated,label = "calculated", linestyle = "dashed")
+
     # non individual plot stuff
     plt.legend()
     plt.xlabel("Omega")
-    plt.ylabel("Viscosity")
+    plt.ylabel("Viscosity [$m^2/t$]")
     plt.show()
 
 
