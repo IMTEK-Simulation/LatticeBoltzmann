@@ -105,7 +105,7 @@ def calculate_collision(grid):
 
 def bounce_back(grid,uw):
     # baunce back without any velocity gain
-    # TODO rho Wall missing
+    # TODO rho Wall missing doesnt matter
     max_size_x = grid.shape[1]-1  # x
     max_size_y = grid.shape[2]-1  # y
     # for bottom y = 0

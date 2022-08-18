@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 
 # initial variables and sizes
 steps = 10000
-size_x = 100
-size_y = 100
+size_x = 300
+size_y = 300
 k_y = 2*np.pi/size_x # why did i name this ky and not just periode
 amplitude_global = 0.1
 periode = 1
@@ -361,14 +361,14 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ##
     axs[0, 0].plot(freq_x,fourier_x)
-    axs[0, 0].set_title("Fourier Analysis of ux in x-Direction")
-    axs[0, 0].set_xlabel("Frequency")
-    axs[0, 0].set_ylabel("Normed Amplitude vx(ky)")
+    axs[0, 0].set_title("Velocity $v_x$ vs wavenumber in $k_y$")
+    axs[0, 0].set_xlabel("Wavenumber $k_y$")
+    axs[0, 0].set_ylabel("Normed Amplitude $v_x(k_y)$")
     ##
     axs[1, 0].plot(freq_y,fourier_y)
-    axs[1, 0].set_title("Fourier Analysis of uy in x-Direction")
-    axs[1, 0].set_xlabel("Frequency")
-    axs[1, 0].set_ylabel("Normed Amplitude vy(ky)")
+    axs[1, 0].set_title("Velocity $v_y$ vs wavenumber in $k_y$")
+    axs[1, 0].set_xlabel("Wavenumber $k_y$")
+    axs[1, 0].set_ylabel("Normed Amplitude $v_y(k_y)$")
     ###
     freq_x, fourier_x = do_fft_analysis(ux[: ,int(size_x / 2)])
     freq_y, fourier_y = do_fft_analysis(uy[: ,int(size_x / 2)])
@@ -376,14 +376,14 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ####
     axs[0, 1].plot(freq_x, fourier_x)
-    axs[0, 1].set_title("Fourier Analysis of ux in y-Direction")
-    axs[0, 1].set_xlabel("Frequency")
-    axs[0, 1].set_ylabel("Normed Amplitude vx(kx)")
+    axs[0, 1].set_title("Velocity $v_x$ vs wavenumber in $k_x$")
+    axs[0, 1].set_xlabel("Wavenumber $k_x$")
+    axs[0, 1].set_ylabel("Normed Amplitude $v_x(k_x)$")
     ##
     axs[1, 1].plot(freq_y, fourier_y)
-    axs[1, 1].set_title("Fourier Analysis of uy in y-Direction")
-    axs[1, 1].set_xlabel("Frequency")
-    axs[1, 1].set_ylabel("Normed Amplitude vy(kx)")
+    axs[1, 1].set_title("Velocity $v_y$ vs wavenumber in $k_x$")
+    axs[1, 1].set_xlabel("Wavenumber $k_x$")
+    axs[1, 1].set_ylabel("Normed Amplitude $v_y(k_x)$")
     title_string = "Frequency analysis with an initial shear wave" \
                    "\n" \
                    "Amplitude: {}".format(amplitude) \
@@ -463,7 +463,7 @@ def analyse_different_values():
                        " , {}*ky".format(ky_factor_call_pattern[i]) \
                        +", size {}".format(size_x)
         axs[y,x].set_title(title_string)
-        axs[y, x].set_xlabel("Frequency")
+        axs[y, x].set_xlabel("F")
         axs[y, x].set_ylabel("Amplitude")
         axs[y,x].legend()
         # counting
@@ -485,7 +485,7 @@ def generate_omega_viscosity_graph():
     ~ 10 maybe need to check of course form 0.03 till 1.7
     remember that we did not think about the ugrad(u) term in the stokes equation
     '''
-    start_relax = 0.03
+    start_relax = 0.007
     end_relax = 1.7
     length_relax = 201
     runs = 1000
@@ -506,6 +506,7 @@ def generate_omega_viscosity_graph():
     viscosity_calculated = []
     # loop
     for relaxation in relaxation_space:
+        print(relaxation)
         for i in range(runs + 1):
             # standard procedure
             stream(grid)
@@ -540,8 +541,10 @@ def generate_omega_viscosity_graph():
 
     # non individual plot stuff
     plt.legend()
-    plt.xlabel("Omega")
-    plt.ylabel("Viscosity [$m^2/t$]")
+    titleString = '$\omega$ vs $\\nu$ (Gridsize ' +  "{}".format(size_x) +"x" +"{}".format(size_y)+")"
+    plt.title(titleString)
+    plt.xlabel("Relaxation $\omega$")
+    plt.ylabel("Viscosity $\\nu$")
     plt.show()
 
 
@@ -553,9 +556,9 @@ Function call area
 # calls
 # shear_wave_decay()
 # rapid_call()
-# shear_wave_different_times(0.2,0.2,10)
+shear_wave_different_times(0.2,0.2,10)
 # analyse_different_values()
-generate_omega_viscosity_graph()
+# generate_omega_viscosity_graph()
 # plotter_shear_wave()
 # example_fft()
 
