@@ -225,7 +225,7 @@ def comunicate(grid,info,comm):
         recvbuf = grid[:, :, -1].copy()
         comm.Sendrecv(grid[:, :, -2].copy(), info.neighbors.top, recvbuf=recvbuf, sendtag = 98, recvtag = 99)
         grid[:, :, -1] = recvbuf
-
+get_postions_out_of_rank_size_quadratic
 
 def collapse_data(process_info,grid,comm):
     full_grid = np.zeros(2)
