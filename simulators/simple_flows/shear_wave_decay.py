@@ -324,9 +324,9 @@ def shear_wave_decay_fft_analyise(amplitude,relaxation,ky_factor):
     plt.show()
 
 def shear_wave_different_times(amplitude,relaxation,ky_factor):
-    print("Shear Wave Decay Fourier Analysis at different timesteps")
+    print("Shear Wave, generates 4 diagrams with the fft amplitudes in different directions")
     # stuff for the basic simulation
-    runs = 10000
+    runs = 1000
     ky = ky_factor* k_y
     x_values = ky * np.arange(0, size_x)
     shear_wave = amplitude * np.sin(periode * x_values)
@@ -351,21 +351,24 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
 
 
     # label_string = ""
-    fig_size = (10 * 2.5, 8 * 2.5)
+    fig_size = (10 , 9.5)
     axs = plt.figure(figsize=fig_size).subplots(2, 2)
     # calcs
+    # int(size_x / 2) random point in der wave
     freq_x, fourier_x = do_fft_analysis(ux[int(size_x / 2), :])
     freq_y, fourier_y = do_fft_analysis(uy[int(size_x / 2), :])
     fourier_x = fourier_x/np.linalg.norm(fourier_x)
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ##
     axs[0, 0].plot(freq_x,fourier_x)
-    axs[0, 0].set_xlabel("Wave number")
-    axs[0, 0].set_ylabel("Amplitude vx(ky)")
+    axs[0, 0].set_title("Velocity $v_x$ vs wavenumber in $k_y$")
+    axs[0, 0].set_xlabel("Wavenumber $k_y$")
+    axs[0, 0].set_ylabel("Normed Amplitude $v_x(k_y)$")
     ##
     axs[1, 0].plot(freq_y,fourier_y)
-    axs[1, 0].set_xlabel("Wave number")
-    axs[1, 0].set_ylabel("Amplitude vy(ky)")
+    axs[1, 0].set_title("Velocity $v_y$ vs wavenumber in $k_y$")
+    axs[1, 0].set_xlabel("Wavenumber $k_y$")
+    axs[1, 0].set_ylabel("Normed Amplitude $v_y(k_y)$")
     ###
     freq_x, fourier_x = do_fft_analysis(ux[: ,int(size_x / 2)])
     freq_y, fourier_y = do_fft_analysis(uy[: ,int(size_x / 2)])
@@ -373,21 +376,26 @@ def shear_wave_different_times(amplitude,relaxation,ky_factor):
     fourier_y = fourier_y / np.linalg.norm(fourier_y)
     ####
     axs[0, 1].plot(freq_x, fourier_x)
-    axs[0, 1].set_xlabel("Wave number")
-    axs[0, 1].set_ylabel("Amplitude vx(kx)")
+    axs[0, 1].set_title("Velocity $v_x$ vs wavenumber in $k_x$")
+    axs[0, 1].set_xlabel("Wavenumber $k_x$")
+    axs[0, 1].set_ylabel("Normed Amplitude $v_x(k_x)$")
     ##
     axs[1, 1].plot(freq_y, fourier_y)
-    axs[1, 1].set_xlabel("Wave number")
-    axs[1, 1].set_ylabel("Amplitude vy(kx)")
-    title_string = "Amplitude {}".format(amplitude) \
-                   + " ,relaxation {}".format(relaxation) + \
-                   " , {}*ky".format(ky_factor) \
-                   + ", size {}".format(size_x)
+    axs[1, 1].set_title("Velocity $v_y$ vs wavenumber in $k_x$")
+    axs[1, 1].set_xlabel("Wavenumber $k_x$")
+    axs[1, 1].set_ylabel("Normed Amplitude $v_y(k_x)$")
+    title_string = "Frequency analysis with an initial shear wave" \
+                   "\n" \
+                   "Amplitude: {}".format(amplitude) \
+                   + " ,relaxation $\omega$: {}".format(relaxation) + \
+                   " ,k_y {}*$2\pi / L_g$".format(ky_factor) \
+                   + ", size {}x{}".format(size_x,size_y)
     plt.suptitle(title_string)
     plt.show()
 
 
 def shear_wave_decay_return(amplitude,relaxation,ky_factor):
+    print("8 diagrams with different kys that relax differently")
     # stuff for the basic simulation
     ky = k_y * ky_factor
     x_values = ky * np.arange(0, size_x)
@@ -455,7 +463,7 @@ def analyse_different_values():
                        " , {}*ky".format(ky_factor_call_pattern[i]) \
                        +", size {}".format(size_x)
         axs[y,x].set_title(title_string)
-        axs[y, x].set_xlabel("Frequency")
+        axs[y, x].set_xlabel("F")
         axs[y, x].set_ylabel("Amplitude")
         axs[y,x].legend()
         # counting
@@ -469,6 +477,7 @@ def analyse_different_values():
     plt.show()
 
 def generate_omega_viscosity_graph():
+    print("Omega vs Kinematic Shear Viscsity")
     # measured solution plot
     # analytical solution plot
     '''
@@ -476,16 +485,66 @@ def generate_omega_viscosity_graph():
     ~ 10 maybe need to check of course form 0.03 till 1.7
     remember that we did not think about the ugrad(u) term in the stokes equation
     '''
+    start_relax = 0.007
+    end_relax = 1.7
+    length_relax = 201
+    runs = 1000
+    ky = k_y
+    amplitude = 0.1
+    x_values = ky * np.arange(0, size_x)
+    shear_wave = amplitude * np.sin(periode * x_values)
+
+    # initizlize the gird
+    rho = np.ones((size_x, size_y))
+    ux = np.zeros((size_x, size_y))
+    ux[:, :] = shear_wave
+    uy = np.zeros((size_x, size_y))
+    grid = equilibrium(rho, ux, uy)
+    relaxation_space = np.linspace(start_relax, end_relax, length_relax)
+    # relaxation_space = [0.2]
+    #
+    viscosity_calculated = []
+    # loop
+    for relaxation in relaxation_space:
+        print(relaxation)
+        for i in range(runs + 1):
+            # standard procedure
+            stream(grid)
+            rho, ux, uy = caluculate_rho_ux_uy(grid)
+            collision_with_relaxation(grid, rho, ux, uy, relaxation)
+            # calculate the kinematic viscosity of the thing
+        rho, ux, uy = caluculate_rho_ux_uy(grid)
+        # print(np.mean(rho))
+
+        ###
+        # 2 possibilities
+        # fit the data to a cure and then go see
+        # just use the equation and reform
+        ux_fft = np.fft.fft(ux[int(size_x / 2), :])
+        ampl = 2 / size_y * np.abs(ux_fft)
+        ampl = np.max(ampl)
+        vis = -np.log(ampl/amplitude)/((2*np.pi/size_x)**2*runs)
+        viscosity_calculated.append(vis)
+        # reset the grid for the next calculation
+        rho = np.ones((size_x, size_y))
+        ux = np.zeros((size_x, size_y))
+        ux[:, :] = shear_wave
+        uy = np.zeros((size_x, size_y))
+        grid = equilibrium(rho, ux, uy)
 
     # fix this to be right
-    omegas = np.linspace(0.03,1.7,100)
-    print(np.diff(omegas)[0])
+    omegas = np.linspace(start_relax, end_relax, length_relax)
+    # print(np.diff(omegas)[0])
     viscoity = 1/3 *(1/omegas -1/2)
     plt.plot(omegas,viscoity, label = "analytical")
+    plt.plot(relaxation_space,viscosity_calculated,label = "calculated", linestyle = "dashed")
+
     # non individual plot stuff
     plt.legend()
-    plt.xlabel("Omega")
-    plt.ylabel("Viscosity")
+    titleString = '$\omega$ vs $\\nu$ (Gridsize ' +  "{}".format(size_x) +"x" +"{}".format(size_y)+")"
+    plt.title(titleString)
+    plt.xlabel("Relaxation $\omega$")
+    plt.ylabel("Viscosity $\\nu$")
     plt.show()
 
 
@@ -497,9 +556,9 @@ Function call area
 # calls
 # shear_wave_decay()
 # rapid_call()
-# shear_wave_different_times(0.3,0.2,10)
+shear_wave_different_times(0.2,0.2,10)
 # analyse_different_values()
-generate_omega_viscosity_graph()
+# generate_omega_viscosity_graph()
 # plotter_shear_wave()
 # example_fft()
 

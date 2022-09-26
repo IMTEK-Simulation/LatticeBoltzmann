@@ -120,8 +120,8 @@ def couette_flow():
     plt.plot(y, label ="Analytical")
     plt.legend()
     plt.xlabel('Position in cross section')
-    plt.ylabel('Velocity [m/s]')
-    plt.title('Couette flow')
+    plt.ylabel('Velocity')
+    plt.title('Couette flow (Gridsize 100x52, $\omega = 0.5$)')
     savestring = "CouetteFlow.png"
     plt.savefig(savestring)
     plt.show()
@@ -160,8 +160,8 @@ def poiseuille_flow():
     print(len(ux[25,1:-1]))
     plt.legend()
     plt.xlabel('Position in cross section')
-    plt.ylabel('Velocity [m/s]')
-    plt.title('Pouisuelle flow')
+    plt.ylabel('Velocity')
+    plt.title('Pouisuelle flow (Gridsize 100x52, $\omega = 0.5$, $\\nabla \\rho = 0.002$)')
     savestring = "PouisuelleFlow.png"
     plt.savefig(savestring)
     plt.show()

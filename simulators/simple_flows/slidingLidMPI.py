@@ -96,6 +96,7 @@ def fill_mpi_struct_fields(rank,size,max_x,max_y,base_grid,relaxation,steps,uw):
     info.size = size
     info.pos_x,info.pos_y = get_postions_out_of_rank_size_quadratic(rank,size)
     info.boundaries_info = set_boundary_info(info.pos_x,info.pos_y,max_x-1,max_y-1) # i should know my own code lol
+    # cheeky
     info.size_x = base_grid//(max_x) + 2
     info.size_y = base_grid //(max_y) + 2
     info.neighbors = determin_neighbors(rank,size)

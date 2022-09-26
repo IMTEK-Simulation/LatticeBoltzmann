@@ -22,8 +22,8 @@ re = 1000
 base_lenght = 300
 steps = 100000
 uw = 0.1
-size_x = base_lenght
-size_y = base_lenght
+size_x = base_lenght + 2
+size_y = base_lenght + 2
 relaxation = (2*re)/(6*base_lenght*uw+re)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
@@ -91,9 +91,9 @@ def sliding_lid():
     print("Sliding Lid")
 
     # initizlize the gird
-    rho = np.ones((size_x+2,size_y+2))
-    ux = np.zeros((size_x+2,size_y+2))
-    uy = np.zeros((size_x+2,size_y+2))
+    rho = np.ones((size_x,size_y))
+    ux = np.zeros((size_x,size_y))
+    uy = np.zeros((size_x,size_y))
     grid = equilibrium(rho,ux,uy)
 
     # loop
@@ -106,16 +106,19 @@ def sliding_lid():
     # print(grid[2,0,:])
     # visualize
     # values
-    x = np.arange(0, size_x)
-    y = np.arange(0, size_y)
+    x = np.arange(0, base_lenght)
+    y = np.arange(0, base_lenght)
     X, Y = np.meshgrid(x, y)
     speed = np.sqrt(ux[1:-1,1:-1].T ** 2 + uy[1:-1,1:-1].T ** 2)
+    print(speed.shape)
     # plot
     plt.streamplot(X,Y,ux[1:-1,1:-1].T,uy[1:-1,1:-1].T, color = speed, cmap= plt.cm.jet)
     ax = plt.gca()
     ax.set_xlim([0, 301])
     ax.set_ylim([0, 301])
-    plt.title("Sliding Lid")
+    titleString = "Sliding Lid (Gridsize " + "{}".format(size_x) + "x" + "{}".format(size_y)
+    titleString += ",  $\\omega$ = {:.2f}".format(relaxation) + ", steps = {}".format(steps) + ")"
+    plt.title(titleString)
     plt.xlabel("x-Position")
     plt.ylabel("y-Position")
     fig = plt.colorbar()
