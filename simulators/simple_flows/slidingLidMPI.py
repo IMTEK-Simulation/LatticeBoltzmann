@@ -330,11 +330,12 @@ def call():
 
 # call()
 #comm = MPI.COMM_WORLD
-#process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
+process_info = fill_mpi_struct_fields(0,4,2,2,300,0,0,0)
+print(process_info)
 #fg = collapse_data(process_info,np.ones((9,152,152)),comm)
 #print(fg.shape)
 # g = np.zeros((9,27,27))
 # k = g[:,1:-1,1:-1]
 # print(k.shape)
-startime = time.time()
-call()
+#startime = time.time()
+#call()

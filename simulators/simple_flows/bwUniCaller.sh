@@ -7,7 +7,7 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --output=slidingLidMPI.out
 #SBATCH --error=slidingLidMPI.err
-echo "Loading Pythona module and mpi module"
+echo "Loading Python module and mpi module"
 module load devel/python/3.10.0_gnu_11.1
 module load mpi/openmpi/4.1
 module list
