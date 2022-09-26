@@ -142,7 +142,7 @@ def shift_stuff():
 
 
 def test_colapse_data_with_2cores():
-    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import simulators.simple_flows.slidingLidMPI as slidingLidMPI
     import numpy as np
     size = MPI.COMM_WORLD.Get_size()
     rank = MPI.COMM_WORLD.Get_rank()
@@ -177,7 +177,7 @@ def test_colapse_data_with_2cores():
     return f"{full_grid.shape}"
 
 def test_colapse_data():
-    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import simulators.simple_flows.slidingLidMPI as slidingLidMPI
     import numpy as np
     comm = MPI.COMM_WORLD
     size = MPI.COMM_WORLD.Get_size()
@@ -198,7 +198,7 @@ def test_colapse_data():
     return f"{process_info}"
 
 def test_data_creation():
-    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import simulators.simple_flows.slidingLidMPI as slidingLidMPI
     import numpy as np
     comm = MPI.COMM_WORLD
     size = MPI.COMM_WORLD.Get_size()
@@ -212,7 +212,7 @@ def test_data_creation():
     return f"{process_info}"
 
 def test_4_simulation():
-    import simulators.SimpleFlows.slidingLidMPI as slidingLidMPI
+    import simulators.simple_flows.slidingLidMPI as slidingLidMPI
     import numpy as np
     comm = MPI.COMM_WORLD
     size = MPI.COMM_WORLD.Get_size()
