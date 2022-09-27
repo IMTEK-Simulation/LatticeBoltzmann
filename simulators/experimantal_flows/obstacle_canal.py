@@ -112,9 +112,7 @@ class packageStructure:
                                      boundary_state_top= boundary_state_top, 
                                      boundary_state_bottom = boundary_state_bottom)
         self.determin_neighbors(calculation_cell_info=self.calculation_cell_info)
-        # TODO allow non equal partition
-        self.size_x = base_grid_x // number_of_cells_x + 2
-        self.size_y = base_grid_y // number_of_cells_y + 2
+        self.set_own_cell_size()
 
     def determin_neighbors(self, calculation_cell_info):
         # (determins the neighbour in term of its size not its grid position)
@@ -145,7 +143,16 @@ class packageStructure:
         self.boundaries_info = info
 
     def set_own_cell_size(self):
-        pass
+        # case 1 basic cell no need to add further grid points
+        self.size_x = self.base_grid_x // self.calculation_cell_info.cell_numbers_in_x + 2
+        self.size_y = self.base_grid_y // self.calculation_cell_info.cell_numbers_in_y + 2
+        # case 2 end cell in x -> check weather or not there are more grid points to be dealt with
+        if self.calculation_cell_info.cell_position_x == self.calculation_cell_info.final_cell_position_x:
+            self.size_x += self.base_grid_x % self.calculation_cell_info.cell_numbers_in_x
+        # case 3 end cell in y -> check weather or not there are more grid points to be dealt with
+        if self.calculation_cell_info.cell_position_y == self.calculation_cell_info.final_cell_position_y:
+            self.size_y += self.base_grid_y % self.calculation_cell_info.final_cell_position_y
+
 # regular classes
 def equilibrium_calculation(rho, ux, uy):
     uxy_3plus = 3 * (ux + uy)
