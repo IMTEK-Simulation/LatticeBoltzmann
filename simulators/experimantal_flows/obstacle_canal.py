@@ -29,6 +29,7 @@ class boundaryStates(enum.Enum):
     BAUNCE_BACK = enum.auto()
     COMMUNICATE = enum.auto()
     PERIODIC_BOUNDARY = enum.auto()
+    DEAD_BOUNDARY = enum.auto()
 
 
 rho_null = 1
@@ -36,7 +37,8 @@ rho_diff = 0.001
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
 # class structures
-# for organization of an mpi call modified from simple flows
+# for basic ingidients to the packed struct with contains all of the grid info locally and globally
+# (just not the girds itself)
 @dataclass
 class boundariesApplied:
     apply_left: boundaryStates = boundaryStates.NONE
@@ -151,7 +153,35 @@ class packageStructure:
             self.size_x += self.base_grid_x % self.calculation_cell_info.cell_numbers_in_x
         # case 3 end cell in y -> check weather or not there are more grid points to be dealt with
         if self.calculation_cell_info.cell_position_y == self.calculation_cell_info.final_cell_position_y:
-            self.size_y += self.base_grid_y % self.calculation_cell_info.final_cell_position_y
+            self.size_y += self.base_grid_y % self.calculation_cell_info.cell_numbers_in_y
+
+
+@dataclass
+class globalObstacleInfo:
+    # information related to a rectangular obstacle
+    # main points that span the rectangular
+    start_x: int = -1
+    start_y: int = -1
+    end_x: int = -1
+    end_y: int = -1
+
+@dataclass
+class localObstacleInfo:
+    # conceptually still a rectangular form like the global one
+    boundary_state: boundariesApplied = (boundaryStates.NONE, boundaryStates.NONE,
+                                         boundaryStates.NONE, boundaryStates.NONE)
+    # contains more info than just the grid points that span the cell
+    # boundary info
+    start_x: int = -1
+    start_y: int = -1
+    end_x: int = -1
+    end_y: int = -1
+    # dead cells useful for determining unused parts in the grid shape changes depending on case 1,2,3
+    dead_start_x: int = -1
+    dead_start_y: int = -1
+    dead_end_x: int = -1
+    dead_end_y: int = -1
+
 
 # regular classes
 def equilibrium_calculation(rho, ux, uy):
@@ -191,7 +221,6 @@ class obstacleWindTunnel:
         else:
             principal_length = base_length_x
         self.relaxation = (2 * re) / (6 * principal_length * uw + re)
-        self.relaxation = 0.5 # TODO pflow fix
         self.shear_viscosity = (1/self.relaxation-0.5)/3
         # set up the information for parallel use
         self.comm = MPI.COMM_WORLD # only var thats not in the packed struct
@@ -223,8 +252,8 @@ class obstacleWindTunnel:
             self.comunicate()
     #
         self.collapse_data()
-        # self.plotter_stream()
-        self.plotter_simple()
+        self.plotter_stream()
+        # self.plotter_simple()
 
     ''' basic functions '''
 
@@ -406,13 +435,14 @@ class obstacleWindTunnel:
         plt.show()
 
 
-tun = obstacleWindTunnel(steps=4000,re=1100,base_length_x=100,base_length_y=50,uw = 0,
-                         number_of_cells_x = 1,
-                         number_of_cells_y = 1,
-                         # kina meh the global state have to given thou 2 times
-                         boundary_state_left= boundaryStates.PERIODIC_BOUNDARY,
-                         boundary_state_right=boundaryStates.PERIODIC_BOUNDARY,
-                         boundary_state_top=boundaryStates.BAUNCE_BACK,
-                         boundary_state_bottom = boundaryStates.BAUNCE_BACK,
-                         title = "Work in progress")
-tun.run()
+t= obstacleWindTunnel(steps=4000,re=1100,base_length_x=100,base_length_y=50,uw = 0.1,
+                      number_of_cells_x=1,
+                      number_of_cells_y=1,
+                      # kina meh the global state have to given thou 2 times
+                      boundary_state_left=boundaryStates.PERIODIC_BOUNDARY,
+                      boundary_state_right=boundaryStates.PERIODIC_BOUNDARY,
+                      boundary_state_top=boundaryStates.BAUNCE_BACK,
+                      boundary_state_bottom=boundaryStates.BAUNCE_BACK,
+                      title="Work in progress")
+
+t.run()
