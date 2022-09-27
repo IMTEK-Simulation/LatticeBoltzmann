@@ -105,18 +105,18 @@ class mpiPackageStructure:
         self.neighbors = neighbor
 
     def set_boundary_info(self,pox, poy, max_x, max_y):
-        info = boundariesApplied(False, False, False, False)
+        info = boundariesApplied(boundaryStates.NONE, boundaryStates.NONE,
+                                 boundaryStates.NONE, boundaryStates.NONE)
         ##
         if pox == 0:
-            info.apply_left = True
+            info.apply_left = boundaryStates.BAUNCE_BACK
         if poy == 0:
-            info.apply_bottom = True
+            info.apply_bottom = boundaryStates.BAUNCE_BACK
         if pox == max_x:
-            info.apply_right = True
+            info.apply_right = boundaryStates.BAUNCE_BACK
         if poy == max_y:
-            info.apply_top = True
+            info.apply_top = boundaryStates.BAUNCE_BACK
         ##
-        print(info)
         self.boundaries_info = info
 
 # regular classes
@@ -198,24 +198,24 @@ class obstacleWindTunnel:
             self.grid[i] = np.roll(self.grid[i], self.velocity_set[i], axis=(0, 1))
 
     def bounce_back_choosen(self):
-        if self.mpi.boundaries_info.apply_right:
+        if self.mpi.boundaries_info.apply_right == boundaryStates.BAUNCE_BACK:
             # right so x = -1
             self.grid[3, -2, :] = self.grid[1, -1, :]
             self.grid[6, -2, :] = self.grid[8, -1, :]
             self.grid[7, -2, :] = self.grid[5, -1, :]
-        if self.mpi.boundaries_info.apply_left:
+        if self.mpi.boundaries_info.apply_left == boundaryStates.BAUNCE_BACK:
             # left so x = 0
             self.grid[1, 1, :] = self.grid[3, 0, :]
             self.grid[5, 1, :] = self.grid[7, 0, :]
             self.grid[8, 1, :] = self.grid[6, 0, :]
 
         # Bottom + Top
-        if self.mpi.boundaries_info.apply_bottom:
+        if self.mpi.boundaries_info.apply_bottom == boundaryStates.BAUNCE_BACK:
             # for bottom y = 0
             self.grid[2, :, 1] = self.grid[4, :, 0]
             self.grid[5, :, 1] = self.grid[7, :, 0]
             self.grid[6, :, 1] = self.grid[8, :, 0]
-        if self.mpi.boundaries_info.apply_top:
+        if self.mpi.boundaries_info.apply_top == boundaryStates.BAUNCE_BACK:
             # for top y = -1
             self.grid[4, :, -2] = self.grid[2, :, -1]
             self.grid[7, :, -2] = self.grid[5, :, -1] - 1 / 6 * self.mpi.uw
@@ -231,21 +231,21 @@ class obstacleWindTunnel:
 
     def comunicate(self):
         # Right + Left
-        if not self.mpi.boundaries_info.apply_right:
+        if self.mpi.boundaries_info.apply_right == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, -1, :].copy()
             self.comm.Sendrecv(self.grid[:, -2, :].copy(), self.mpi.neighbors.right, recvbuf=recvbuf, sendtag=11, recvtag=12)
             self.grid[:, -1, :] = recvbuf
-        if not self.mpi.boundaries_info.apply_left:
+        if self.mpi.boundaries_info.apply_left == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, 0, :].copy()
             self.comm.Sendrecv(self.grid[:, 1, :].copy(), self.mpi.neighbors.left, recvbuf=recvbuf, sendtag=12, recvtag=11)
             self.grid[:, 0, :] = recvbuf
 
         # Bottom + Top
-        if not self.mpi.boundaries_info.apply_bottom:
+        if self.mpi.boundaries_info.apply_bottom == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, :, 0].copy()
             self.comm.Sendrecv(self.grid[:, :, 1].copy(), self.mpi.neighbors.bottom, recvbuf=recvbuf, sendtag=99, recvtag=98)
             self.grid[:, :, 0] = recvbuf
-        if not self.mpi.boundaries_info.apply_top:
+        if self.mpi.boundaries_info.apply_top == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, :, -1].copy()
             self.comm.Sendrecv(self.grid[:, :, -2].copy(), self.mpi.neighbors.top, recvbuf=recvbuf, sendtag=98, recvtag=99)
             self.grid[:, :, -1] = recvbuf
