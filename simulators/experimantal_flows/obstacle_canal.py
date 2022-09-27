@@ -80,10 +80,6 @@ class mpiPackageStructure:
     size_y: int = -1
     base_grid_x: int = -1
     base_grid_y: int = -1
-    # miniscule data entries
-    relaxation: int = -1
-    steps: int = -1
-    uw: int = -1
 
     def fill_calculation_cell_field(self,rank,size,number_of_cells_x,number_of_cells_y):
         calculation_cell = calculationCellInfo()
@@ -102,26 +98,21 @@ class mpiPackageStructure:
         print(calculation_cell)
         self.calculation_cell_info = calculation_cell
 
-
-
-    def fill_packed_struct_fields(self,
-                               rank, size,
-                               number_of_cells_x, number_of_cells_y,
-                               base_grid_x, base_grid_y, relaxation, steps, uw,
-                               global_boundary_info):
-        # set the basic information
-        self.relaxation = relaxation
-        self.base_grid_x = base_grid_x
-        self.base_grid_y = base_grid_y
-        self.steps = steps
-        self.uw = uw
-        # set all the cell related information
+    def fill_packed_struct_fields(self, rank, size, number_of_cells_x, number_of_cells_y, base_grid_x, base_grid_y,
+                                  boundary_state_left,boundary_state_right, boundary_state_top, boundary_state_bottom):
+        # set all the cell related information in the context of the mpi
         self.fill_calculation_cell_field(rank = rank,size = size,
                                          number_of_cells_x= number_of_cells_x,
                                          number_of_cells_y=number_of_cells_y)
         self.set_boundary_info_local(calculation_cell_info = self.calculation_cell_info,
-                                     global_boundary_info= global_boundary_info)
+                                     boundary_state_left= boundary_state_left,
+                                     boundary_state_right= boundary_state_right,
+                                     boundary_state_top= boundary_state_top, 
+                                     boundary_state_bottom = boundary_state_bottom)
         self.determin_neighbors(calculation_cell_info=self.calculation_cell_info)
+        # grid sizes
+        self.base_grid_x = base_grid_x
+        self.base_grid_y = base_grid_y
         # TODO allow non equal partition
         self.size_x = base_grid_x // number_of_cells_x + 2
         self.size_y = base_grid_y // number_of_cells_y + 2
@@ -138,9 +129,10 @@ class mpiPackageStructure:
         ###
         self.neighbors = neighbor
 
-    def set_boundary_info_local(self,calculation_cell_info, global_boundary_info):
+    def set_boundary_info_local(self,calculation_cell_info, boundary_state_left,boundary_state_right, boundary_state_top, 
+                                boundary_state_bottom):
         # global boundary info is used for an init point will only be overwritten by communicate
-        info = global_boundary_info
+        info = boundariesApplied(boundary_state_left, boundary_state_right, boundary_state_top, boundary_state_bottom)
         ##
         # if cell position in set {x;y} -> {0,max;0,max} no boundaries
         if calculation_cell_info.cell_position_x != 0:
@@ -178,14 +170,13 @@ class obstacleWindTunnel:
     def __init__(self, steps, re,number_of_cells_x,number_of_cells_y ,base_length_x, base_length_y, uw, boundary_state_left,boundary_state_right,
                  boundary_state_top, boundary_state_bottom, title):
         self.time = 0
-        self.packedInfo = mpiPackageStructure()
+        self.packed_info = mpiPackageStructure()
         self.re = re
+        self.uw = uw
+        self.steps = steps
         self.title = title
         self.rho_in  = rho_null + rho_diff
         self.rho_out = rho_null - rho_diff
-
-        self.global_boundaries = boundariesApplied(boundary_state_left,boundary_state_right,boundary_state_top,
-                                                   boundary_state_bottom)
         # principal length for calculating relaxation for the correct re number smaller should be the significant one
         principal_length = 0
         if base_length_x > base_length_y:
@@ -193,32 +184,30 @@ class obstacleWindTunnel:
         else:
             principal_length = base_length_x
         relaxation = (2 * re) / (6 * principal_length * uw + re)
-        relaxation = 0.5 # TODO pflow fix
+        self.relaxation = 0.5 # TODO pflow fix
         self.shear_viscosity = (1/relaxation-0.5)/3
-        self.comm = MPI.COMM_WORLD
-        size = self.comm.Get_size()
-        self.packedInfo.fill_packed_struct_fields(rank = self.comm.Get_rank(),
-                                        size = size,
-                                        number_of_cells_x = number_of_cells_x,
-                                        number_of_cells_y = number_of_cells_y,
-                                        base_grid_x=base_length_x,
-                                        base_grid_y=base_length_y,
-                                        relaxation= relaxation,
-                                        steps=steps,
-                                        uw = uw,
-                                        global_boundary_info = self.global_boundaries)
+        # set up the information for parallel use
+        self.comm = MPI.COMM_WORLD # only var thats not in the packed struct
+        self.packed_info.fill_packed_struct_fields(rank=self.comm.Get_rank(), size=self.comm.Get_size(),
+                                                   number_of_cells_x=number_of_cells_x,
+                                                   number_of_cells_y=number_of_cells_y,
+                                                   base_grid_x=base_length_x, base_grid_y=base_length_y,
+                                                   boundary_state_left= boundary_state_left,
+                                                   boundary_state_right= boundary_state_right,
+                                                   boundary_state_top = boundary_state_top,
+                                                   boundary_state_bottom = boundary_state_bottom)
         # grid type variables
-        self.rho = np.ones((self.packedInfo.size_x, self.packedInfo.size_y))
-        self.ux = np.zeros((self.packedInfo.size_x, self.packedInfo.size_y))
-        self.uy = np.zeros((self.packedInfo.size_x, self.packedInfo.size_y))
+        self.rho = np.ones((self.packed_info.size_x, self.packed_info.size_y))
+        self.ux = np.zeros((self.packed_info.size_x, self.packed_info.size_y))
+        self.uy = np.zeros((self.packed_info.size_x, self.packed_info.size_y))
         self.grid = self.equilibrium()
-        self.full_grid = np.ones((9, self.packedInfo.base_grid_x, self.packedInfo.base_grid_y))
+        self.full_grid = np.ones((9, self.packed_info.base_grid_x, self.packed_info.base_grid_y))
 
     def run(self):
         self.time = time.time()
-        print(self.packedInfo)
+        print(self.packed_info)
         # iterations
-        for i in range(self.packedInfo.steps):
+        for i in range(self.packed_info.steps):
             self.periodic_boundary_delta_p()
             self.stream()
             self.bounce_back_choosen()
@@ -256,28 +245,28 @@ class obstacleWindTunnel:
             self.grid[i] = np.roll(self.grid[i], velocity_set[i], axis=(0, 1))
 
     def bounce_back_choosen(self):
-        if self.packedInfo.boundaries_info.apply_right == boundaryStates.BAUNCE_BACK:
+        if self.packed_info.boundaries_info.apply_right == boundaryStates.BAUNCE_BACK:
             # right so x = -1
             self.grid[3, -2, :] = self.grid[1, -1, :]
             self.grid[6, -2, :] = self.grid[8, -1, :]
             self.grid[7, -2, :] = self.grid[5, -1, :]
-        if self.packedInfo.boundaries_info.apply_left == boundaryStates.BAUNCE_BACK:
+        if self.packed_info.boundaries_info.apply_left == boundaryStates.BAUNCE_BACK:
             # left so x = 0
             self.grid[1, 1, :] = self.grid[3, 0, :]
             self.grid[5, 1, :] = self.grid[7, 0, :]
             self.grid[8, 1, :] = self.grid[6, 0, :]
 
         # Bottom + Top
-        if self.packedInfo.boundaries_info.apply_bottom == boundaryStates.BAUNCE_BACK:
+        if self.packed_info.boundaries_info.apply_bottom == boundaryStates.BAUNCE_BACK:
             # for bottom y = 0
             self.grid[2, :, 1] = self.grid[4, :, 0]
             self.grid[5, :, 1] = self.grid[7, :, 0]
             self.grid[6, :, 1] = self.grid[8, :, 0]
-        if self.packedInfo.boundaries_info.apply_top == boundaryStates.BAUNCE_BACK:
+        if self.packed_info.boundaries_info.apply_top == boundaryStates.BAUNCE_BACK:
             # for top y = -1
             self.grid[4, :, -2] = self.grid[2, :, -1]
-            self.grid[7, :, -2] = self.grid[5, :, -1] - 1 / 6 * self.packedInfo.uw
-            self.grid[8, :, -2] = self.grid[6, :, -1] + 1 / 6 * self.packedInfo.uw
+            self.grid[7, :, -2] = self.grid[5, :, -1] - 1 / 6 * self.packed_info.uw
+            self.grid[8, :, -2] = self.grid[6, :, -1] + 1 / 6 * self.packed_info.uw
 
     def caluculate_rho_ux_uy(self):
         self.rho = np.sum(self.grid, axis=0)  # sums over each one individually
@@ -285,27 +274,27 @@ class obstacleWindTunnel:
         self.uy = ((self.grid[2] + self.grid[5] + self.grid[6]) - (self.grid[4] + self.grid[7] + self.grid[8])) / self.rho
 
     def collision(self):
-        self.grid -= self.packedInfo.relaxation * (self.grid - self.equilibrium())
+        self.grid -= self.packed_info.relaxation * (self.grid - self.equilibrium())
 
     def comunicate(self):
         # Right + Left
-        if self.packedInfo.boundaries_info.apply_right == boundaryStates.COMMUNICATE:
+        if self.packed_info.boundaries_info.apply_right == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, -1, :].copy()
-            self.comm.Sendrecv(self.grid[:, -2, :].copy(), self.packedInfo.neighbors.right, recvbuf=recvbuf, sendtag=11, recvtag=12)
+            self.comm.Sendrecv(self.grid[:, -2, :].copy(), self.packed_info.neighbors.right, recvbuf=recvbuf, sendtag=11, recvtag=12)
             self.grid[:, -1, :] = recvbuf
-        if self.packedInfo.boundaries_info.apply_left == boundaryStates.COMMUNICATE:
+        if self.packed_info.boundaries_info.apply_left == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, 0, :].copy()
-            self.comm.Sendrecv(self.grid[:, 1, :].copy(), self.packedInfo.neighbors.left, recvbuf=recvbuf, sendtag=12, recvtag=11)
+            self.comm.Sendrecv(self.grid[:, 1, :].copy(), self.packed_info.neighbors.left, recvbuf=recvbuf, sendtag=12, recvtag=11)
             self.grid[:, 0, :] = recvbuf
 
         # Bottom + Top
-        if self.packedInfo.boundaries_info.apply_bottom == boundaryStates.COMMUNICATE:
+        if self.packed_info.boundaries_info.apply_bottom == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, :, 0].copy()
-            self.comm.Sendrecv(self.grid[:, :, 1].copy(), self.packedInfo.neighbors.bottom, recvbuf=recvbuf, sendtag=99, recvtag=98)
+            self.comm.Sendrecv(self.grid[:, :, 1].copy(), self.packed_info.neighbors.bottom, recvbuf=recvbuf, sendtag=99, recvtag=98)
             self.grid[:, :, 0] = recvbuf
-        if self.packedInfo.boundaries_info.apply_top == boundaryStates.COMMUNICATE:
+        if self.packed_info.boundaries_info.apply_top == boundaryStates.COMMUNICATE:
             recvbuf = self.grid[:, :, -1].copy()
-            self.comm.Sendrecv(self.grid[:, :, -2].copy(), self.packedInfo.neighbors.top, recvbuf=recvbuf, sendtag=98, recvtag=99)
+            self.comm.Sendrecv(self.grid[:, :, -2].copy(), self.packed_info.neighbors.top, recvbuf=recvbuf, sendtag=98, recvtag=99)
             self.grid[:, :, -1] = recvbuf
 
     def periodic_boundary_delta_p(self):
@@ -314,76 +303,76 @@ class obstacleWindTunnel:
         equilibrium = self.equilibrium()
         # loop through the individual sides (locally)
         # left + right
-        if self.packedInfo.boundaries_info.apply_left == boundaryStates.PERIODIC_BOUNDARY:
+        if self.packed_info.boundaries_info.apply_left == boundaryStates.PERIODIC_BOUNDARY:
             equilibrium_in = equilibrium_calculation(self.rho_in, self.ux[-2, :],self.uy[-2, :])
             self.grid[:,0,:] = equilibrium_in + self.grid[:, -2, :] - equilibrium[:, -2, :]
 
-        if self.packedInfo.boundaries_info.apply_right == boundaryStates.PERIODIC_BOUNDARY:
+        if self.packed_info.boundaries_info.apply_right == boundaryStates.PERIODIC_BOUNDARY:
             equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[1, :], self.uy[1, :])
             self.grid[:, -1, :] = equilibrium_out + self.grid[:, 1, :] - equilibrium[:, 1, :]
 
         # Top + bottom
-        if self.packedInfo.boundaries_info.apply_top == boundaryStates.PERIODIC_BOUNDARY:
+        if self.packed_info.boundaries_info.apply_top == boundaryStates.PERIODIC_BOUNDARY:
             equilibrium_in = equilibrium_calculation(self.rho_in, self.ux[:, -2], self.uy[:, -2])
             self.grid[:, :, 0] = equilibrium_in + self.grid[:, :, -2] - equilibrium[:, :, -2]
 
-        if self.packedInfo.boundaries_info.apply_bottom == boundaryStates.PERIODIC_BOUNDARY:
+        if self.packed_info.boundaries_info.apply_bottom == boundaryStates.PERIODIC_BOUNDARY:
             equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[:, 1], self.uy[:, 1])
             self.grid[:, -1, :] = equilibrium_out + self.grid[:, :, 1] - equilibrium[:, :, 1]
 
     def collapse_data(self):
         # process 0 gets the data and does the visualization
-        if self.packedInfo.calculation_cell_info.rank == 0:
-            original_x = self.packedInfo.size_x - 2  # ie the base size of the grid on that the
-            original_y = self.packedInfo.size_y - 2  # calculation ran without extra cells for synchron +
+        if self.packed_info.calculation_cell_info.rank == 0:
+            original_x = self.packed_info.size_x - 2  # ie the base size of the grid on that the
+            original_y = self.packed_info.size_y - 2  # calculation ran without extra cells for synchron +
             # write the own stuff into it first
             self.full_grid[:, 0:original_x, 0:original_y] = self.grid[:, 1:-1, 1:-1]
             temp = np.zeros((9, original_x, original_y))
-            for i in range(1, self.packedInfo.calculation_cell_info.size):
+            for i in range(1, self.packed_info.calculation_cell_info.size):
                 self.comm.Recv(temp, source=i, tag=i)
                 # determine start end endpoints to copy to in the grid
-                copy_start_x = 0 + original_x * self.packedInfo.base_grid_x
-                copy_end_x = original_x + original_x * self.packedInfo.base_grid_x
-                copy_start_y = 0 + original_y * self.packedInfo.base_grid_y
-                copy_end_y = original_y + original_y * self.packedInfo.base_grid_y
+                copy_start_x = 0 + original_x * self.packed_info.base_grid_x
+                copy_end_x = original_x + original_x * self.packed_info.base_grid_x
+                copy_start_y = 0 + original_y * self.packed_info.base_grid_y
+                copy_end_y = original_y + original_y * self.packed_info.base_grid_y
                 # copy
                 self.full_grid[:, copy_start_x:copy_end_x, copy_start_y:copy_end_y] = temp
             #
             self.grid = self.full_grid
         # all the others send to p0
         else:
-            self.comm.Send(self.grid[:, 1:-1, 1:-1].copy(), dest=0, tag=self.packedInfo.rank)
+            self.comm.Send(self.grid[:, 1:-1, 1:-1].copy(), dest=0, tag=self.packed_info.rank)
 
     def plotter_stream(self):
         # plot
-        if self.packedInfo.calculation_cell_info.rank == 0:
+        if self.packed_info.calculation_cell_info.rank == 0:
             print("Making Image")
             # recalculate ux and uy
             # change the original grid to the full one
             self.caluculate_rho_ux_uy()
             # acutal plot
 
-            x = np.arange(0, self.packedInfo.base_grid_x)
-            y = np.arange(0, self.packedInfo.base_grid_y)
+            x = np.arange(0, self.packed_info.base_grid_x)
+            y = np.arange(0, self.packed_info.base_grid_y)
             X, Y = np.meshgrid(x, y)
             speed = np.sqrt(self.ux.T ** 2 + self.uy.T ** 2)
             # plot
             # plt.streamplot(X,Y,full_ux.T,full_uy.T)
             plt.streamplot(X, Y, self.ux.T, self.uy.T, color=speed, cmap=plt.cm.jet)
             ax = plt.gca()
-            ax.set_xlim([0, self.packedInfo.base_grid_x + 1])
-            ax.set_ylim([0, self.packedInfo.base_grid_y + 1])
+            ax.set_xlim([0, self.packed_info.base_grid_x + 1])
+            ax.set_ylim([0, self.packed_info.base_grid_y + 1])
             plt.title(self.title)
             plt.xlabel("x-Position")
             plt.ylabel("y-Position")
             fig = plt.colorbar()
             fig.set_label("Velocity u(x,y,t)", rotation=270, labelpad=15)
-            savestring = "slidingLidmpi" + str(self.packedInfo.size) + ".png"
+            savestring = "slidingLidmpi" + str(self.packed_info.calculation_cell_info.size) + ".png"
             plt.savefig(savestring)
             plt.show()
 
-        if self.packedInfo.calculation_cell_info.rank == 0:
-            savestring = "slidingLidmpi" + str(self.packedInfo.size) + ".txt"
+        if self.packed_info.calculation_cell_info.rank == 0:
+            savestring = "slidingLidmpi" + str(self.packed_info.calculation_cell_info.size) + ".txt"
             f = open(savestring, "w")
             totaltime = time.time() - self.time
             f.write(str(totaltime))
@@ -391,14 +380,14 @@ class obstacleWindTunnel:
 
     def plotter_simple(self):
         # visualize
-        delta = 2.0 * rho_diff / self.packedInfo.size_x / self.shear_viscosity / 2.
-        y = np.linspace(0, self.packedInfo.size_y, self.packedInfo.size_y + 1) + 0.5
-        u_analytical = delta * y * (self.packedInfo.size_y - y) / 3.
+        delta = 2.0 * rho_diff / self.packed_info.size_x / self.shear_viscosity / 2.
+        y = np.linspace(0, self.packed_info.size_y, self.packed_info.size_y + 1) + 0.5
+        u_analytical = delta * y * (self.packed_info.size_y - y) / 3.
         plt.plot(u_analytical[:-1], label='Analytical')
         # plt.plot(u_analytical, label='analytical')
         number_of_cuts_in_x = 2
         for i in range(1, number_of_cuts_in_x):
-            point = int(i * self.packedInfo.size_x / number_of_cuts_in_x)
+            point = int(i * self.packed_info.size_x / number_of_cuts_in_x)
             plt.plot(self.ux[point, 1:-1], label="Calculated")
         print(len(self.ux[25, 1:-1]))
         plt.legend()
