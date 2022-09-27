@@ -46,12 +46,14 @@ class boundariesApplied:
     apply_top: boundaryStates = boundaryStates.NONE
     apply_bottom: boundaryStates = boundaryStates.NONE
 
+
 @dataclass
 class cellNeighbors:
     left: int = -1
     right: int = -1
     top: int = -1
     bottom: int = -1
+
 
 @dataclass
 class calculationCellInfo:
@@ -69,6 +71,7 @@ class calculationCellInfo:
     # final cell positions for boundary determination
     final_cell_position_x: int = -1
     final_cell_position_y: int = -1
+
 
 @dataclass
 class packageStructure:
@@ -97,7 +100,6 @@ class packageStructure:
         calculation_cell.cell_position_x = rank % number_of_cells_x
         calculation_cell.cell_position_y = rank // number_of_cells_y
         # set
-        print(calculation_cell)
         self.calculation_cell_info = calculation_cell
 
     def fill_packed_struct_fields(self, rank, size, number_of_cells_x, number_of_cells_y, base_grid_x, base_grid_y,
@@ -156,6 +158,7 @@ class packageStructure:
             self.size_y += self.base_grid_y % self.calculation_cell_info.cell_numbers_in_y
 
 
+
 @dataclass
 class globalObstacleInfo:
     # information related to a rectangular obstacle
@@ -165,18 +168,19 @@ class globalObstacleInfo:
     end_x: int = -1
     end_y: int = -1
 
+
 @dataclass
 class localObstacleInfo:
     # conceptually still a rectangular form like the global one
     boundary_state: boundariesApplied = (boundaryStates.NONE, boundaryStates.NONE,
                                          boundaryStates.NONE, boundaryStates.NONE)
     # contains more info than just the grid points that span the cell
-    # boundary info
+    # boundary info (local)
     start_x: int = -1
     start_y: int = -1
     end_x: int = -1
     end_y: int = -1
-    # dead cells useful for determining unused parts in the grid shape changes depending on case 1,2,3
+    # dead cells useful for determining unused parts in the grid shape changes depending on different cases
     dead_start_x: int = -1
     dead_start_y: int = -1
     dead_end_x: int = -1
@@ -203,9 +207,10 @@ def equilibrium_calculation(rho, ux, uy):
                      (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
                      (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
 
+
 class obstacleWindTunnel:
     def __init__(self, steps, re,number_of_cells_x,number_of_cells_y ,base_length_x, base_length_y, uw, boundary_state_left,boundary_state_right,
-                 boundary_state_top, boundary_state_bottom, title):
+                 boundary_state_top, boundary_state_bottom, title, obstacle_start, obstacle_end):
         self.time = 0
         self.packed_info = packageStructure()
         self.re = re
@@ -238,6 +243,10 @@ class obstacleWindTunnel:
         self.uy = np.zeros((self.packed_info.size_x, self.packed_info.size_y))
         self.grid = self.equilibrium()
         self.full_grid = np.ones((9, self.packed_info.base_grid_x, self.packed_info.base_grid_y))
+        # obstacle info
+        self.global_obstacle = globalObstacleInfo(obstacle_start[0],obstacle_start[1],obstacle_end[0],obstacle_end[1])
+        self.local_obstacle = localObstacleInfo()
+        self.setup_obstacle()
 
     def run(self):
         self.time = time.time()
@@ -356,6 +365,15 @@ class obstacleWindTunnel:
             equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[:, 1], self.uy[:, 1])
             self.grid[:, -1, :] = equilibrium_out + self.grid[:, :, 1] - equilibrium[:, :, 1]
 
+    ''' obstacle methods '''
+    def setup_obstacle(self):
+        print(self.global_obstacle)
+        # set up the local info
+        print(self.local_obstacle)
+
+    def apply_obstacle(self):
+        pass
+
     ''' auxiliary methods '''
 
     def collapse_data(self):
@@ -437,14 +455,18 @@ class obstacleWindTunnel:
         plt.show()
 
 
-t= obstacleWindTunnel(steps=4000,re=1100,base_length_x=100,base_length_y=50,uw = 0.1,
+t= obstacleWindTunnel(steps=1,re=1100,base_length_x=100,base_length_y=50,uw = 0.1,
                       number_of_cells_x=1,
                       number_of_cells_y=1,
-                      # kina meh the global state have to given thou 2 times
+                      # kinda meh the global state have to given thou 2 times
                       boundary_state_left=boundaryStates.PERIODIC_BOUNDARY,
                       boundary_state_right=boundaryStates.PERIODIC_BOUNDARY,
                       boundary_state_top=boundaryStates.BAUNCE_BACK,
                       boundary_state_bottom=boundaryStates.BAUNCE_BACK,
-                      title="Work in progress")
+                      # title for the plot
+                      title="Work in progress",
+                      # obstacle placement in the global grid
+                      obstacle_start=(10, 15),
+                      obstacle_end=(20, 25))
 
 t.run()
