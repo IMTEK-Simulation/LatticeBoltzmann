@@ -4,6 +4,7 @@ Zeilenumbruch bei Spalte 120
 Modulname, Klassennamen als CamelCase
 Variablennamen, Methodennamen, Funktionsnamen mit unter_strichen
 Bitte nicht CamelCase und Unterstriche mischen
+für statics + enum like names nehm ich ALL CAPS was glauch ich standard ist
 '''
 
 '''
@@ -20,14 +21,23 @@ from dataclasses import dataclass
 from mpi4py import MPI
 import time
 import matplotlib.pyplot as plt
+import enum
 
-#Class structures for organization of an mpi call modified from simple flows
+# enums and statics
+class boundaryStates(enum.Enum):
+    NONE = enum.auto()
+    BAUNCE_BACK = enum.auto()
+    COMMUNICATE = enum.auto()
+    PERIODIC_BOUNDARY = enum.auto()
+
+# class structures
+# for organization of an mpi call modified from simple flows
 @dataclass
 class boundariesApplied:
-    apply_left: bool = False
-    apply_right: bool = False
-    apply_top: bool = False
-    apply_bottom: bool = False
+    apply_left: boundaryStates = boundaryStates.NONE
+    apply_right: boundaryStates = boundaryStates.NONE
+    apply_top: boundaryStates = boundaryStates.NONE
+    apply_bottom: boundaryStates = boundaryStates.NONE
 
 @dataclass
 class cellNeighbors:
@@ -50,11 +60,12 @@ class mpiPackageStructure:
     size: int = -1
     # overall
     relaxation: int = -1
-    base_grid: int = -1
+    base_grid_x: int = -1
+    base_grid_y: int = -1
     steps: int = -1
     uw: int = -1
 
-    def fill_mpi_struct_fields(self, rank, size, max_x, max_y, base_grid, relaxation, steps, uw):
+    def fill_mpi_struct_fields(self, rank, size, max_x, max_y, base_grid_x, base_grid_y, relaxation, steps, uw):
         #
         self.rank = rank
         self.size = size
@@ -62,12 +73,13 @@ class mpiPackageStructure:
         print(self.pos_x,self.pos_y)
         self.set_boundary_info(self.pos_x, self.pos_y, max_x - 1, max_y - 1)  # i should know my own code lol
         # cheeky
-        self.size_x = base_grid // (max_x) + 2
-        self.size_y = base_grid // (max_y) + 2
+        self.size_x = base_grid_x // (max_x) + 2
+        self.size_y = base_grid_y // (max_y) + 2
         self.determin_neighbors(rank, size)
         #
         self.relaxation = relaxation
-        self.base_grid = base_grid
+        self.base_grid_x = base_grid_x
+        self.base_grid_y = base_grid_y
         self.steps = steps
         self.uw = uw
 
@@ -82,11 +94,11 @@ class mpiPackageStructure:
 
     def determin_neighbors(self, rank, size):
         # determin edge lenght
-        edge_lenght = int(np.sqrt(size))
+        edge_length = int(np.sqrt(size))
         ###
         neighbor = cellNeighbors()
-        neighbor.top = rank + edge_lenght
-        neighbor.bottom = rank - edge_lenght
+        neighbor.top = rank + edge_length
+        neighbor.bottom = rank - edge_length
         neighbor.right = rank + 1
         neighbor.left = rank - 1
         ###
@@ -107,26 +119,35 @@ class mpiPackageStructure:
         print(info)
         self.boundaries_info = info
 
-
+# regular classes
 class obstacleWindTunnel:
-    def __init__(self,steps,re,base_length,uw):
+    def __init__(self,steps,re,base_length_x,base_length_y,uw):
         self.time = 0
         self.mpi = mpiPackageStructure()
         self.velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                                       [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
         self.re = re
-        relaxation = (2 * re) / (6 * base_length * uw + re)
+        # Todo check if correct
+        # principal length for calculating relaxation for the correct re number
+        principal_length = 0
+        if base_length_x > base_length_y:
+            principal_length = base_length_y
+        else:
+            principal_length = base_length_x
+        relaxation = (2 * re) / (6 * principal_length * uw + re)
         self.comm = MPI.COMM_WORLD
         size = self.comm.Get_size()
+        print(size)
         # test for badness
-        rank_in_one_direction = int(np.sqrt(size))  # for an MPI thingi with 9 processes -> 3x3 field
+        rank_in_one_direction = int(np.sqrt(size)) # for an MPI thingi with 9 processes -> 3x3 field
         if rank_in_one_direction * rank_in_one_direction != size:
             exit(Exception)
         self.mpi.fill_mpi_struct_fields(rank = self.comm.Get_rank(),
                                         size = size,
                                         max_x = rank_in_one_direction,
                                         max_y = rank_in_one_direction,
-                                        base_grid=base_length,
+                                        base_grid_x=base_length_x,
+                                        base_grid_y=base_length_y,
                                         relaxation= relaxation,
                                         steps=steps,
                                         uw = uw)
@@ -135,7 +156,7 @@ class obstacleWindTunnel:
         self.ux = np.zeros((self.mpi.size_x, self.mpi.size_y))
         self.uy = np.zeros((self.mpi.size_x, self.mpi.size_y))
         self.grid = self.equilibrium()
-        self.full_gird = np.zeros(2)
+        self.full_grid = np.ones((9, self.mpi.base_grid_x, self.mpi.base_grid_y))
 
     def run(self):
         self.time = time.time()
@@ -202,7 +223,7 @@ class obstacleWindTunnel:
 
     def caluculate_rho_ux_uy(self):
         self.rho = np.sum(self.grid, axis=0)  # sums over each one individually
-        self.ux = ((self.grid[1] + [5] + self.grid[8]) - (self.grid[3] + self.grid[6] + self.grid[7])) / self.rho
+        self.ux = ((self.grid[1] + self.grid[5] + self.grid[8]) - (self.grid[3] + self.grid[6] + self.grid[7])) / self.rho
         self.uy = ((self.grid[2] + self.grid[5] + self.grid[6]) - (self.grid[4] + self.grid[7] + self.grid[8])) / self.rho
 
     def collision(self):
@@ -232,21 +253,18 @@ class obstacleWindTunnel:
     def collapse_data(self):
         # process 0 gets the data and does the visualization
         if self.mpi.rank == 0:
-            self.full_grid = np.ones((9, self.mpi.base_grid, self.mpi.base_grid))
             original_x = self.mpi.size_x - 2  # ie the base size of the grid on that the
-            original_y = self.mpi.size_y - 2  # calculation ran
+            original_y = self.mpi.size_y - 2  # calculation ran without extra cells for synchron +
             # write the own stuff into it first
             self.full_grid[:, 0:original_x, 0:original_y] = self.grid[:, 1:-1, 1:-1]
             temp = np.zeros((9, original_x, original_y))
             for i in range(1, self.mpi.size):
                 self.comm.Recv(temp, source=i, tag=i)
-                # TODO change me
-                x, y = 300,300
-                # determin start end endpoints to copy to in the grid
-                copy_start_x = 0 + original_x * x
-                copy_end_x = original_x + original_x * x
-                copy_start_y = 0 + original_y * y
-                copy_end_y = original_y + original_y * y
+                # determine start end endpoints to copy to in the grid
+                copy_start_x = 0 + original_x * self.mpi.base_grid_x
+                copy_end_x = original_x + original_x * self.mpi.base_grid_x
+                copy_start_y = 0 + original_y * self.mpi.base_grid_y
+                copy_end_y = original_y + original_y * self.mpi.base_grid_y
                 # copy
                 self.full_grid[:, copy_start_x:copy_end_x, copy_start_y:copy_end_y] = temp
             #
@@ -264,16 +282,16 @@ class obstacleWindTunnel:
             self.caluculate_rho_ux_uy()
             # acutal plot
 
-            x = np.arange(0, self.mpi.base_grid)
-            y = np.arange(0, self.mpi.base_grid)
+            x = np.arange(0, self.mpi.base_grid_x)
+            y = np.arange(0, self.mpi.base_grid_y)
             X, Y = np.meshgrid(x, y)
             speed = np.sqrt(self.ux.T ** 2 + self.uy.T ** 2)
             # plot
             # plt.streamplot(X,Y,full_ux.T,full_uy.T)
             plt.streamplot(X, Y, self.ux.T, self.uy.T, color=speed, cmap=plt.cm.jet)
             ax = plt.gca()
-            ax.set_xlim([0, self.mpi.base_grid + 1])
-            ax.set_ylim([0, self.mpi.base_grid + 1])
+            ax.set_xlim([0, self.mpi.base_grid_x + 1])
+            ax.set_ylim([0, self.mpi.base_grid_y + 1])
             plt.title("Sliding Lid")
             plt.xlabel("x-Position")
             plt.ylabel("y-Position")
@@ -291,5 +309,5 @@ class obstacleWindTunnel:
             f.close()
 
 
-tun = obstacleWindTunnel(steps=10,re=1000,base_length=300,uw = 0.1)
+tun = obstacleWindTunnel(steps=10000,re=1000,base_length_x=100,base_length_y=100,uw = 0.1)
 tun.run()
