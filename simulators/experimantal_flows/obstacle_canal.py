@@ -181,8 +181,8 @@ class obstacleWindTunnel:
         self.packedInfo = mpiPackageStructure()
         self.re = re
         self.title = title
-        self.rho_in  = rho_null - rho_diff
-        self.rho_out = rho_null + rho_diff
+        self.rho_in  = rho_null + rho_diff
+        self.rho_out = rho_null - rho_diff
 
         self.global_boundaries = boundariesApplied(boundary_state_left,boundary_state_right,boundary_state_top,
                                                    boundary_state_bottom)
@@ -333,13 +333,13 @@ class obstacleWindTunnel:
 
     def collapse_data(self):
         # process 0 gets the data and does the visualization
-        if self.packedInfo.rank == 0:
+        if self.packedInfo.calculation_cell_info.rank == 0:
             original_x = self.packedInfo.size_x - 2  # ie the base size of the grid on that the
             original_y = self.packedInfo.size_y - 2  # calculation ran without extra cells for synchron +
             # write the own stuff into it first
             self.full_grid[:, 0:original_x, 0:original_y] = self.grid[:, 1:-1, 1:-1]
             temp = np.zeros((9, original_x, original_y))
-            for i in range(1, self.packedInfo.size):
+            for i in range(1, self.packedInfo.calculation_cell_info.size):
                 self.comm.Recv(temp, source=i, tag=i)
                 # determine start end endpoints to copy to in the grid
                 copy_start_x = 0 + original_x * self.packedInfo.base_grid_x
@@ -356,7 +356,7 @@ class obstacleWindTunnel:
 
     def plotter_stream(self):
         # plot
-        if self.packedInfo.rank == 0:
+        if self.packedInfo.calculation_cell_info.rank == 0:
             print("Making Image")
             # recalculate ux and uy
             # change the original grid to the full one
@@ -382,7 +382,7 @@ class obstacleWindTunnel:
             plt.savefig(savestring)
             plt.show()
 
-        if self.packedInfo.rank == 0:
+        if self.packedInfo.calculation_cell_info.rank == 0:
             savestring = "slidingLidmpi" + str(self.packedInfo.size) + ".txt"
             f = open(savestring, "w")
             totaltime = time.time() - self.time
@@ -410,7 +410,7 @@ class obstacleWindTunnel:
         plt.show()
 
 
-tun = obstacleWindTunnel(steps=0,re=1100,base_length_x=100,base_length_y=50,uw = 0,
+tun = obstacleWindTunnel(steps=4000,re=1100,base_length_x=100,base_length_y=50,uw = 0,
                          number_of_cells_x = 1,
                          number_of_cells_y = 1,
                          boundary_state_left= boundaryStates.PERIODIC_BOUNDARY,
