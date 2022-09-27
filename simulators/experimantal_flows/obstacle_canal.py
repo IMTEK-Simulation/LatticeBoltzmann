@@ -69,7 +69,7 @@ class calculationCellInfo:
     final_cell_position_y: int = -1
 
 @dataclass
-class mpiPackageStructure:
+class packageStructure:
     # aka all the (static) info about the grid in its environment
     boundaries_info: boundariesApplied = (boundaryStates.NONE, boundaryStates.NONE,
                                           boundaryStates.NONE, boundaryStates.NONE)
@@ -100,19 +100,18 @@ class mpiPackageStructure:
 
     def fill_packed_struct_fields(self, rank, size, number_of_cells_x, number_of_cells_y, base_grid_x, base_grid_y,
                                   boundary_state_left,boundary_state_right, boundary_state_top, boundary_state_bottom):
+        # grid sizes
+        self.base_grid_x = base_grid_x
+        self.base_grid_y = base_grid_y
         # set all the cell related information in the context of the mpi
         self.fill_calculation_cell_field(rank = rank,size = size,
                                          number_of_cells_x= number_of_cells_x,
                                          number_of_cells_y=number_of_cells_y)
-        self.set_boundary_info_local(calculation_cell_info = self.calculation_cell_info,
-                                     boundary_state_left= boundary_state_left,
+        self.set_boundary_info_local(boundary_state_left= boundary_state_left,
                                      boundary_state_right= boundary_state_right,
                                      boundary_state_top= boundary_state_top, 
                                      boundary_state_bottom = boundary_state_bottom)
         self.determin_neighbors(calculation_cell_info=self.calculation_cell_info)
-        # grid sizes
-        self.base_grid_x = base_grid_x
-        self.base_grid_y = base_grid_y
         # TODO allow non equal partition
         self.size_x = base_grid_x // number_of_cells_x + 2
         self.size_y = base_grid_y // number_of_cells_y + 2
@@ -129,23 +128,24 @@ class mpiPackageStructure:
         ###
         self.neighbors = neighbor
 
-    def set_boundary_info_local(self,calculation_cell_info, boundary_state_left,boundary_state_right, boundary_state_top, 
-                                boundary_state_bottom):
+    def set_boundary_info_local(self, boundary_state_left,boundary_state_right, boundary_state_top, boundary_state_bottom):
         # global boundary info is used for an init point will only be overwritten by communicate
         info = boundariesApplied(boundary_state_left, boundary_state_right, boundary_state_top, boundary_state_bottom)
         ##
         # if cell position in set {x;y} -> {0,max;0,max} no boundaries
-        if calculation_cell_info.cell_position_x != 0:
+        if self.calculation_cell_info.cell_position_x != 0:
             info.apply_left = boundaryStates.COMMUNICATE
-        if calculation_cell_info.cell_position_y != 0:
+        if self.calculation_cell_info.cell_position_y != 0:
             info.apply_bottom = boundaryStates.COMMUNICATE
-        if calculation_cell_info.cell_position_x != calculation_cell_info.final_cell_position_x:
+        if self.calculation_cell_info.cell_position_x != self.calculation_cell_info.final_cell_position_x:
             info.apply_right = boundaryStates.COMMUNICATE
-        if calculation_cell_info.cell_position_y != calculation_cell_info.final_cell_position_y:
+        if self.calculation_cell_info.cell_position_y != self.calculation_cell_info.final_cell_position_y:
             info.apply_top = boundaryStates.COMMUNICATE
         ##
         self.boundaries_info = info
 
+    def set_own_cell_size(self):
+        pass
 # regular classes
 def equilibrium_calculation(rho, ux, uy):
     uxy_3plus = 3 * (ux + uy)
@@ -170,12 +170,12 @@ class obstacleWindTunnel:
     def __init__(self, steps, re,number_of_cells_x,number_of_cells_y ,base_length_x, base_length_y, uw, boundary_state_left,boundary_state_right,
                  boundary_state_top, boundary_state_bottom, title):
         self.time = 0
-        self.packed_info = mpiPackageStructure()
+        self.packed_info = packageStructure()
         self.re = re
         self.uw = uw
         self.steps = steps
         self.title = title
-        self.rho_in  = rho_null + rho_diff
+        self.rho_in = rho_null + rho_diff
         self.rho_out = rho_null - rho_diff
         # principal length for calculating relaxation for the correct re number smaller should be the significant one
         principal_length = 0
@@ -183,9 +183,9 @@ class obstacleWindTunnel:
             principal_length = base_length_y
         else:
             principal_length = base_length_x
-        relaxation = (2 * re) / (6 * principal_length * uw + re)
+        self.relaxation = (2 * re) / (6 * principal_length * uw + re)
         self.relaxation = 0.5 # TODO pflow fix
-        self.shear_viscosity = (1/relaxation-0.5)/3
+        self.shear_viscosity = (1/self.relaxation-0.5)/3
         # set up the information for parallel use
         self.comm = MPI.COMM_WORLD # only var thats not in the packed struct
         self.packed_info.fill_packed_struct_fields(rank=self.comm.Get_rank(), size=self.comm.Get_size(),
@@ -207,7 +207,7 @@ class obstacleWindTunnel:
         self.time = time.time()
         print(self.packed_info)
         # iterations
-        for i in range(self.packed_info.steps):
+        for i in range(self.steps):
             self.periodic_boundary_delta_p()
             self.stream()
             self.bounce_back_choosen()
@@ -265,8 +265,8 @@ class obstacleWindTunnel:
         if self.packed_info.boundaries_info.apply_top == boundaryStates.BAUNCE_BACK:
             # for top y = -1
             self.grid[4, :, -2] = self.grid[2, :, -1]
-            self.grid[7, :, -2] = self.grid[5, :, -1] - 1 / 6 * self.packed_info.uw
-            self.grid[8, :, -2] = self.grid[6, :, -1] + 1 / 6 * self.packed_info.uw
+            self.grid[7, :, -2] = self.grid[5, :, -1] - 1 / 6 * self.uw
+            self.grid[8, :, -2] = self.grid[6, :, -1] + 1 / 6 * self.uw
 
     def caluculate_rho_ux_uy(self):
         self.rho = np.sum(self.grid, axis=0)  # sums over each one individually
@@ -274,7 +274,7 @@ class obstacleWindTunnel:
         self.uy = ((self.grid[2] + self.grid[5] + self.grid[6]) - (self.grid[4] + self.grid[7] + self.grid[8])) / self.rho
 
     def collision(self):
-        self.grid -= self.packed_info.relaxation * (self.grid - self.equilibrium())
+        self.grid -= self.relaxation * (self.grid - self.equilibrium())
 
     def comunicate(self):
         # Right + Left
@@ -341,7 +341,7 @@ class obstacleWindTunnel:
             self.grid = self.full_grid
         # all the others send to p0
         else:
-            self.comm.Send(self.grid[:, 1:-1, 1:-1].copy(), dest=0, tag=self.packed_info.rank)
+            self.comm.Send(self.grid[:, 1:-1, 1:-1].copy(), dest=0, tag=self.packed_info.calculation_cell_info.rank)
 
     def plotter_stream(self):
         # plot
@@ -380,14 +380,14 @@ class obstacleWindTunnel:
 
     def plotter_simple(self):
         # visualize
-        delta = 2.0 * rho_diff / self.packed_info.size_x / self.shear_viscosity / 2.
-        y = np.linspace(0, self.packed_info.size_y, self.packed_info.size_y + 1) + 0.5
-        u_analytical = delta * y * (self.packed_info.size_y - y) / 3.
+        delta = 2.0 * rho_diff / self.packed_info.base_grid_x / self.shear_viscosity / 2.
+        y = np.linspace(0, self.packed_info.base_grid_y, self.packed_info.base_grid_y + 1) + 0.5
+        u_analytical = delta * y * (self.packed_info.base_grid_y - y) / 3.
         plt.plot(u_analytical[:-1], label='Analytical')
         # plt.plot(u_analytical, label='analytical')
         number_of_cuts_in_x = 2
         for i in range(1, number_of_cuts_in_x):
-            point = int(i * self.packed_info.size_x / number_of_cuts_in_x)
+            point = int(i * self.packed_info.base_grid_x / number_of_cuts_in_x)
             plt.plot(self.ux[point, 1:-1], label="Calculated")
         print(len(self.ux[25, 1:-1]))
         plt.legend()
@@ -402,6 +402,7 @@ class obstacleWindTunnel:
 tun = obstacleWindTunnel(steps=4000,re=1100,base_length_x=100,base_length_y=50,uw = 0,
                          number_of_cells_x = 1,
                          number_of_cells_y = 1,
+                         # kina meh the global state have to given thou 2 times
                          boundary_state_left= boundaryStates.PERIODIC_BOUNDARY,
                          boundary_state_right=boundaryStates.PERIODIC_BOUNDARY,
                          boundary_state_top=boundaryStates.BAUNCE_BACK,
