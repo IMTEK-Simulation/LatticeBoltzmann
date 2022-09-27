@@ -30,6 +30,9 @@ class boundaryStates(enum.Enum):
     COMMUNICATE = enum.auto()
     PERIODIC_BOUNDARY = enum.auto()
 
+
+rho_null = 1
+rho_diff = 0.001
 # class structures
 # for organization of an mpi call modified from simple flows
 @dataclass
@@ -48,7 +51,8 @@ class cellNeighbors:
 
 @dataclass
 class mpiPackageStructure:
-    boundaries_info: boundariesApplied = (False, False, False, False)
+    boundaries_info: boundariesApplied = (boundaryStates.NONE, boundaryStates.NONE,
+                                          boundaryStates.NONE, boundaryStates.NONE)
     neighbors: cellNeighbors = (-1, -1, -1, -1)
     # sizes and position in the whole grid
     size_x: int = -1
@@ -120,15 +124,39 @@ class mpiPackageStructure:
         self.boundaries_info = info
 
 # regular classes
+def equilibrium_calculation(rho, ux, uy):
+    uxy_3plus = 3 * (ux + uy)
+    uxy_3miuns = 3 * (ux - uy)
+    uu = 3 * (ux * ux + uy * uy)
+    ux_6 = 6 * ux
+    uy_6 = 6 * uy
+    uxx_9 = 9 * ux * ux
+    uyy_9 = 9 * uy * uy
+    uxy_9 = 9 * ux * uy
+    return np.array([(2 * rho / 9) * (2 - uu),
+                     (rho / 18) * (2 + ux_6 + uxx_9 - uu),
+                     (rho / 18) * (2 + uy_6 + uyy_9 - uu),
+                     (rho / 18) * (2 - ux_6 + uxx_9 - uu),
+                     (rho / 18) * (2 - uy_6 + uyy_9 - uu),
+                     (rho / 36) * (1 + uxy_3plus + uxy_9 + uu),
+                     (rho / 36) * (1 - uxy_3miuns - uxy_9 + uu),
+                     (rho / 36) * (1 - uxy_3plus + uxy_9 + uu),
+                     (rho / 36) * (1 + uxy_3miuns - uxy_9 + uu)])
+
 class obstacleWindTunnel:
-    def __init__(self,steps,re,base_length_x,base_length_y,uw):
+    def __init__(self, steps, re, base_length_x, base_length_y, uw, boundary_state_left,boundary_state_right,
+                 boundary_state_top, boundary_state_bottom):
         self.time = 0
         self.mpi = mpiPackageStructure()
         self.velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                                       [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
         self.re = re
+        self.rho_in  = rho_null - rho_diff
+        self.rho_out = rho_null + rho_diff
+        self.global_boundaries = boundariesApplied(boundary_state_left,boundary_state_right,boundary_state_top,
+                                                   boundary_state_bottom)
         # Todo check if correct
-        # principal length for calculating relaxation for the correct re number
+        # principal length for calculating relaxation for the correct re number smaller should be the significant one
         principal_length = 0
         if base_length_x > base_length_y:
             principal_length = base_length_y
@@ -250,6 +278,29 @@ class obstacleWindTunnel:
             self.comm.Sendrecv(self.grid[:, :, -2].copy(), self.mpi.neighbors.top, recvbuf=recvbuf, sendtag=98, recvtag=99)
             self.grid[:, :, -1] = recvbuf
 
+    def periodic_boundary_delta_p(self):
+        # movement is assumed form left to right or from top to bottom
+        self.caluculate_rho_ux_uy()
+        equilibrium = self.equilibrium()
+        # loop through the individual sides (locally)
+        # left + right
+        if self.mpi.boundaries_info.apply_left == boundaryStates.PERIODIC_BOUNDARY:
+            equilibrium_in = equilibrium_calculation(self.rho_in, self.ux[-2, :],self.uy[-2, :])
+            self.grid[:,0,:] = equilibrium_in + self.grid[:, -2, :] - equilibrium[:, -2, :]
+
+        if self.mpi.boundaries_info.apply_right == boundaryStates.PERIODIC_BOUNDARY:
+            equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[1, :], self.uy[1, :])
+            self.grid[:, -1, :] = equilibrium_out + self.grid[:, 1, :] - equilibrium[:, 1, :]
+
+        # Top + bottom
+        if self.mpi.boundaries_info.apply_top == boundaryStates.PERIODIC_BOUNDARY:
+            equilibrium_in = equilibrium_calculation(self.rho_in, self.ux[:, -2], self.uy[:, -2])
+            self.grid[:, :, 0] = equilibrium_in + self.grid[:, :, -2] - equilibrium[:, :, -2]
+
+        if self.mpi.boundaries_info.apply_bottom == boundaryStates.PERIODIC_BOUNDARY:
+            equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[:, 1], self.uy[:, 1])
+            self.grid[:, -1, :] = equilibrium_out + self.grid[:, :, 1] - equilibrium[:, :, 1]
+
     def collapse_data(self):
         # process 0 gets the data and does the visualization
         if self.mpi.rank == 0:
@@ -309,5 +360,5 @@ class obstacleWindTunnel:
             f.close()
 
 
-tun = obstacleWindTunnel(steps=10000,re=1000,base_length_x=100,base_length_y=100,uw = 0.1)
+tun = obstacleWindTunnel(steps=10,re=1000,base_length_x=100,base_length_y=100,uw = 0.1,)
 tun.run()
