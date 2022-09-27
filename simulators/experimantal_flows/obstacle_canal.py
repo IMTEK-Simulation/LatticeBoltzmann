@@ -50,10 +50,29 @@ class cellNeighbors:
     bottom: int = -1
 
 @dataclass
+class calculationCellInfo:
+    # rank of the calculation cell
+    rank: int = -1
+    # total number of calculation cells
+    size: int = -1
+    # positions in x and y in the whole gird or calculation cells
+    # numeration starts from 0,0
+    cell_position_x: int = -1
+    cell_position_y: int = -1
+    # number of calculation cells in different directions
+    cell_numbers_in_x: int = -1
+    cell_numbers_in_y: int = -1
+    # final cell positions for boundary determination
+    final_cell_position_x: int = -1
+    final_cell_position_y: int = -1
+
+@dataclass
 class mpiPackageStructure:
+    # aka all the (static) info in on package
     boundaries_info: boundariesApplied = (boundaryStates.NONE, boundaryStates.NONE,
                                           boundaryStates.NONE, boundaryStates.NONE)
     neighbors: cellNeighbors = (-1, -1, -1, -1)
+    calculation_cell_info:calculationCellInfo = (-1,-1,-1,-1,-1,-1,-1,-1)
     # sizes and position in the whole grid
     size_x: int = -1
     size_y: int = -1
@@ -69,17 +88,36 @@ class mpiPackageStructure:
     steps: int = -1
     uw: int = -1
 
-    def fill_mpi_struct_fields(self, rank, size, max_x, max_y, base_grid_x, base_grid_y, relaxation, steps, uw):
+    def fill_calculation_cell_field(self,rank,size,number_of_cells_x,number_of_cells_y):
+        calculation_cell = calculationCellInfo()
+        calculation_cell.rank = rank
+        calculation_cell.size = size
+        calculation_cell.cell_numbers_in_x = number_of_cells_x
+        calculation_cell.cell_numbers_in_y = number_of_cells_y
+        # set
+        self.calculation_cell_info = calculation_cell
+
+
+
+    def fill_mpi_struct_fields(self,
+                               rank, size,
+                               number_of_cells_x, number_of_cells_y,
+                               base_grid_x, base_grid_y, relaxation, steps, uw,
+                               global_boundary_info):
         #
+        self.fill_calculation_cell_field(rank = rank,size = size,
+                                         number_of_cells_x= number_of_cells_x,
+                                         number_of_cells_y=number_of_cells_y)
         self.rank = rank
         self.size = size
         self.get_postions_out_of_rank_size_quadratic()
         print(self.pos_x,self.pos_y)
-        self.set_boundary_info(self.pos_x, self.pos_y, max_x - 1, max_y - 1)  # i should know my own code lol
+        self.set_boundary_info_local(calculation_cell_info = self.calculation_cell_info,
+                                     global_boundary_info= global_boundary_info)  # i should know my own code lol
         # cheeky
-        self.size_x = base_grid_x // (max_x) + 2
-        self.size_y = base_grid_y // (max_y) + 2
-        self.determin_neighbors(rank, size)
+        self.size_x = base_grid_x // number_of_cells_x + 2
+        self.size_y = base_grid_y // number_of_cells_y + 2
+        self.determin_neighbors(calculation_cell_info= self.calculation_cell_info)
         #
         self.relaxation = relaxation
         self.base_grid_x = base_grid_x
@@ -94,32 +132,32 @@ class mpiPackageStructure:
         ###
         self.pos_x = self.rank % edge_lenght
         self.pos_y = self.rank // edge_lenght
-        print(self.pos_x, self.pos_y)
 
-    def determin_neighbors(self, rank, size):
-        # determin edge lenght
-        edge_length = int(np.sqrt(size))
+    def determin_neighbors(self, calculation_cell_info):
+        # (determins the neighbour in term of its size not its grid position)
+        # (we can get away with unsafe grid positions as those are set at the actual boundary of the domain)
         ###
         neighbor = cellNeighbors()
-        neighbor.top = rank + edge_length
-        neighbor.bottom = rank - edge_length
-        neighbor.right = rank + 1
-        neighbor.left = rank - 1
+        neighbor.top = calculation_cell_info.rank + calculation_cell_info.cell_numbers_in_x
+        neighbor.bottom = calculation_cell_info.rank - calculation_cell_info.cell_numbers_in_x
+        neighbor.right = calculation_cell_info.rank + 1
+        neighbor.left = calculation_cell_info.rank - 1
         ###
         self.neighbors = neighbor
 
-    def set_boundary_info(self,pox, poy, max_x, max_y):
-        info = boundariesApplied(boundaryStates.NONE, boundaryStates.NONE,
-                                 boundaryStates.NONE, boundaryStates.NONE)
+    def set_boundary_info_local(self,calculation_cell_info, global_boundary_info):
+        # global boundary info is used for an init point will only be overwritten by communicate
+        info = global_boundary_info
         ##
-        if pox == 0:
-            info.apply_left = boundaryStates.BAUNCE_BACK
-        if poy == 0:
-            info.apply_bottom = boundaryStates.BAUNCE_BACK
-        if pox == max_x:
-            info.apply_right = boundaryStates.BAUNCE_BACK
-        if poy == max_y:
-            info.apply_top = boundaryStates.BAUNCE_BACK
+        # if cell position in set {x;y} -> {0,max;0,max} no boundaries
+        if calculation_cell_info.cell_position_x != 0:
+            info.apply_left = boundaryStates.COMMUNICATE
+        if calculation_cell_info.cell_position_y != 0:
+            info.apply_bottom = boundaryStates.COMMUNICATE
+        if calculation_cell_info.cell_position_x != calculation_cell_info.final_cell_position_x:
+            info.apply_right = boundaryStates.COMMUNICATE
+        if calculation_cell_info.cell_position_y != calculation_cell_info.final_cell_position_y:
+            info.apply_top = boundaryStates.COMMUNICATE
         ##
         self.boundaries_info = info
 
@@ -145,17 +183,18 @@ def equilibrium_calculation(rho, ux, uy):
 
 class obstacleWindTunnel:
     def __init__(self, steps, re, base_length_x, base_length_y, uw, boundary_state_left,boundary_state_right,
-                 boundary_state_top, boundary_state_bottom):
+                 boundary_state_top, boundary_state_bottom, title):
         self.time = 0
         self.mpi = mpiPackageStructure()
         self.velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                                       [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
         self.re = re
+        self.title = title
         self.rho_in  = rho_null - rho_diff
         self.rho_out = rho_null + rho_diff
+
         self.global_boundaries = boundariesApplied(boundary_state_left,boundary_state_right,boundary_state_top,
                                                    boundary_state_bottom)
-        # Todo check if correct
         # principal length for calculating relaxation for the correct re number smaller should be the significant one
         principal_length = 0
         if base_length_x > base_length_y:
@@ -163,22 +202,23 @@ class obstacleWindTunnel:
         else:
             principal_length = base_length_x
         relaxation = (2 * re) / (6 * principal_length * uw + re)
+        relaxation = 0.5 # TODO pflow fix
+        self.shear_viscosity = (1/relaxation-0.5)/3
         self.comm = MPI.COMM_WORLD
         size = self.comm.Get_size()
         print(size)
-        # test for badness
+        # TODO change me
         rank_in_one_direction = int(np.sqrt(size)) # for an MPI thingi with 9 processes -> 3x3 field
-        if rank_in_one_direction * rank_in_one_direction != size:
-            exit(Exception)
         self.mpi.fill_mpi_struct_fields(rank = self.comm.Get_rank(),
                                         size = size,
-                                        max_x = rank_in_one_direction,
-                                        max_y = rank_in_one_direction,
+                                        number_of_cells_x = rank_in_one_direction,
+                                        number_of_cells_y = rank_in_one_direction,
                                         base_grid_x=base_length_x,
                                         base_grid_y=base_length_y,
                                         relaxation= relaxation,
                                         steps=steps,
-                                        uw = uw)
+                                        uw = uw,
+                                        global_boundary_info = self.global_boundaries)
         # grid type variables
         self.rho = np.ones((self.mpi.size_x, self.mpi.size_y))
         self.ux = np.zeros((self.mpi.size_x, self.mpi.size_y))
@@ -191,6 +231,7 @@ class obstacleWindTunnel:
         print(self.mpi)
         # iterations
         for i in range(self.mpi.steps):
+            self.periodic_boundary_delta_p()
             self.stream()
             self.bounce_back_choosen()
             self.caluculate_rho_ux_uy()
@@ -198,7 +239,8 @@ class obstacleWindTunnel:
             self.comunicate()
     #
         self.collapse_data()
-        self.plotter()
+        # self.plotter_stream()
+        self.plotter_simple()
 
     ''' basic functions '''
 
@@ -324,7 +366,7 @@ class obstacleWindTunnel:
         else:
             self.comm.Send(self.grid[:, 1:-1, 1:-1].copy(), dest=0, tag=self.mpi.rank)
 
-    def plotter(self):
+    def plotter_stream(self):
         # plot
         if self.mpi.rank == 0:
             print("Making Image")
@@ -343,7 +385,7 @@ class obstacleWindTunnel:
             ax = plt.gca()
             ax.set_xlim([0, self.mpi.base_grid_x + 1])
             ax.set_ylim([0, self.mpi.base_grid_y + 1])
-            plt.title("Sliding Lid")
+            plt.title(self.title)
             plt.xlabel("x-Position")
             plt.ylabel("y-Position")
             fig = plt.colorbar()
@@ -359,6 +401,31 @@ class obstacleWindTunnel:
             f.write(str(totaltime))
             f.close()
 
+    def plotter_simple(self):
+        # visualize
+        delta = 2.0 * rho_diff / self.mpi.size_x / self.shear_viscosity / 2.
+        y = np.linspace(0, self.mpi.size_y, self.mpi.size_y + 1) + 0.5
+        u_analytical = delta * y * (self.mpi.size_y - y) / 3.
+        plt.plot(u_analytical[:-1], label='Analytical')
+        # plt.plot(u_analytical, label='analytical')
+        number_of_cuts_in_x = 2
+        for i in range(1, number_of_cuts_in_x):
+            point = int(i * self.mpi.size_x / number_of_cuts_in_x)
+            plt.plot(self.ux[point, 1:-1], label="Calculated")
+        print(len(self.ux[25, 1:-1]))
+        plt.legend()
+        plt.xlabel('Position in cross section')
+        plt.ylabel('Velocity')
+        plt.title('Pouisuelle flow (Gridsize 100x52, $\omega = 0.5$, $\\nabla \\rho = 0.002$)')
+        savestring = "PouisuelleFlow.png"
+        plt.savefig(savestring)
+        plt.show()
 
-tun = obstacleWindTunnel(steps=10,re=1000,base_length_x=100,base_length_y=100,uw = 0.1,)
+
+tun = obstacleWindTunnel(steps=0,re=1100,base_length_x=100,base_length_y=50,uw = 0,
+                         boundary_state_left= boundaryStates.PERIODIC_BOUNDARY,
+                         boundary_state_right=boundaryStates.PERIODIC_BOUNDARY,
+                         boundary_state_top=boundaryStates.BAUNCE_BACK,
+                         boundary_state_bottom = boundaryStates.BAUNCE_BACK,
+                         title = "Work in progress")
 tun.run()
