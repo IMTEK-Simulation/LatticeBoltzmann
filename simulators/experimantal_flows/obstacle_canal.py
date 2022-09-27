@@ -90,11 +90,19 @@ class mpiPackageStructure:
 
     def fill_calculation_cell_field(self,rank,size,number_of_cells_x,number_of_cells_y):
         calculation_cell = calculationCellInfo()
+        # bind info
         calculation_cell.rank = rank
-        calculation_cell.size = size
+        calculation_cell.size = size # aka the number in the grid
         calculation_cell.cell_numbers_in_x = number_of_cells_x
         calculation_cell.cell_numbers_in_y = number_of_cells_y
+        calculation_cell.final_cell_position_x = number_of_cells_x - 1
+        calculation_cell.final_cell_position_y = number_of_cells_y - 1
+        # calculate the rest
+        # numbering starts with 0,0, x ->
+        calculation_cell.cell_position_x = rank % number_of_cells_x
+        calculation_cell.cell_position_y = rank // number_of_cells_y
         # set
+        print(calculation_cell)
         self.calculation_cell_info = calculation_cell
 
 
