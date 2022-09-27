@@ -255,7 +255,7 @@ class obstacleWindTunnel:
         self.plotter_stream()
         # self.plotter_simple()
 
-    ''' basic functions '''
+    ''' core methods '''
 
     def equilibrium(self):
         uxy_3plus = 3 * (self.ux + self.uy)
@@ -355,6 +355,8 @@ class obstacleWindTunnel:
         if self.packed_info.boundaries_info.apply_bottom == boundaryStates.PERIODIC_BOUNDARY:
             equilibrium_out = equilibrium_calculation(self.rho_out, self.ux[:, 1], self.uy[:, 1])
             self.grid[:, -1, :] = equilibrium_out + self.grid[:, :, 1] - equilibrium[:, :, 1]
+
+    ''' auxiliary methods '''
 
     def collapse_data(self):
         # process 0 gets the data and does the visualization
