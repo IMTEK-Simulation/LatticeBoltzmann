@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from mpi4py import MPI
 import time
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import enum
 
 # enums and statics
@@ -238,6 +239,7 @@ class obstacleWindTunnel:
         else:
             principal_length = base_length_x
         self.relaxation = (2 * re) / (6 * principal_length * uw + re)
+        self.relaxation = 0.5
         self.shear_viscosity = (1/self.relaxation-0.5)/3
         # set up the information for parallel use
         self.comm = MPI.COMM_WORLD # only var thats not in the packed struct
@@ -265,9 +267,11 @@ class obstacleWindTunnel:
         print(self.packed_info)
         # iterations
         for i in range(self.steps):
+            print(self.grid[0:self.local_obstacle.start_x:self.local_obstacle.end_x,self.local_obstacle.start_y:self.local_obstacle.end_y])
             self.periodic_boundary_delta_p()
             self.stream()
             self.bounce_back_choosen()
+            self.apply_obstacle()
             self.caluculate_rho_ux_uy()
             self.collision()
             self.comunicate()
@@ -327,8 +331,10 @@ class obstacleWindTunnel:
 
     def caluculate_rho_ux_uy(self):
         self.rho = np.sum(self.grid, axis=0)  # sums over each one individually
-        self.ux = ((self.grid[1] + self.grid[5] + self.grid[8]) - (self.grid[3] + self.grid[6] + self.grid[7])) / self.rho
-        self.uy = ((self.grid[2] + self.grid[5] + self.grid[6]) - (self.grid[4] + self.grid[7] + self.grid[8])) / self.rho
+        self.ux = np.divide((self.grid[1] + self.grid[5] + self.grid[8]) - (self.grid[3] + self.grid[6] + self.grid[7]),
+                            self.rho, where=self.rho != 0)
+        self.uy = np.divide((self.grid[2] + self.grid[5] + self.grid[6]) - (self.grid[4] + self.grid[7] + self.grid[8]),
+                            self.rho, where=self.rho != 0)
 
     def collision(self):
         self.grid -= self.relaxation * (self.grid - self.equilibrium())
@@ -389,7 +395,7 @@ class obstacleWindTunnel:
         if self.packed_info.local_grid_start_x < self.global_obstacle.start_x:
             print("T1")
             self.local_obstacle.start_x = self.global_obstacle.start_x
-            self.local_obstacle.start_y = self.global_obstacle.end_y
+            self.local_obstacle.end_x = self.global_obstacle.end_x
         if self.packed_info.local_grid_start_y < self.global_obstacle.start_y:
             print("T2")
             self.local_obstacle.start_y = self.global_obstacle.start_y
@@ -404,8 +410,53 @@ class obstacleWindTunnel:
         self.local_obstacle.boundary_state = info
         print(self.local_obstacle)
 
+
     def apply_obstacle(self):
-        pass
+        # set the cells to dead
+        self.ux[self.local_obstacle.start_x:self.local_obstacle.end_x,self.local_obstacle.start_y:self.local_obstacle.end_y] = 0
+        self.uy[self.local_obstacle.start_x:self.local_obstacle.end_x,self.local_obstacle.start_y:self.local_obstacle.end_y] = 0
+        # self.grid[:,self.local_obstacle.dead_start_x:self.local_obstacle.dead_end_x, self.local_obstacle.start_y:self.local_obstacle.dead_end_y] = 0
+        # apply boundaries position is relative to the pos on the rectangle
+        if self.local_obstacle.boundary_state.apply_left == boundaryStates.BAUNCE_BACK:
+            # 1 into 3
+            self.grid[3, self.local_obstacle.start_x - 1, self.local_obstacle.start_y: self.local_obstacle.end_y] = \
+                self.grid[1, self.local_obstacle.start_x, self.local_obstacle.start_y: self.local_obstacle.end_y]
+            # 5 into 7
+            self.grid[7,self.local_obstacle.start_x-1, self.local_obstacle.start_y: self.local_obstacle.end_y] = \
+                self.grid[5, self.local_obstacle.start_x, self.local_obstacle.start_y: self.local_obstacle.end_y]
+            # 8 into 6
+            self.grid[6, self.local_obstacle.start_x-1, self.local_obstacle.start_y: self.local_obstacle.end_y] = \
+                self.grid[8, self.local_obstacle.start_x, self.local_obstacle.start_y: self.local_obstacle.end_y]
+        if self.local_obstacle.boundary_state.apply_right == boundaryStates.BAUNCE_BACK:
+            # 3 into 1
+            self.grid[1, self.local_obstacle.end_x+1, self.local_obstacle.start_y:self.local_obstacle.end_y] = \
+                self.grid[3, self.local_obstacle.end_x, self.local_obstacle.start_y:self.local_obstacle.end_y]
+            # 7 into 5
+            self.grid[5, self.local_obstacle.end_x+1, self.local_obstacle.start_y:self.local_obstacle.end_y] =\
+                self.grid[7, self.local_obstacle.end_x, self.local_obstacle.start_y:self.local_obstacle.end_y]
+            # 8 into 6
+            self.grid[6, self.local_obstacle.end_x+1, self.local_obstacle.start_y:self.local_obstacle.end_y] = \
+                self.grid[8, self.local_obstacle.end_x, self.local_obstacle.start_y:self.local_obstacle.end_y]
+        if self.local_obstacle.boundary_state.apply_top == boundaryStates.BAUNCE_BACK:
+            # 4 into 2
+            self.grid[2, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y + 1] = \
+                self.grid[4, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y]
+            # 7 into 5
+            self.grid[5, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y + 1] = \
+                self.grid[7, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y]
+            # 8 into 5
+            self.grid[6, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y + 1] = \
+                self.grid[8, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.end_y]
+        if self.local_obstacle.boundary_state.apply_bottom == boundaryStates.BAUNCE_BACK:
+            # 2 into 4
+            self.grid[4, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y - 1] = \
+                self.grid[2, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y]
+            # 5 into 7
+            self.grid[7, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y - 1] = \
+                self.grid[5, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y]
+            # 6 into 8
+            self.grid[8, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y - 1] = \
+                self.grid[6, self.local_obstacle.start_x:self.local_obstacle.end_x, self.local_obstacle.start_y]
 
     ''' auxiliary methods '''
 
@@ -448,7 +499,12 @@ class obstacleWindTunnel:
             # plot
             # plt.streamplot(X,Y,full_ux.T,full_uy.T)
             plt.streamplot(X, Y, self.ux.T, self.uy.T, color=speed, cmap=plt.cm.jet)
+            rect = mpatches.Rectangle((self.global_obstacle.start_x,self.global_obstacle.start_y),
+                                      self.global_obstacle.end_x - self.global_obstacle.start_x,
+                                      self.global_obstacle.end_y - self.global_obstacle.start_y,
+                                      fill = False, color="black", linewidth=2)
             ax = plt.gca()
+            ax.add_patch(rect)
             ax.set_xlim([0, self.packed_info.base_grid_x + 1])
             ax.set_ylim([0, self.packed_info.base_grid_y + 1])
             plt.title(self.title)
@@ -488,7 +544,7 @@ class obstacleWindTunnel:
         plt.show()
 
 
-t= obstacleWindTunnel(steps=1,re=1100,base_length_x=100,base_length_y=50,uw = 0.1,
+t= obstacleWindTunnel(steps=1000,re=1000,base_length_x=100,base_length_y=50,uw = 0,
                       number_of_cells_x=1,
                       number_of_cells_y=1,
                       # kinda meh the global state have to given thou 2 times
@@ -499,7 +555,7 @@ t= obstacleWindTunnel(steps=1,re=1100,base_length_x=100,base_length_y=50,uw = 0.
                       # title for the plot
                       title="Work in progress",
                       # obstacle placement in the global grid
-                      obstacle_start=(25, 50),
-                      obstacle_end=(28, 53))
+                      obstacle_start=(-1, -1),
+                      obstacle_end=(-1, -1))
 
 t.run()
