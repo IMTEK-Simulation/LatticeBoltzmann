@@ -34,7 +34,7 @@ class boundaryStates(enum.Enum):
 
 
 rho_null = 1
-rho_diff = 0.001
+rho_diff = 0.01
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0, 0, 1, 0, -1, 1, 1, -1, -1]]).T
 # class structures
@@ -267,7 +267,6 @@ class obstacleWindTunnel:
         print(self.packed_info)
         # iterations
         for i in range(self.steps):
-            print(self.grid[0:self.local_obstacle.start_x:self.local_obstacle.end_x,self.local_obstacle.start_y:self.local_obstacle.end_y])
             self.periodic_boundary_delta_p()
             self.stream()
             self.bounce_back_choosen()
@@ -555,7 +554,7 @@ t= obstacleWindTunnel(steps=1000,re=1000,base_length_x=100,base_length_y=50,uw =
                       # title for the plot
                       title="Work in progress",
                       # obstacle placement in the global grid
-                      obstacle_start=(-1, -1),
-                      obstacle_end=(-1, -1))
+                      obstacle_start=(50, 24),
+                      obstacle_end=(53, 27))
 
 t.run()
