@@ -383,6 +383,25 @@ class obstacleWindTunnel:
         # set up the local info
         # relation between global coordinates and local coordinates
         # dont forget about that pesky communication layer
+        # check weather or not inside the cell
+        # Todo go from simple to harder this is the hard part! prob move to the packed struct
+        # local active cells (aka boundary)
+        if self.packed_info.local_grid_start_x < self.global_obstacle.start_x:
+            print("T1")
+            self.local_obstacle.start_x = self.global_obstacle.start_x
+            self.local_obstacle.start_y = self.global_obstacle.end_y
+        if self.packed_info.local_grid_start_y < self.global_obstacle.start_y:
+            print("T2")
+            self.local_obstacle.start_y = self.global_obstacle.start_y
+            self.local_obstacle.end_y = self.global_obstacle.end_y
+        # local dead cell
+        self.local_obstacle.dead_start_x = self.global_obstacle.start_x + 1
+        self.local_obstacle.dead_start_x = self.global_obstacle.start_y + 1
+        self.local_obstacle.dead_end_x = self.global_obstacle.end_x - 1
+        self.local_obstacle.dead_end_y = self.global_obstacle.end_y -1
+        # Boundary states
+        info = boundariesApplied(boundaryStates.BAUNCE_BACK,boundaryStates.BAUNCE_BACK,boundaryStates.BAUNCE_BACK,boundaryStates.BAUNCE_BACK)
+        self.local_obstacle.boundary_state = info
         print(self.local_obstacle)
 
     def apply_obstacle(self):
@@ -480,7 +499,7 @@ t= obstacleWindTunnel(steps=1,re=1100,base_length_x=100,base_length_y=50,uw = 0.
                       # title for the plot
                       title="Work in progress",
                       # obstacle placement in the global grid
-                      obstacle_start=(10, 15),
-                      obstacle_end=(20, 25))
+                      obstacle_start=(25, 50),
+                      obstacle_end=(28, 53))
 
 t.run()
