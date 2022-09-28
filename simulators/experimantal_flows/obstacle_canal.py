@@ -85,6 +85,10 @@ class packageStructure:
     size_y: int = -1
     base_grid_x: int = -1
     base_grid_y: int = -1
+    local_grid_start_x: int = -1
+    local_grid_start_y: int = -1
+    local_grid_end_x: int = -1
+    local_grid_end_y: int = -1
 
     def fill_calculation_cell_field(self,rank,size,number_of_cells_x,number_of_cells_y):
         calculation_cell = calculationCellInfo()
@@ -148,16 +152,24 @@ class packageStructure:
 
     def set_own_cell_size(self):
         # case 1 basic cell no need to add further grid points
-        self.size_x = self.base_grid_x // self.calculation_cell_info.cell_numbers_in_x + 2
-        self.size_y = self.base_grid_y // self.calculation_cell_info.cell_numbers_in_y + 2
+        self.size_x = self.base_grid_x // self.calculation_cell_info.cell_numbers_in_x
+        self.size_y = self.base_grid_y // self.calculation_cell_info.cell_numbers_in_y
         # case 2 end cell in x -> check weather or not there are more grid points to be dealt with
         if self.calculation_cell_info.cell_position_x == self.calculation_cell_info.final_cell_position_x:
             self.size_x += self.base_grid_x % self.calculation_cell_info.cell_numbers_in_x
         # case 3 end cell in y -> check weather or not there are more grid points to be dealt with
         if self.calculation_cell_info.cell_position_y == self.calculation_cell_info.final_cell_position_y:
             self.size_y += self.base_grid_y % self.calculation_cell_info.cell_numbers_in_y
-
-
+        # set local relation to global grid
+        self.local_grid_start_x = (self.base_grid_x // self.calculation_cell_info.cell_numbers_in_x) * self.\
+            calculation_cell_info.cell_position_x
+        self.local_grid_start_y = self.base_grid_y // self.calculation_cell_info.cell_numbers_in_y * self.\
+            calculation_cell_info.cell_position_y
+        self.local_grid_end_x = self.local_grid_start_x + self.size_x
+        self.local_grid_end_y = self.local_grid_start_y + self.size_y
+        # + 2 describes boundary/com points
+        self.size_x += 2
+        self.size_y += 2
 
 @dataclass
 class globalObstacleInfo:
@@ -369,6 +381,8 @@ class obstacleWindTunnel:
     def setup_obstacle(self):
         print(self.global_obstacle)
         # set up the local info
+        # relation between global coordinates and local coordinates
+        # dont forget about that pesky communication layer
         print(self.local_obstacle)
 
     def apply_obstacle(self):
