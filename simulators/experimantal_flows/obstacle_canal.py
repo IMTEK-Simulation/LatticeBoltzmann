@@ -267,8 +267,8 @@ class obstacleWindTunnel:
         print(self.packed_info)
         # iterations
         for i in range(self.steps):
-            self.periodic_boundary_delta_p()
             self.stream()
+            self.periodic_boundary_delta_p()
             self.bounce_back_choosen()
             self.apply_obstacle()
             self.caluculate_rho_ux_uy()
