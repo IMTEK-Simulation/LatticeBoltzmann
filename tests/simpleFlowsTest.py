@@ -27,6 +27,13 @@ class testsInStreaming(unittest.TestCase):
         # look weather the last elemnt is 1
         self.assertEqual(grid[0, 0, lenght - 1], 1)  # add assertion here
 
+    def test_dirty_np_roll(self):
+        k = np.arange(25)
+        k = np.reshape(k,(5,5))
+        print(k)
+        k = np.roll(k,(1,0))
+        print(k)
+
     def test_multidimensional_roll(self):
         # now with more channels here the 4 main channels
         lenght = 9
