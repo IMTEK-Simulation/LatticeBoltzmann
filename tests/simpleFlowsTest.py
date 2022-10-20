@@ -15,6 +15,14 @@ Tester for Streaming
 '''
 
 
+def print_array_c(a):
+    for line in a:
+        string = ""
+        for e in line:
+            string  += str(e) + ", "
+        print(string)
+
+
 class testsInStreaming(unittest.TestCase):
     def test_basic_np_roll(self):
         # make a grid with a lenght and write the first element to one-> then roll the element through
@@ -24,15 +32,21 @@ class testsInStreaming(unittest.TestCase):
         # roll through the array
         for i in range(lenght - 1):
             grid = np.roll(grid, (1, 0))
+            print(grid)
         # look weather the last elemnt is 1
         self.assertEqual(grid[0, 0, lenght - 1], 1)  # add assertion here
 
     def test_dirty_np_roll(self):
-        k = np.arange(25)
-        k = np.reshape(k,(5,5))
+        size_x = 5
+        size_y = 7
+        k = np.arange(size_y*size_x)
+        k = np.reshape(k,(1,size_x,size_y))
         print(k)
-        k = np.roll(k,(1,0))
+        k = np.roll(k[0],(-1,-1),axis= (0,1))
         print(k)
+        print_array_c(k)
+        # just there for some dirty testing
+        self.assertTrue(True)
 
     def test_multidimensional_roll(self):
         # now with more channels here the 4 main channels
