@@ -38,7 +38,7 @@ class testsInStreaming(unittest.TestCase):
 
     def test_dirty_np_roll(self):
         size_x = 5
-        size_y = 7
+        size_y = 5
         k = np.arange(size_y*size_x)
         k = np.reshape(k,(1,size_x,size_y))
         print(k)
