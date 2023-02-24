@@ -16,15 +16,17 @@ for this look at the simpleFlowsTest.
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 # initial variables and sizess
 re = 1000
-base_lenght = 300
-steps = 100000
+base_lenght = 14
+steps = 500
 uw = 0.1
 size_x = base_lenght + 2
 size_y = base_lenght + 2
 relaxation = (2*re)/(6*base_lenght*uw+re)
+print(relaxation)
 velocity_set = np.array([[0, 1, 0, -1, 0, 1, -1, -1, 1],
                          [0,0,1,0,-1,1,1,-1,-1]]).T
 # main methods
@@ -82,9 +84,10 @@ def bounce_back(grid,uw):
     grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
     grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
     # for top y = -1
+    rho_wall = 2*(grid[2, 1:-1, -1] + grid[5, 1:-1, -1] + grid[6, 1:-1, -1]) + grid[0, 1:-1, -1] +grid[1, 1:-1, -1] +grid[3, 1:-1, -1]
     grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
-    grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw
-    grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw
+    grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw * rho_wall
+    grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw * rho_wall
 
 # body
 def sliding_lid():
@@ -102,7 +105,8 @@ def sliding_lid():
         bounce_back(grid,uw)
         rho, ux, uy = caluculate_rho_ux_uy(grid)
         collision(grid,rho,ux,uy)
-
+    print(rho)
+    np.set_printoptions(threshold=sys.maxsize)
     # print(grid[2,0,:])
     # visualize
     # values
@@ -110,12 +114,11 @@ def sliding_lid():
     y = np.arange(0, base_lenght)
     X, Y = np.meshgrid(x, y)
     speed = np.sqrt(ux[1:-1,1:-1].T ** 2 + uy[1:-1,1:-1].T ** 2)
-    print(speed.shape)
     # plot
     plt.streamplot(X,Y,ux[1:-1,1:-1].T,uy[1:-1,1:-1].T, color = speed, cmap= plt.cm.jet)
     ax = plt.gca()
-    ax.set_xlim([0, 301])
-    ax.set_ylim([0, 301])
+    ax.set_xlim([0, base_lenght+1])
+    ax.set_ylim([0, base_lenght+1])
     titleString = "Sliding Lid (Gridsize " + "{}".format(size_x) + "x" + "{}".format(size_y)
     titleString += ",  $\\omega$ = {:.2f}".format(relaxation) + ", steps = {}".format(steps) + ")"
     plt.title(titleString)
@@ -132,8 +135,6 @@ def sliding_lid():
     plt.title('Constant velocity')
     plt.show()
     '''
-
-
 
 # call
 sliding_lid()

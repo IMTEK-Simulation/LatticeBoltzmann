@@ -37,12 +37,15 @@ class testsInStreaming(unittest.TestCase):
         self.assertEqual(grid[0, 0, lenght - 1], 1)  # add assertion here
 
     def test_dirty_np_roll(self):
-        size_x = 5
-        size_y = 5
-        k = np.arange(size_y*size_x)
+        size_x = 3
+        size_y = 3
+        k = np.arange(1,size_y*size_x+1)
         k = np.reshape(k,(1,size_x,size_y))
+        k[0, 0, 0] = 4
         print(k)
-        k = np.roll(k[0],(-1,-1),axis= (0,1))
+        #k = np.roll(k[0],(-1,-1),axis= (0,1))
+        print(np.linalg.det(k))
+        k = np.linalg.inv(k)
         print(k)
         print_array_c(k)
         # just there for some dirty testing
