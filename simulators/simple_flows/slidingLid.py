@@ -20,8 +20,8 @@ import sys
 
 # initial variables and sizess
 re = 1000
-base_lenght = 14
-steps = 500
+base_lenght = 300
+steps = 10000
 uw = 0.1
 size_x = base_lenght + 2
 size_y = base_lenght + 2
@@ -84,7 +84,8 @@ def bounce_back(grid,uw):
     grid[5, 1:-1, 1] = grid[7, 1:-1, 0]
     grid[6, 1:-1, 1] = grid[8, 1:-1, 0]
     # for top y = -1
-    rho_wall = 2*(grid[2, 1:-1, -1] + grid[5, 1:-1, -1] + grid[6, 1:-1, -1]) + grid[0, 1:-1, -1] +grid[1, 1:-1, -1] +grid[3, 1:-1, -1]
+    rho_wall = 2.0*(grid[2, 1:-1, -1] + grid[5, 1:-1, -1] + grid[6, 1:-1, -1]) + \
+               grid[0, 1:-1, -1] +grid[1, 1:-1, -1] +grid[3, 1:-1, -1]
     grid[4, 1:-1, -2] = grid[2, 1:-1, -1]
     grid[7, 1:-1, -2] = grid[5, 1:-1, -1] - 1 / 6 * uw * rho_wall
     grid[8, 1:-1, -2] = grid[6, 1:-1, -1] + 1 / 6 * uw * rho_wall
